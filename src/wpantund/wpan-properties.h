@@ -85,6 +85,22 @@
 
 #define kWPANTUNDProperty_DebugIPv6GlobalIPAddressList         "Debug:IPv6:GlobalIPAddressList"
 
+// Ignore this line --- begin pe8qf1P4GCme
+#define kWPANTUNDProperty_SiLabs_NCPAssociationState           "com.silabs:NCP:AssociationState"
+#define kWPANTUNDProperty_SiLabs_NCPTXPowerMode                "com.silabs:NCP:TXPowerMode"
+#define kWPANTUNDProperty_SiLabs_NCPTXPowerMax                 "com.silabs:NCP:TXPowerMax"
+#define kWPANTUNDProperty_SiLabs_NCPTXPowerMin                 "com.silabs:NCP:TXPowerMin"
+#define kWPANTUNDProperty_SiLabs_NetworkNodeType               "com.silabs:Network:NodeType"
+#define kWPANTUNDProperty_SiLabs_IPv6RIPEntries                "com.silabs:IPv6:RIPEntries"
+#define kWPANTUNDProperty_SiLabs_IPv6RIPEntriesValueMap        "com.silabs:IPv6:RIPEntries:ValueMap"
+#define kWPANTUNDProperty_SiLabs_MfgTestMode                   "com.silabs:Mfg:TestMode"
+#define kWPANTUNDProperty_SiLabs_MfgSYNOffset                  "com.silabs:Mfg:SYNOffset"
+#define kWPANTUNDProperty_SiLabs_MfgRepeatRandomTXInterval     "com.silabs:Mfg:RepeatRandomTXInterval"
+#define kWPANTUNDProperty_SiLabs_MfgRepeatRandomTXLen          "com.silabs:Mfg:RepeatRandomTXLen"
+#define kWPANTUNDProperty_SiLabs_MfgFirstPacketRSSI            "com.silabs:Mfg:FirstPacketRSSI"
+#define kWPANTUNDProperty_SiLabs_MfgFirstPacketLQI             "com.silabs:Mfg:FirstPacketLQI"
+#define kWPANTUNDProperty_SiLabs_CounterPrefix                 "com.silabs:Counter:"
+// Ignore this line --- end pe8qf1P4GCme
 
 #define kWPANTUNDProperty_NestLabs_NetworkAllowingJoin         "com.nestlabs.internal:Network:AllowingJoin"
 #define kWPANTUNDProperty_NestLabs_NetworkPassthruPort         "com.nestlabs.internal:Network:PassthruPort"
@@ -158,5 +174,18 @@
 #define kWPANTUNDStatAutoLogState_Long              "long"
 #define kWPANTUNDStatAutoLogState_Short             "short"
 
+// Ignore this line --- begin pe8qf1P4GCme
+//-----------------------------------------------------------------------------
+// Keys used in the ValueMap returned from getting "IPv6:RIPEntries:ValueMap"
+
+#define kWPANTUNDValueMapKey_Silabs_RIPEntry_EUI64                "com.silabs:IPv6:RIPEntry:EUI64"
+#define kWPANTUNDValueMapKey_Silabs_RIPEntry_RSSI                 "com.silabs:IPv6:RIPEntry:RSSI"
+#define kWPANTUNDValueMapKey_Silabs_RIPEntry_IncomingLinkQuality  "com.silabs:IPv6:RIPEntry:IncomingLinkQuality"
+#define kWPANTUNDValueMapKey_Silabs_RIPEntry_OutgoingLinkQuality  "com.silabs:IPv6:RIPEntry:OutgoingLinkQuality"
+#define kWPANTUNDValueMapKey_Silabs_RIPEntry_Age                  "com.silabs:IPv6:RIPEntry:Age"
+#define kWPANTUNDValueMapKey_Silabs_RIPEntry_NodeType             "com.silabs:IPv6:RIPEntry:NodeType"
+#define kWPANTUNDValueMapKey_Silabs_RIPEntry_MLESync              "com.silabs:IPv6:RIPEntry:MLESync"
+#define kWPANTUNDValueMapKey_Silabs_RIPEntry_RIPMetric            "com.silabs:IPv6:RIPEntry:RIPMetric"
+// Ignore this line --- end pe8qf1P4GCme
 
 #endif

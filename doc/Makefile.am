@@ -27,3 +27,9 @@ EXTRA_DIST =                 \
 	wpantund.1               \
 	wpanctl.1                \
 	$(NULL)
+
+# Ignore this line --- begin pe8qf1P4GCme
+EXTRA_DIST +=                \
+	spi-server.md            \
+	$(NULL)
+# Ignore this line --- end pe8qf1P4GCme

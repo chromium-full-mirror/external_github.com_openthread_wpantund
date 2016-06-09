@@ -33,6 +33,8 @@ dnl These are the list of plugins that have usage restrictions
 dnl associated with their license. These will be automatically
 dnl disabled by default and print out a warning when enabled.
 m4_define(RESTRICTED_USE_NCP_PLUGINS, [  dnl
+	silabs                               dnl ignore pe8qf1P4GCme
+	silabs_tmsp                          dnl ignore pe8qf1P4GCme
 ])
 
 dnl This is the list of plugins which are included with wpantund.
@@ -63,6 +65,7 @@ AC_CONFIG_FILES(Makefile doxygen.cfg src/Makefile doc/Makefile src/connman-plugi
 # Set up AC_CONFIG_FILES for all of the available plugins.
 AC_CONFIG_FILES(m4_normalize(m4_foreach_w(THIS_PLUGIN,AVAILABLE_NCP_PLUGINS,[src/ncp-[]THIS_PLUGIN/Makefile ])))
 
+AC_CONFIG_SUBDIRS(src/ncp-silabs/libsoot) dnl ignore pe8qf1P4GCme
 
 PLUGIN_SUBDIRS="[]m4_foreach_w(THIS_PLUGIN,AVAILABLE_NCP_PLUGINS,ncp-[]THIS_PLUGIN )"
 AC_SUBST(PLUGIN_SUBDIRS)
@@ -243,6 +246,14 @@ AM_CONDITIONAL(STATIC_LINK_NCP_PLUGIN,[test "x${enable_static_link_ncp_plugin}" 
 
 building_ncp_plugins=""
 
+dnl Ignore this line --- begin pe8qf1P4GCme
+NL_CONNECTIP_DROP([],[
+if test "x${enable_ncp_silabs_tmsp}" = "xyes"
+then
+	AC_MSG_ERROR([SiLabs TMSP NCP plugin requires a usable drop from SiLabs.])
+fi
+])
+dnl Ignore this line --- end pe8qf1P4GCme
 
 m4_foreach_w(THIS_PLUGIN,AVAILABLE_NCP_PLUGINS,[
 	if test "x${enable_ncp_[]m4_translit(THIS_PLUGIN,[-],[_])}" = "xyes"

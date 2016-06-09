@@ -14,6 +14,22 @@ few methods in `wpanctl` over to use the new API. We also need to add
 the DBusv1 API equivalent for the `GetInterfaces` method, which is
 currently only in the V0 API.
 
+#### begin pe8qf1P4GCme
+
+### Move NCP control logic out of `EmberNCPControlInstance` and into `EmberNCPInstance` ###
+
+Having the implementation of the NCP logic exist across two major
+classes is an anacronism from early development. We should consolidate
+the logic into EmberNCPInstance and have EmberNCPControlInstance be
+only a behavioral interface.
+
+### Move general-purpose NCP logic out of `EmberNCPControlInstance` and into `NCPInstanceBase` ###
+
+There is a lot of general NCP control logic which is in the class
+`EmberNCPControlInstance`. This logic can be shared across NCP types
+and should be implemented at a higher level.
+
+#### end pe8qf1P4GCme
 
 
 Security Tasks
