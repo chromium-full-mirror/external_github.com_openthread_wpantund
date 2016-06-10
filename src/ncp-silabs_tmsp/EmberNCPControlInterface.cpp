@@ -2215,7 +2215,7 @@ EmberNCPControlInterface::request_manual_address_from_ncp(const struct in6_addr&
 			addr, kForeverLifetime, kForeverLifetime, NilReturn());
 	} else {
 		// non-Router roles do the usual thing
-		request_address_from_ncp(addr, prefix_len, 0);
+		request_address_from_ncp(addr, 128, 0);
 	}
 }
 
