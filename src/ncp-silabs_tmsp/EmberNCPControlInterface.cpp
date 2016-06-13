@@ -1857,19 +1857,33 @@ EmberNCPControlInterface::handle_cb_address_configuration_change(va_list args)
 
 	std::string address_string;
 
-	mNCPInstance->update_global_address(address, valid_lifetime, preferred_lifetime, flags);
-
 	address_string = in6_addr_to_string(address);
 
-	syslog(
-		LOG_NOTICE,
-		"[NCP->] Address Config Change: \"%s\" valid:%d preferred:%d flags:%s(0x%02X)\n",
-		address_string.c_str(),
-		valid_lifetime,
-		preferred_lifetime,
-		address_flags_to_string(flags).c_str(),
-		flags
-	);
+
+	if (buffer_is_nonzero(address.s6_addr, 8)) {
+		syslog(
+			LOG_NOTICE,
+			"[NCP->] Address Config Change: \"%s\" valid:%d preferred:%d flags:%s(0x%02X)\n",
+			address_string.c_str(),
+			valid_lifetime,
+			preferred_lifetime,
+			address_flags_to_string(flags).c_str(),
+			flags
+		);
+
+		mNCPInstance->update_global_address(address, valid_lifetime, preferred_lifetime, flags);
+	} else {
+		syslog(
+			LOG_ERR,
+			"[NCP->] *INVALID* Address Config Change: \"%s\" valid:%d preferred:%d flags:%s(0x%02X)\n",
+			address_string.c_str(),
+			valid_lifetime,
+			preferred_lifetime,
+			address_flags_to_string(flags).c_str(),
+			flags
+		);
+
+	}
 }
 
 void
@@ -1935,31 +1949,28 @@ EmberNCPControlInterface::handle_cb_slaac_server_change(va_list args)
 	uint8_t prefix_len = va_arg_small(args, uint8_t);
 	bool available = va_arg_small(args, bool);
 	struct in6_addr address = {};
+	std::string address_string;
 
 	require_action(prefix_len <= 16, bail, mNCPInstance->change_ncp_state(FAULT));
-
 	memcpy(address.s6_addr, prefix, prefix_len);
 
-	{
-		char prefix_cstr[INET6_ADDRSTRLEN] = "::";
-		inet_ntop(
-			AF_INET6,
-			&address,
-			prefix_cstr,
-			sizeof(prefix_cstr)
-		);
+	address_string = in6_addr_to_string(address);
 
-		syslog(LOG_NOTICE, "[NCP->] SLAAC Server for prefix \"%s/%u\" is %savailable", prefix_cstr, prefix_len * 8, available?"":"NOT ");
+	if (buffer_is_nonzero(prefix, prefix_len)) {
+		syslog(LOG_NOTICE, "[NCP->] SLAAC Server for prefix \"%s/%u\" is %savailable", address_string.c_str(), prefix_len * 8, available?"":"NOT ");
+
+		if (available
+			&& (prefix_len == 8)
+			&& !mNCPInstance->lookup_address_for_prefix(NULL, address, 64)
+		) {
+			memcpy(address.s6_addr + 8, mNCPInstance->mNCPHardwareAddress, 8);
+			address.s6_addr[8] ^= 0x02; // flip the private-use bit on the hardware address.
+			request_address_from_ncp(address, 128, 0);
+		}
+	} else {
+		syslog(LOG_ERR, "[NCP->] *INVALID* SLAAC Server prefix \"%s/%u\" is %savailable", address_string.c_str(), prefix_len * 8, available?"":"NOT ");
 	}
 
-	if (available
-	    && (prefix_len == 8)
-		&& !mNCPInstance->lookup_address_for_prefix(NULL, address, 64)
-	) {
-		memcpy(address.s6_addr + 8, mNCPInstance->mNCPHardwareAddress, 8);
-		address.s6_addr[8] ^= 0x02; // flip the private-use bit on the hardware address.
-		request_address_from_ncp(address, 128, 0);
-	}
 
 bail:
 	return;
