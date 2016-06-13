@@ -3,12 +3,17 @@
 # Copyright (c) 2016 Nest Labs, Inc.
 # All rights reserved.
 #
-# This document is the property of Nest. It is considered
-# confidential and proprietary information.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# This document may not be reproduced or transmitted in any form,
-# in whole or in part, without the express written permission of
-# Nest.
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 
 PREV_PATH="`pwd`"
@@ -21,7 +26,7 @@ die() {
 set -x
 
 prep_ssh_key() {
-	openssl aes-256-cbc -K "${encrypted_0f1462f1026b_key}" -iv "${encrypted_0f1462f1026b_iv}" -in .travis/deploy.prv.enc -out .travis/deploy.prv -d &&
+	openssl aes-256-cbc -K "${encrypted_8f78c13496e8_key}" -iv "${encrypted_8f78c13496e8_iv}" -in .travis/deploy.prv.enc -out .travis/deploy.prv -d &&
 	chmod 600 .travis/deploy.prv &&
 	ssh-add .travis/deploy.prv &&
 	git config --global user.name "Travis CI" &&
@@ -29,6 +34,7 @@ prep_ssh_key() {
 }
 
 AUTOCONF_BRANCH="autoconf/$TRAVIS_BRANCH"
+
 
 if [ $TRAVIS_REPO_SLUG = "openthread/wpantund" ] \
 && [ $TRAVIS_BRANCH = "master" ]                 \
@@ -38,7 +44,7 @@ if [ $TRAVIS_REPO_SLUG = "openthread/wpantund" ] \
 && [ $BUILD_MAKEARGS = "distcheck" ]             \
 && prep_ssh_key                                  #
 then
-	git fetch --unshallow origin || die
+	git fetch --unshallow origin || git fetch origin || die
 
 	git fetch origin scripts:scripts ${AUTOCONF_BRANCH}:${AUTOCONF_BRANCH} ${TRAVIS_BRANCH}:${TRAVIS_BRANCH} || die
 
