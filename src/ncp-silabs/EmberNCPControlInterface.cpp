@@ -79,6 +79,8 @@ EmberNCPControlInterface::HelperTask::~HelperTask()
 void
 EmberNCPControlInterface::HelperTask::finish(int status, const boost::any& value)
 {
+	check_noerr(status);
+
 	if (!mCB.empty()) {
 		mCB(status, value);
 		mCB = CallbackWithStatusArg1();
@@ -1980,6 +1982,7 @@ EmberNCPControlInterface::refresh_addresses(void)
 	}
 
 	if (!buffer_is_nonzero(mNCPInstance->mNCPV6Prefix, 8) && !buffer_is_nonzero(mNCPInstance->mNCPV6LegacyPrefix, 8)) {
+		mNCPInstance->mPrimaryInterface->set_realm_local_address(NULL);
 		return;
 	}
 
@@ -1994,7 +1997,11 @@ EmberNCPControlInterface::refresh_addresses(void)
 			if (static_cast<bool>(mNCPInstance->mLegacyInterface)) {
 				mNCPInstance->mLegacyInterface->remove_address(&legacy_addr);
 			}
-			mNCPInstance->mPrimaryInterface->set_realm_local_address(&mNCPInstance->mNCPMeshLocalAddress);
+			if (buffer_is_nonzero(&mNCPInstance->mNCPMeshLocalAddress.s6_addr[8], 8)) {
+				mNCPInstance->mPrimaryInterface->set_realm_local_address(&mNCPInstance->mNCPMeshLocalAddress);
+			} else {
+				mNCPInstance->mPrimaryInterface->set_realm_local_address(NULL);
+			}
 			memset(mNCPInstance->mNCPV6LegacyPrefix, 0, sizeof(mNCPInstance->mNCPV6LegacyPrefix));
 		}
 	} else {
@@ -2004,6 +2011,8 @@ EmberNCPControlInterface::refresh_addresses(void)
 
 		if (buffer_is_nonzero(&mNCPInstance->mNCPMeshLocalAddress.s6_addr[8], 8)) {
 			mNCPInstance->mPrimaryInterface->set_realm_local_address(&mNCPInstance->mNCPMeshLocalAddress);
+		} else {
+			mNCPInstance->mPrimaryInterface->set_realm_local_address(NULL);
 		}
 	}
 }
@@ -2137,9 +2146,9 @@ EmberNCPControlInterface::handle_cb_state(const Data& data)
 		mNCPInstance->mCurrentNetworkInstance = new_network_instance;
 	}
 
-	refresh_addresses();
-
 	mNCPInstance->change_ncp_state(new_ncp_state);
+
+	refresh_addresses();
 
 	mTXPower = tx_power;
 

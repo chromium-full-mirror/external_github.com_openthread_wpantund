@@ -163,6 +163,8 @@ nl::wpantund::EmberNCPControlInterface::SendCommandTask::vprocess_event(int even
 
 on_error:
 
+	check_noerr(ret);
+
 	if (ret == kWPANTUNDStatus_Ok) {
 		ret = kWPANTUNDStatus_Failure;
 	}
