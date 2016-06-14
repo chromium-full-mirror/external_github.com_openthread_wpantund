@@ -203,6 +203,14 @@ EmberNCPInstance::handle_ncp_state_change(NCPState new_ncp_state, NCPState old_n
 	mControlInterface.handle_ncp_state_change(new_ncp_state, old_ncp_state);
 }
 
+void
+EmberNCPInstance::reinitialize_ncp(void)
+{
+	PT_INIT(&mControlInterface.mControlPT);
+	mControlInterface.mGotInitCallback = false;
+	NCPInstanceBase::reinitialize_ncp();
+}
+
 bool
 EmberNCPInstance::outbound_command_is_in_flight(void)
 {

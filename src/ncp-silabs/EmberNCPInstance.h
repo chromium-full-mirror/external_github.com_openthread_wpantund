@@ -91,6 +91,8 @@ public:
 public:
 	static bool setup_property_supported_by_class(const std::string& prop_name);
 
+	virtual void reinitialize_ncp(void);
+
 protected:
 
 	virtual void hard_reset_ncp(void);
