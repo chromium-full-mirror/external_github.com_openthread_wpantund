@@ -2203,19 +2203,18 @@ void
 EmberNCPControlInterface::request_address_from_ncp(const struct in6_addr& addr, int prefix_len, int flags)
 {
 	int len_in_bytes((prefix_len+7)/8);
+	std::string address_string(in6_addr_to_string(addr));
 
 	if ((flags & GA_DHCP) == GA_DHCP) {
-		start_send_command_task(
-			NilReturn(),
-			boost::bind(emberRequestDhcpAddress,addr.s6_addr, len_in_bytes),
-			EVENT_EMBER_CB_REQUEST_DHCP_ADDRESS_RETURN
-		);
+		syslog(LOG_NOTICE, "Requesting \"%s\" from NCP (DHCP)", address_string.c_str());
+
+		// Can't queue this in a helper because of the address would be out of scope
+		emberRequestDhcpAddress(addr.s6_addr, len_in_bytes);
 	} else {
-		start_send_command_task(
-			NilReturn(),
-			boost::bind(emberRequestSlaacAddress,addr.s6_addr, len_in_bytes),
-			EVENT_EMBER_CB_REQUEST_SLAAC_ADDRESS_RETURN
-		);
+		syslog(LOG_NOTICE, "Requesting \"%s\" from NCP (SLAAC)", address_string.c_str());
+
+		// Can't queue this in a helper because of the address would be out of scope
+		emberRequestSlaacAddress(addr.s6_addr, len_in_bytes);
 	}
 }
 
