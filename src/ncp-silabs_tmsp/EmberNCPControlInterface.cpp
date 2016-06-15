@@ -86,8 +86,6 @@ EmberNCPControlInterface::HelperTask::~HelperTask()
 void
 EmberNCPControlInterface::HelperTask::finish(int status, const boost::any& value)
 {
-	check_noerr(status);
-
 	if (!mCB.empty()) {
 		mCB(status, value);
 		mCB = CallbackWithStatusArg1();
