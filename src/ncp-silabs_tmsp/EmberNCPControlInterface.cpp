@@ -212,7 +212,7 @@ EmberNCPControlInterface::join(
 
 	if (!mNCPInstance->mEnabled) {
 		cb(kWPANTUNDStatus_InvalidWhenDisabled);
-		return;
+		goto bail;
 	}
 
 	if (options.count(kWPANTUNDProperty_NetworkName)) {
@@ -221,6 +221,11 @@ EmberNCPControlInterface::join(
 
 	if (options.count(kWPANTUNDProperty_NetworkNodeType)) {
 		node_type = string_to_node_type(any_to_string(options.at(kWPANTUNDProperty_NetworkNodeType)));
+
+		if (node_type == UNKNOWN) {
+			cb(kWPANTUNDStatus_InvalidArgument);
+			goto bail;
+		}
 	}
 
 	if (options.count(kWPANTUNDProperty_NCPChannel)) {
@@ -254,6 +259,9 @@ EmberNCPControlInterface::join(
 	));
 
 	END_TRY_FOR_CMD(cb);
+
+bail:
+	return;
 }
 
 void

@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 
 using namespace nl;
 using namespace wpantund;
@@ -246,6 +247,9 @@ nl::wpantund::string_to_node_type(const std::string& node_type_string)
 	} else if (strcaseequal(node_type_string.c_str(), kWPANTUNDNodeType_NestLurker) || (node_type_string == "6") || strcaseequal(node_type_string.c_str(), "lurker")) {
 		return LURKER;
 	}
+
+	syslog(LOG_WARNING, "Unknown node type \"%s\"", node_type_string.c_str());
+
 	return UNKNOWN;
 }
 
