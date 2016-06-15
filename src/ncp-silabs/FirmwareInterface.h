@@ -100,7 +100,7 @@ public:
 
 	class not_implemented : public std::runtime_error {
 	public:
-		explicit not_implemented(): runtime_error("not_implented") { };
+		explicit not_implemented(): runtime_error("not_implemented") { };
 	};
 
 	class unsupported_firmware_version : public std::runtime_error {

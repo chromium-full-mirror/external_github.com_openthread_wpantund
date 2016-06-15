@@ -86,8 +86,6 @@ EmberNCPControlInterface::HelperTask::~HelperTask()
 void
 EmberNCPControlInterface::HelperTask::finish(int status, const boost::any& value)
 {
-	check_noerr(status);
-
 	if (!mCB.empty()) {
 		mCB(status, value);
 		mCB = CallbackWithStatusArg1();
@@ -212,7 +210,7 @@ EmberNCPControlInterface::join(
 
 	if (!mNCPInstance->mEnabled) {
 		cb(kWPANTUNDStatus_InvalidWhenDisabled);
-		return;
+		goto bail;
 	}
 
 	if (options.count(kWPANTUNDProperty_NetworkName)) {
@@ -221,6 +219,11 @@ EmberNCPControlInterface::join(
 
 	if (options.count(kWPANTUNDProperty_NetworkNodeType)) {
 		node_type = string_to_node_type(any_to_string(options.at(kWPANTUNDProperty_NetworkNodeType)));
+
+		if (node_type == UNKNOWN) {
+			cb(kWPANTUNDStatus_InvalidArgument);
+			goto bail;
+		}
 	}
 
 	if (options.count(kWPANTUNDProperty_NCPChannel)) {
@@ -254,6 +257,9 @@ EmberNCPControlInterface::join(
 	));
 
 	END_TRY_FOR_CMD(cb);
+
+bail:
+	return;
 }
 
 void
@@ -2203,19 +2209,18 @@ void
 EmberNCPControlInterface::request_address_from_ncp(const struct in6_addr& addr, int prefix_len, int flags)
 {
 	int len_in_bytes((prefix_len+7)/8);
+	std::string address_string(in6_addr_to_string(addr));
 
 	if ((flags & GA_DHCP) == GA_DHCP) {
-		start_send_command_task(
-			NilReturn(),
-			boost::bind(emberRequestDhcpAddress,addr.s6_addr, len_in_bytes),
-			EVENT_EMBER_CB_REQUEST_DHCP_ADDRESS_RETURN
-		);
+		syslog(LOG_NOTICE, "Requesting \"%s\" from NCP (DHCP)", address_string.c_str());
+
+		// Can't queue this in a helper because of the address would be out of scope
+		emberRequestDhcpAddress(addr.s6_addr, len_in_bytes);
 	} else {
-		start_send_command_task(
-			NilReturn(),
-			boost::bind(emberRequestSlaacAddress,addr.s6_addr, len_in_bytes),
-			EVENT_EMBER_CB_REQUEST_SLAAC_ADDRESS_RETURN
-		);
+		syslog(LOG_NOTICE, "Requesting \"%s\" from NCP (SLAAC)", address_string.c_str());
+
+		// Can't queue this in a helper because of the address would be out of scope
+		emberRequestSlaacAddress(addr.s6_addr, len_in_bytes);
 	}
 }
 

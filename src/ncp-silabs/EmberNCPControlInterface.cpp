@@ -79,8 +79,6 @@ EmberNCPControlInterface::HelperTask::~HelperTask()
 void
 EmberNCPControlInterface::HelperTask::finish(int status, const boost::any& value)
 {
-	check_noerr(status);
-
 	if (!mCB.empty()) {
 		mCB(status, value);
 		mCB = CallbackWithStatusArg1();
@@ -1488,6 +1486,10 @@ EmberNCPControlInterface::get_ncp_instance()
 void
 EmberNCPControlInterface::handle_ncp_state_change(NCPState new_ncp_state, NCPState old_ncp_state)
 {
+	if (new_ncp_state == UPGRADING) {
+		goto bail;
+	}
+
 	if (!ncp_state_is_interface_up(old_ncp_state)
 		&& ncp_state_is_interface_up(new_ncp_state)
 	) {
@@ -1518,7 +1520,7 @@ EmberNCPControlInterface::handle_ncp_state_change(NCPState new_ncp_state, NCPSta
 				&& mNCPInstance->mAutoResume
 	) {
 		// We don't bother handling this transition if autoresume is on.
-		return;
+		goto bail;
 	}
 
 
@@ -1563,6 +1565,9 @@ EmberNCPControlInterface::handle_ncp_state_change(NCPState new_ncp_state, NCPSta
 	if (ncp_state_is_sleeping(old_ncp_state)) {
 		mIsWakingUpFromSleep = false;
 	}
+
+bail:
+	return;
 }
 
 void
@@ -2622,9 +2627,7 @@ EmberNCPControlInterface::is_ok_to_sleep() {
 void
 EmberNCPControlInterface::reinitialize_ncp(void)
 {
-	PT_INIT(&mControlPT);
-	mGotInitCallback = false;
-	mNCPInstance->change_ncp_state(UNINITIALIZED);
+	mNCPInstance->reinitialize_ncp();
 }
 
 int
@@ -3098,7 +3101,7 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 		status = mNCPInstance->get_upgrade_status();
 
 		if (status == 0) {
-			syslog(LOG_INFO, "Firmware Update Complete.");
+			syslog(LOG_NOTICE, "Firmware Update Complete.");
 		} else {
 			syslog(LOG_ERR, "Firmware Update Failed with Error %d", status);
 			mNCPInstance->mFailureCount++;
@@ -3150,7 +3153,7 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 		if (mNCPInstance->mFailureCount > mNCPInstance->mFailureThreshold) {
 			syslog(LOG_ALERT, "The NCP is misbehaving: Repeatedly unable to initialize NCP. Entering fault state.");
 			mNCPInstance->change_ncp_state(FAULT);
-			EmberNCPControlInterface::reset_callbacks(-1);
+			EmberNCPControlInterface::reset_callbacks(kWPANTUNDStatus_Canceled);
 			EH_EXIT();
 		}
 
