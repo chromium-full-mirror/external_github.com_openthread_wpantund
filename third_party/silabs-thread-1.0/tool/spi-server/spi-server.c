@@ -230,6 +230,7 @@ static void openNcpReset(const char *resetDevice)
 
 static void openNcpSpiSerial(const char *spiDevice, const char *intDevice)
 {
+  int status;
   ncpSpiFd = open(spiDevice, O_RDWR);
   if (ncpSpiFd < 0) {
     logError("Cannot open SPI device %s.", spiDevice);
@@ -253,16 +254,22 @@ static void openNcpSpiSerial(const char *spiDevice, const char *intDevice)
 
   // SPI mode
   int8u mode = NCP_SPI_MODE;
-  assert(ioctl(ncpSpiFd, SPI_IOC_WR_MODE, &mode) >= 0);
-  assert(ioctl(ncpSpiFd, SPI_IOC_RD_MODE, &mode) >= 0);
+  status = ioctl(ncpSpiFd, SPI_IOC_WR_MODE, &mode);
+  assert(status >= 0);
+  status = ioctl(ncpSpiFd, SPI_IOC_RD_MODE, &mode);
+  assert(status >= 0);
   logEvent(LOG_SPI_LOGIC, "SPI-Mode", (int8u*)&mode, sizeof(mode));
   int8u bits = NCP_SPI_BITS_PER_WORD;
-  assert(ioctl(ncpSpiFd, SPI_IOC_WR_BITS_PER_WORD, &bits) >= 0);
-  assert(ioctl(ncpSpiFd, SPI_IOC_RD_BITS_PER_WORD, &bits) >= 0);
+  status = ioctl(ncpSpiFd, SPI_IOC_WR_BITS_PER_WORD, &bits);
+  assert(status >= 0);
+  status = ioctl(ncpSpiFd, SPI_IOC_RD_BITS_PER_WORD, &bits);
+  assert(status >= 0);
   logEvent(LOG_SPI_LOGIC, "SPI-Bits", (int8u*)&bits, sizeof(bits));
   int32u speed = NCP_SPI_SPEED_HZ;
-  assert(ioctl(ncpSpiFd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) >= 0);
-  assert(ioctl(ncpSpiFd, SPI_IOC_RD_MAX_SPEED_HZ, &speed) >= 0);
+  status = ioctl(ncpSpiFd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
+  assert(status >= 0);
+  status = ioctl(ncpSpiFd, SPI_IOC_RD_MAX_SPEED_HZ, &speed);
+  assert(status >= 0);
   logEvent(LOG_SPI_LOGIC, "SPI-Speed", (int8u*)&speed, sizeof(speed));
 }
 
@@ -389,7 +396,8 @@ static int16s spiParseRsp(int8u *buf, int16s trLen, boolean *pAcked)
         }
 
         alarm(0); // Turn off our watchdog.
-        assert(write(clientOutFd, trBuf, rxLen) == rxLen);
+        int writeLen = write(clientOutFd, trBuf, rxLen);
+        assert(writeLen == rxLen);
         alarm(SPI_SERVER_WATCHDOG_TIMEOUT); // Turn our watchdog back on.
 
         if ((flags >= 0) && (flags & O_NONBLOCK)) {
@@ -464,7 +472,8 @@ static boolean spiTransact(int16s pktLen)
 
   // Perform the SPI transaction
   logEvent(LOG_SPI_TX, NULL, ncpTxBuffer, pktLen);
-  assert(ioctl(ncpSpiFd, SPI_IOC_MESSAGE(SPI_IOC_TRANSFERS), tr) >= 0);
+  int ret = ioctl(ncpSpiFd, SPI_IOC_MESSAGE(SPI_IOC_TRANSFERS), tr);
+  assert(ret >= 0);
   logEvent(LOG_SPI_RX, NULL, ncpRxBuffer, pktLen);
 
   // Turn off reset indication after 1st transaction
