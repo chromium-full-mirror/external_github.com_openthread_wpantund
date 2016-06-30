@@ -2232,7 +2232,10 @@ EmberNCPControlInterface::handle_cb_get_versions(const Data& data)
 		bail
 	);
 
-	mNCPInstance->set_ncp_version_string(version_string);
+	require(
+		mNCPInstance->set_ncp_version_string(version_string) == kWPANTUNDStatus_Ok,
+		bail
+	);
 
 	// The above command can change our state to the upgrading state.
 	// If this has occured, then we should skip the management version
