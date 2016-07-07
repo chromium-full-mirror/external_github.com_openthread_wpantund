@@ -1625,8 +1625,10 @@ EmberNCPControlInterface::handle_ncp_get_versions(const uint8_t *versionName,
 	if (management_version != mManagementVersion) {
 		mManagementVersion = management_version;
 
-		if (((EMBER_MANAGEMENT_VERSION >> 8) == 0x0D)
-		 && (version_patch < EMBER_PATCH_VERSION)
+		if ( ((EMBER_MANAGEMENT_VERSION >> 8) == 0x0D)
+		  && (version_major == EMBER_MAJOR_VERSION)
+		  && (version_minor == EMBER_MINOR_VERSION)
+		  && (version_patch < EMBER_PATCH_VERSION)
 		) {
 			// Work-around for the fact that SiLabs released
 			// several incompatible builds with the same major management
