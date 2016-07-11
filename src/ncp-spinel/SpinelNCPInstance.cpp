@@ -36,6 +36,8 @@
 #include "any-to.h"
 #include "spinel-extra.h"
 
+#define kWPANTUNDProperty_Spinel_CounterPrefix		"NCP:Counter:"
+
 using namespace nl;
 using namespace wpantund;
 
@@ -122,13 +124,43 @@ SpinelNCPInstance::get_supported_property_keys()const
 	properties.insert(kWPANTUNDProperty_NCPFrequency);
 	properties.insert(kWPANTUNDProperty_NCPRSSI);
 
-	properties.insert(kWPANTUNDProperty_ThreadLeaderAddress);
-	properties.insert(kWPANTUNDProperty_ThreadLeaderRouterID);
-	properties.insert(kWPANTUNDProperty_ThreadLeaderWeight);
-	properties.insert(kWPANTUNDProperty_ThreadLeaderLocalWeight);
-	properties.insert(kWPANTUNDProperty_ThreadNetworkData);
-	properties.insert(kWPANTUNDProperty_ThreadNetworkDataVersion);
-	properties.insert(kWPANTUNDProperty_ThreadStableNetworkDataVersion);
+	if (mCapabilities.count(SPINEL_CAP_NET_THREAD_1_0)) {
+		properties.insert(kWPANTUNDProperty_ThreadLeaderAddress);
+		properties.insert(kWPANTUNDProperty_ThreadLeaderRouterID);
+		properties.insert(kWPANTUNDProperty_ThreadLeaderWeight);
+		properties.insert(kWPANTUNDProperty_ThreadLeaderLocalWeight);
+		properties.insert(kWPANTUNDProperty_ThreadNetworkData);
+		properties.insert(kWPANTUNDProperty_ThreadNetworkDataVersion);
+		properties.insert(kWPANTUNDProperty_ThreadStableNetworkDataVersion);
+	}
+
+	if (mCapabilities.count(SPINEL_CAP_COUNTERS)) {
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_TOTAL");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_ACK_REQ");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_ACKED");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_NO_ACK_REQ");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_DATA");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_DATA_POLL");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_BEACON");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_BEACON_REQ");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_OTHER");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_RETRY");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_ERR_CCA");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_TOTAL");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_DATA");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_DATA_POLL");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_BEACON");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_BEACON_REQ");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_OTHER");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_FILT_WL");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_FILT_DA");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_ERR_EMPTY");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_ERR_UKWN_NBR");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_ERR_NVLD_SADDR");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_ERR_SECURITY");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_ERR_BAD_FCS");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_ERR_OTHER");
+	}
 
 	return properties;
 }
@@ -375,6 +407,65 @@ SpinelNCPInstance::get_property(
 			cb(kWPANTUNDStatus_InvalidForCurrentState, boost::any());
 		}
 
+	} else if (strncaseequal(key.c_str(), kWPANTUNDProperty_Spinel_CounterPrefix, sizeof(kWPANTUNDProperty_Spinel_CounterPrefix)-1)) {
+		int cntr_key = 0;
+
+#define CNTR_KEY(x)	\
+	else if (strcaseequal(key.c_str()+sizeof(kWPANTUNDProperty_Spinel_CounterPrefix)-1, # x)) { \
+		cntr_key = SPINEL_PROP_CNTR_ ## x; \
+	}
+
+		// Check to see if the counter name is an integer.
+		cntr_key = strtol(key.c_str()+sizeof(kWPANTUNDProperty_Spinel_CounterPrefix)-1, NULL, 0);
+
+		if ( (cntr_key > 0)
+		  && (cntr_key < SPINEL_PROP_CNTR__END-SPINEL_PROP_CNTR__BEGIN)
+		) {
+			// Counter name was a valid integer. Let's use it.
+			cntr_key += SPINEL_PROP_CNTR__BEGIN;
+		}
+
+		CNTR_KEY(TX_PKT_TOTAL)
+		CNTR_KEY(TX_PKT_ACK_REQ)
+		CNTR_KEY(TX_PKT_ACKED)
+		CNTR_KEY(TX_PKT_NO_ACK_REQ)
+		CNTR_KEY(TX_PKT_DATA)
+		CNTR_KEY(TX_PKT_DATA_POLL)
+		CNTR_KEY(TX_PKT_BEACON)
+		CNTR_KEY(TX_PKT_BEACON_REQ)
+		CNTR_KEY(TX_PKT_OTHER)
+		CNTR_KEY(TX_PKT_RETRY)
+		CNTR_KEY(TX_ERR_CCA)
+		CNTR_KEY(RX_PKT_TOTAL)
+		CNTR_KEY(RX_PKT_DATA)
+		CNTR_KEY(RX_PKT_DATA_POLL)
+		CNTR_KEY(RX_PKT_BEACON)
+		CNTR_KEY(RX_PKT_BEACON_REQ)
+		CNTR_KEY(RX_PKT_OTHER)
+		CNTR_KEY(RX_PKT_FILT_WL)
+		CNTR_KEY(RX_PKT_FILT_DA)
+		CNTR_KEY(RX_ERR_EMPTY)
+		CNTR_KEY(RX_ERR_UKWN_NBR)
+		CNTR_KEY(RX_ERR_NVLD_SADDR)
+		CNTR_KEY(RX_ERR_SECURITY)
+		CNTR_KEY(RX_ERR_BAD_FCS)
+		CNTR_KEY(RX_ERR_OTHER)
+
+#undef CNTR_KEY
+
+		if (cntr_key != 0) {
+			start_new_task(boost::shared_ptr<SpinelNCPTask>(
+				new SpinelNCPTaskSendCommand(
+					this,
+					cb,
+					SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_GET, cntr_key),
+					NCP_DEFAULT_COMMAND_RESPONSE_TIMEOUT,
+					SPINEL_DATATYPE_UINT8_S
+				)
+			));
+		} else {
+			NCPInstanceBase::get_property(key, cb);
+		}
 	} else {
 		NCPInstanceBase::get_property(key, cb);
 	}
@@ -614,7 +705,7 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 		}
 
 	} else if (key == SPINEL_PROP_IPV6_LL_ADDR) {
-		spinel_ipv6addr_t *addr = NULL;
+		struct in6_addr *addr = NULL;
 		spinel_datatype_unpack(value_data_ptr, value_data_len, "6", &addr);
 		if (addr) {
 			memcpy(mNCPLinkLocalAddress.s6_addr, addr->s6_addr, sizeof(mNCPLinkLocalAddress));
@@ -622,7 +713,7 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 		}
 
 	} else if (key == SPINEL_PROP_IPV6_ML_ADDR) {
-		spinel_ipv6addr_t *addr = NULL;
+		struct in6_addr *addr = NULL;
 		spinel_datatype_unpack(value_data_ptr, value_data_len, "6", &addr);
 		if (addr
 		 && buffer_is_nonzero(addr->s6_addr, 8)
@@ -634,7 +725,7 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 		}
 
 	} else if (key == SPINEL_PROP_IPV6_ML_PREFIX) {
-		spinel_ipv6addr_t *addr = NULL;
+		struct in6_addr *addr = NULL;
 		spinel_datatype_unpack(value_data_ptr, value_data_len, "6", &addr);
 		if (addr
 		 && buffer_is_nonzero(addr->s6_addr, 8)
@@ -804,7 +895,7 @@ void
 SpinelNCPInstance::handle_ncp_spinel_value_inserted(spinel_prop_key_t key, const uint8_t* value_data_ptr, spinel_size_t value_data_len)
 {
 	if (key == SPINEL_PROP_IPV6_ADDRESS_TABLE) {
-			spinel_ipv6addr_t *addr = NULL;
+			struct in6_addr *addr = NULL;
 			uint8_t prefix_len = 0;
 			uint32_t valid_lifetime = 0xFFFFFFFF;
 			uint32_t preferred_lifetime = 0xFFFFFFFF;
