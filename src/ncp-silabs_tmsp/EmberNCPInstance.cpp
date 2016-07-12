@@ -274,6 +274,11 @@ EmberNCPInstance::ncp_to_driver_pump()
 	ssize_t bytes_read;
 	uint16_t index;
 
+	if (ncp_state_is_detached_from_ncp(get_ncp_state())) {
+		// Do not do anything in this function if we are detached.
+		return 0;
+	}
+
 	// Automatically detect socket resets and behave accordingly.
 	if (mSerialAdapter->did_reset()) {
 		syslog(LOG_NOTICE, "[-NCP-]: Socket Reset");
@@ -504,6 +509,11 @@ EmberNCPInstance::driver_to_ncp_pump()
 {
 	struct nlpt*const pt = &mDriverToNCPPumpPT;
 	ncp_frame_s *outbound_frame = (struct ncp_frame_s *)mOutboundBuffer;
+
+	if (ncp_state_is_detached_from_ncp(get_ncp_state())) {
+		// Do not do anything in this function if we are detached.
+		return 0;
+	}
 
 	NLPT_BEGIN(pt);
 
