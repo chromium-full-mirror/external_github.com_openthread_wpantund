@@ -240,6 +240,7 @@ EmberNCPControlInterface::vprocess_mfg(int event, va_list args)
 	uint8_t random_packet[257];
 	uint8_t i = 0;
 	static uint32_t seed = 0;
+	static cms_t timer;
 
 	// START OF PROTOTHREAD ===================================================
 	EH_BEGIN_SUB(&mSubPT);
@@ -254,6 +255,12 @@ EmberNCPControlInterface::vprocess_mfg(int event, va_list args)
 		EH_YIELD();
 
 		while (mMfgTestMode && (mMfgRepeatRandomTXLen > 0)) {
+
+			timer = time_ms();
+
+			if (mMfgRepeatRandomTXLen >= sizeof(random_packet)) {
+			    mMfgRepeatRandomTXLen = sizeof(random_packet) - 1;
+			}
 			random_packet[0] = mMfgRepeatRandomTXLen;
 
 			// Generate the random data for the packet.
@@ -287,9 +294,13 @@ EmberNCPControlInterface::vprocess_mfg(int event, va_list args)
 				on_error
 			);
 
-			EH_SLEEP_FOR(
-				(float)mMfgRepeatRandomTXInterval / MSEC_PER_SEC
-			);
+			timer = time_ms() - timer;
+
+			if (timer < mMfgRepeatRandomTXInterval) {
+				EH_SLEEP_FOR(
+					(mMfgRepeatRandomTXInterval - timer) / (float)MSEC_PER_SEC
+				);
+			}
 		}
 	}
 

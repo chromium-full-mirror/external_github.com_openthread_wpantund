@@ -1386,9 +1386,6 @@ EmberNCPControlInterface::set_property(
 				mMfgTestMode = bool_value;
 
 				if (mMfgTestMode) {
-					// Turn on verbose debugging.
-					setlogmask(setlogmask(0)|0xFF);
-
 					StartNewTask(boost::shared_ptr<HelperTask>(
 						new SendCommandTask(
 							this,

@@ -1358,9 +1358,6 @@ EmberNCPControlInterface::set_property(
 				mMfgTestMode = bool_value;
 
 				if (mMfgTestMode) {
-					// Turn on verbose debugging.
-					setlogmask(setlogmask(0)|0xFF);
-
 					mfg_start(cb);
 				} else {
 					mfg_finish(boost::bind(cb,_1));
