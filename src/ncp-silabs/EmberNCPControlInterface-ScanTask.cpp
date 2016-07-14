@@ -36,8 +36,14 @@ using namespace nl;
 using namespace nl::wpantund;
 
 
-nl::wpantund::EmberNCPControlInterface::ScanTask::ScanTask(EmberNCPControlInterface* interface, CallbackWithStatusArg1 cb, int period, uint32_t channel_mask):
-		HelperTask(interface,cb), mPeriod(period), mChannelMask(channel_mask)
+nl::wpantund::EmberNCPControlInterface::ScanTask::ScanTask(
+	EmberNCPControlInterface* interface,
+	CallbackWithStatusArg1 cb,
+	ScanType scan_type,
+	int period,
+	uint32_t channel_mask
+):
+	HelperTask(interface,cb), mScanType(scan_type), mPeriod(period), mChannelMask(channel_mask)
 { }
 
 void
@@ -57,7 +63,6 @@ nl::wpantund::EmberNCPControlInterface::ScanTask::vprocess_event(int event, va_l
 	int ret = 0;
 
 	EH_BEGIN();
-
 
 	if (!mInterface->mNCPInstance->mEnabled) {
 		ret = kWPANTUNDStatus_InvalidWhenDisabled;
@@ -94,19 +99,32 @@ nl::wpantund::EmberNCPControlInterface::ScanTask::vprocess_event(int event, va_l
 		mPeriod = 3;
 	}
 
-	CONTROL_REQUIRE_SENT_WITHIN(
-		NCP_DEFAULT_COMMAND_RESPONSE_TIMEOUT,
-		mInterface->mFirmwareInterface->CMD_Scan(mPeriod, mChannelMask),
-		on_error
-	);
+	if (mScanType == kScanTypeNetScan)
+	{
+		CONTROL_REQUIRE_SENT_WITHIN(
+			NCP_DEFAULT_COMMAND_RESPONSE_TIMEOUT,
+			mInterface->mFirmwareInterface->CMD_Scan(mPeriod, mChannelMask),
+			on_error
+		);
+
+	} else { // Energy scan
+
+		CONTROL_REQUIRE_SENT_WITHIN(
+			NCP_DEFAULT_COMMAND_RESPONSE_TIMEOUT,
+			mInterface->mFirmwareInterface->CMD_EnergyScan(mPeriod, mChannelMask),
+			on_error
+		);
+	}
 
 	do {
 		EH_REQUIRE_WITHIN(
 			30,
 			event == mInterface->mFirmwareInterface->GetIDFor_CBActiveScan()
+			|| event == mInterface->mFirmwareInterface->GetIDFor_CBEnergyScan()
 			|| event == mInterface->mFirmwareInterface->GetIDFor_CBScanReturn(),
 			on_error
 		);
+
 		if (event == mInterface->mFirmwareInterface->GetIDFor_CBActiveScan()) {
 			WPAN::NetworkInstance network;
 			ret = mInterface->mFirmwareInterface->Parse_CBActiveScan(
@@ -123,7 +141,34 @@ nl::wpantund::EmberNCPControlInterface::ScanTask::vprocess_event(int event, va_l
 			mInterface->mOnNetScanBeacon(network);
 
 			// Change the event type to 'IDLE' so that we
-			// don't try to process this event once than once.
+			// don't try to process this event more than once.
+			event = EVENT_IDLE;
+
+		} else if (event == mInterface->mFirmwareInterface->GetIDFor_CBEnergyScan()) {
+
+			uint8_t channel;
+			int8_t maxRssi;
+			EnergyScanResultEntry scan_result;
+
+			ret = mInterface->mFirmwareInterface->Parse_CBEnergyScan(
+				va_arg_as_Data(args),
+				&channel,
+				&maxRssi
+			);
+
+			if (ret) {
+				int errno_value = -ret;
+				syslog(LOG_ERR, "FAILED TO UNPACK ARGUMENTS (errno: %d, %s)", errno_value, strerror(errno_value));
+				goto on_error;
+			}
+
+			scan_result.mChannel = channel;
+			scan_result.mMaxRssi = maxRssi;
+
+			mInterface->mOnEnergyScanResult(scan_result);
+
+			// Change the event type to 'IDLE' so that we
+			// don't try to process this event more than once.
 			event = EVENT_IDLE;
 
 		} else if (event == mInterface->mFirmwareInterface->GetIDFor_CBScanReturn()) {

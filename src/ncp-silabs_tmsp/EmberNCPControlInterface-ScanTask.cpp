@@ -36,8 +36,17 @@ using namespace nl;
 using namespace nl::wpantund;
 
 
-nl::wpantund::EmberNCPControlInterface::ScanTask::ScanTask(EmberNCPControlInterface* interface, CallbackWithStatusArg1 cb, int period, uint32_t channel_mask):
-		HelperTask(interface,cb), mPeriod(period), mChannelMask(channel_mask)
+nl::wpantund::EmberNCPControlInterface::ScanTask::ScanTask(
+	EmberNCPControlInterface* interface,
+	CallbackWithStatusArg1 cb,
+	ScanType scan_type,
+	int period,
+	uint32_t channel_mask
+):
+	HelperTask(interface,cb),
+	mScanType(scan_type),
+	mPeriod(period),
+	mChannelMask(channel_mask)
 { }
 
 void
@@ -58,7 +67,6 @@ nl::wpantund::EmberNCPControlInterface::ScanTask::vprocess_event(int event, va_l
 	const EmberMacBeaconData *beaconData;
 
 	EH_BEGIN();
-
 
 	if (!mInterface->mNCPInstance->mEnabled) {
 		ret = kWPANTUNDStatus_InvalidWhenDisabled;
@@ -90,12 +98,15 @@ nl::wpantund::EmberNCPControlInterface::ScanTask::vprocess_event(int event, va_l
 	// to execute.
 	EH_WAIT_UNTIL(EVENT_STARTING_TASK != event);
 
-
 	if (mPeriod == 0) {
 		mPeriod = 3;
 	}
 
-	emberStartScan(EMBER_ACTIVE_SCAN, mChannelMask, mPeriod);
+	emberStartScan(
+		(mScanType == kScanTypeNetScan) ? EMBER_ACTIVE_SCAN : EMBER_ENERGY_SCAN,
+		mChannelMask,
+		mPeriod
+	);
 
 	CONTROL_REQUIRE_FLUSH_WITHIN(
 		NCP_DEFAULT_COMMAND_RESPONSE_TIMEOUT,
@@ -106,9 +117,11 @@ nl::wpantund::EmberNCPControlInterface::ScanTask::vprocess_event(int event, va_l
 		EH_REQUIRE_WITHIN(
 			30,
 			event == EVENT_EMBER_CB_ACTIVE_SCAN_HANDLER
-			|| event == EVENT_EMBER_CB_SCAN_RETURN,
+			|| event == EVENT_EMBER_CB_SCAN_RETURN
+			|| event == EVENT_EMBER_CB_ENERGY_SCAN_HANDLER,
 			on_error
 		);
+
 		if (event == EVENT_EMBER_CB_ACTIVE_SCAN_HANDLER) {
 			char network_name[17] = {};
 
@@ -135,6 +148,19 @@ nl::wpantund::EmberNCPControlInterface::ScanTask::vprocess_event(int event, va_l
 			}
 
 			mInterface->mOnNetScanBeacon(network);
+
+			// Change the event type to 'IDLE' so that we
+			// don't try to process this event once than once.
+			event = EVENT_IDLE;
+
+		} else if (event == EVENT_EMBER_CB_ENERGY_SCAN_HANDLER) {
+
+			EnergyScanResultEntry scan_result;
+
+			scan_result.mChannel = va_arg_small(args, uint8_t);
+			scan_result.mMaxRssi = va_arg_small(args, int8_t);
+
+			mInterface->mOnEnergyScanResult(scan_result);
 
 			// Change the event type to 'IDLE' so that we
 			// don't try to process this event once than once.

@@ -236,6 +236,14 @@ public:
 	) = 0;
 	virtual int GetIDFor_CBActiveScan() = 0;
 
+	virtual Data CMD_EnergyScan(int period, uint32_t channel_mask = kAllChannelsMask) = 0;
+
+	virtual int Parse_CBEnergyScan(
+		const Data& data,
+		uint8_t *channel,
+		int8_t *maxRssi
+	) = 0;
+	virtual int GetIDFor_CBEnergyScan() = 0;
 
 public:
 	// ========================================================================

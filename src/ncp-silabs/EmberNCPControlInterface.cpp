@@ -772,7 +772,8 @@ bail:
 }
 
 void
-EmberNCPControlInterface::netscan_start(
+EmberNCPControlInterface::scan_start(
+    ScanType scan_type,
     const ValueMap& options,
     CallbackWithStatus cb
 ) {
@@ -788,6 +789,7 @@ EmberNCPControlInterface::netscan_start(
 		new ScanTask(
 			this,
 			boost::bind(cb,_1),
+			scan_type,
 			period,
 			channel_mask
 		)
@@ -796,7 +798,7 @@ EmberNCPControlInterface::netscan_start(
 }
 
 void
-EmberNCPControlInterface::netscan_stop(CallbackWithStatus cb)
+EmberNCPControlInterface::scan_stop(CallbackWithStatus cb)
 {
 	int ret = 0;
 
@@ -811,6 +813,30 @@ EmberNCPControlInterface::netscan_stop(CallbackWithStatus cb)
 	END_TRY_FOR_CMD(cb);
 
 	cb(ret);
+}
+
+void
+EmberNCPControlInterface::netscan_start(const ValueMap& options, CallbackWithStatus cb)
+{
+	scan_start(kScanTypeNetScan, options, cb);
+}
+
+void
+EmberNCPControlInterface::netscan_stop(CallbackWithStatus cb)
+{
+	scan_stop(cb);
+}
+
+void
+EmberNCPControlInterface::energyscan_start(const ValueMap& options, CallbackWithStatus cb)
+{
+	scan_start(kScanTypeEnergyScan, options, cb);
+}
+
+void
+EmberNCPControlInterface::energyscan_stop(CallbackWithStatus cb)
+{
+	scan_stop(cb);
 }
 
 struct GetCounterHelper {
