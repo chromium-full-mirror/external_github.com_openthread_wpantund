@@ -138,7 +138,7 @@ EmberNCPControlInterface::EmberNCPControlInterface() :
 	mNCPInstance = NULL;
 	mManagementVersion = 0;
 	mNetWakeState = 0;
-	mDriverState = INITIALIZING;
+	mDriverState = INITIALIZING_WAITING_FOR_RESET;
 	mLastCommandSent = 0;
 	mGotInitCallback = false;
 
@@ -3082,7 +3082,7 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 
 	if (event == mFirmwareInterface->GetIDFor_CBReset()) {
 		if (mDriverState == INITIALIZING) {
-			syslog(LOG_ERR, "Unexpected reset durring NCP initialization.");
+			syslog(LOG_ERR, "Unexpected reset during NCP initialization.");
 			mNCPInstance->mFailureCount++;
 			PT_INIT(&mSubPT);
 		} else if (mDriverState == INITIALIZING_WAITING_FOR_RESET) {
