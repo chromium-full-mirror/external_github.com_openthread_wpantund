@@ -30,7 +30,13 @@ namespace wpantund {
 class nl::wpantund::EmberNCPControlInterface::ScanTask : public HelperTask
 {
 public:
-	ScanTask(EmberNCPControlInterface* interface, CallbackWithStatusArg1 cb, int period, uint32_t channel_mask);
+	ScanTask(
+		EmberNCPControlInterface* interface,
+		CallbackWithStatusArg1 cb,
+		ScanType scan_type,
+		int period,
+		uint32_t channel_mask
+	);
 	virtual ~ScanTask() { finish(kWPANTUNDStatus_Canceled); }
 
 	virtual void finish(int status, const boost::any& value = boost::any());
@@ -38,6 +44,7 @@ public:
 	virtual int vprocess_event(int event, va_list args);
 
 private:
+	ScanType mScanType;
 	int mPeriod;
 	uint32_t mChannelMask;
 };

@@ -48,6 +48,7 @@ public:
 	virtual Data CMD_Leave();
 	virtual Data CMD_Resume();
 	virtual Data CMD_Scan(int period, uint32_t channel_mask = kAllChannelsMask);
+	virtual Data CMD_EnergyScan(int period, uint32_t channel_mask = kAllChannelsMask);
 	virtual Data CMD_StopScan();
 	virtual Data CMD_PermitJoin(int seconds, bool network_wide);
 	virtual Data CMD_SleepNoTimer();
@@ -108,6 +109,8 @@ public:
 		WPAN::NetworkInstance* network_instance
 	);
 
+	virtual int Parse_CBEnergyScan(const Data& data, uint8_t *channel, int8_t *maxRssi);
+
 	virtual int GetIDFor_CBSetNetworkKeys();
 	virtual int Parse_CBSetNetworkKeys(const Data& data, uint32_t *key_index, Data* key);
 	virtual bool Workaround_WaitForCBListenAfterSleepNoTimer(void);
@@ -118,6 +121,7 @@ public:
 	virtual int GetIDFor_CBAssertInfo();
 	virtual int GetIDFor_CBCounters();
 	virtual int GetIDFor_CBEcho();
+	virtual int GetIDFor_CBEnergyScan();
 	virtual int GetIDFor_CBForm();
 	virtual int GetIDFor_CBGetCCAThreshold();
 	virtual int GetIDFor_CBGetChannelCalToken();

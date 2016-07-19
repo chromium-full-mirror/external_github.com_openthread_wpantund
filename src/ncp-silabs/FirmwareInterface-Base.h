@@ -77,6 +77,7 @@ public:
 	virtual Data CMD_Leave();
 	virtual Data CMD_Resume();
 	virtual Data CMD_Scan(int period, uint32_t channel_mask = kAllChannelsMask);
+	virtual Data CMD_EnergyScan(int period, uint32_t channel_mask = kAllChannelsMask);
 	virtual Data CMD_StopScan();
 	virtual Data CMD_PermitJoin(int seconds, bool network_wide);
 	virtual Data CMD_SleepNoTimer();
@@ -102,6 +103,12 @@ public:
 	virtual int Parse_CBActiveScan(
 		const Data& data,
 		WPAN::NetworkInstance* network_instance
+	);
+
+	virtual int Parse_CBEnergyScan(
+		const Data& data,
+		uint8_t *channel,
+		int8_t *maxRssi
 	);
 
 	// MFG Commands
@@ -188,6 +195,7 @@ public:
 	virtual int GetIDFor_CBCounters();
 	virtual int GetIDFor_CBDataPoll();
 	virtual int GetIDFor_CBEcho();
+	virtual int GetIDFor_CBEnergyScan();
 	virtual int GetIDFor_CBForm();
 	virtual int GetIDFor_CBGetCCAThreshold();
 	virtual int GetIDFor_CBGetChannelCalToken();

@@ -406,6 +406,17 @@ FirmwareInterface_1_1_3::CMD_Scan(int period, uint32_t channel_mask)
 }
 
 Data
+FirmwareInterface_1_1_3::CMD_EnergyScan(int period, uint32_t channel_mask)
+{
+	return PackArguments(
+		EMBER_PACKED_UINT16 "wu",
+		EMBER_ENERGY_SCAN_COMMAND_IDENTIFIER,
+		channel_mask,
+		period
+	);
+}
+
+Data
 FirmwareInterface_1_1_3::CMD_StopScan()
 {
 	return PackArguments(
@@ -784,6 +795,7 @@ int FirmwareInterface_1_1_3::GetIDFor_CBActiveScan() { return CB_ACTIVE_SCAN_COM
 int FirmwareInterface_1_1_3::GetIDFor_CBAssertInfo() { return CB_ASSERT_INFO_COMMAND_IDENTIFIER; }
 int FirmwareInterface_1_1_3::GetIDFor_CBCounters() { return CB_COUNTERS_COMMAND_IDENTIFIER; }
 int FirmwareInterface_1_1_3::GetIDFor_CBEcho() { return CB_ECHO_COMMAND_IDENTIFIER; }
+int FirmwareInterface_1_1_3::GetIDFor_CBEnergyScan() { return CB_ENERGY_SCAN_COMMAND_IDENTIFIER; }
 int FirmwareInterface_1_1_3::GetIDFor_CBForm() { return CB_FORM_COMMAND_IDENTIFIER; }
 int FirmwareInterface_1_1_3::GetIDFor_CBGetCCAThreshold() { return CB_GET_CCA_THRESHOLD_COMMAND_IDENTIFIER; }
 int FirmwareInterface_1_1_3::GetIDFor_CBGetChannelCalToken() { return CB_GET_CHANNEL_CAL_TOKEN_COMMAND_IDENTIFIER; }
@@ -1083,6 +1095,25 @@ FirmwareInterface_1_1_3::Parse_CBActiveScan(
 	if (network_instance) {
 		*network_instance = network;
 	}
+	return 0;
+}
+
+int
+FirmwareInterface_1_1_3::Parse_CBEnergyScan(
+	const Data& data,
+	uint8_t *channel,
+	int8_t *maxRssi
+) {
+	if (EmberCommands::UnpackArguments(
+		data,
+		EMBER_PACKED_UINT16 "us",
+		NULL,    // Skip command identifier
+		channel,
+		maxRssi
+	) == -1) {
+		return -errno;
+	}
+
 	return 0;
 }
 

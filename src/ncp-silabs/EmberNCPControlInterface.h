@@ -66,6 +66,12 @@ public:
 		NORMAL_OPERATION
 	};
 
+	enum ScanType
+	{
+		kScanTypeNetScan,
+		kScanTypeEnergyScan,
+	};
+
 public:
 
 	EmberNCPControlInterface();
@@ -87,6 +93,9 @@ public:
 
 	virtual void netscan_start(const ValueMap& options, CallbackWithStatus cb = NilReturn());
 	virtual void netscan_stop(CallbackWithStatus cb = NilReturn());
+
+	virtual void energyscan_start(const ValueMap& options, CallbackWithStatus cb = NilReturn());
+	virtual void energyscan_stop(CallbackWithStatus cb = NilReturn());
 
 	virtual void begin_net_wake(uint8_t data, uint32_t flags, CallbackWithStatus cb = NilReturn());
 	virtual void reset(CallbackWithStatus cb = NilReturn());
@@ -201,6 +210,9 @@ protected:
 
 	void config_gateway_address(uint8_t flags, const struct in6_addr& addr, uint32_t preferredLifetime, uint32_t validLifetime, CallbackWithStatus cb);
 	void config_external_route(uint8_t flags, const uint8_t *route_prefix, int prefix_len, uint8_t domain_id, CallbackWithStatus cb);
+
+	void scan_start(ScanType scan_type, const ValueMap& options, CallbackWithStatus cb);
+	void scan_stop(CallbackWithStatus cb);
 
 protected: // Hooks from NCPInstance
 	void handle_ncp_frame(uint8_t type, const uint8_t* command, size_t length);

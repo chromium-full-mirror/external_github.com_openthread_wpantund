@@ -564,6 +564,12 @@ FirmwareInterface_Base::CMD_Scan(int period, uint32_t channel_mask)
 }
 
 Data
+FirmwareInterface_Base::CMD_EnergyScan(int period, uint32_t channel_mask)
+{
+	throw not_implemented();
+}
+
+Data
 FirmwareInterface_Base::CMD_StopScan()
 {
 	throw not_implemented();
@@ -717,6 +723,15 @@ int
 FirmwareInterface_Base::Parse_CBActiveScan(
 	const Data& data,
 	WPAN::NetworkInstance* network_instance
+) {
+	throw not_implemented();
+}
+
+int
+FirmwareInterface_Base::Parse_CBEnergyScan(
+	const Data& data,
+	uint8_t *channel,
+	int8_t *maxRssi
 ) {
 	throw not_implemented();
 }
@@ -929,6 +944,7 @@ int FirmwareInterface_Base::GetIDFor_CBConfigGatewayReturn() { return 0; }
 int FirmwareInterface_Base::GetIDFor_CBCounters() { return 0; }
 int FirmwareInterface_Base::GetIDFor_CBDataPoll() { return 0; }
 int FirmwareInterface_Base::GetIDFor_CBEcho() { return 0; }
+int FirmwareInterface_Base::GetIDFor_CBEnergyScan() { return 0; }
 int FirmwareInterface_Base::GetIDFor_CBForm() { return 0; }
 int FirmwareInterface_Base::GetIDFor_CBGetCCAThreshold() { return 0; }
 int FirmwareInterface_Base::GetIDFor_CBGetChannelCalToken() { return 0; }
