@@ -3171,11 +3171,15 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 	} else {
 		// Backoff delay. Normaly zero. May increase if we are in a reset loop.
 		EH_SLEEP_FOR(mNCPInstance->mRunawayResetBackoffManager.delay_for_unexpected_reset());
+
+		// Wait a little bit and see if we get a reset.
+		EH_WAIT_UNTIL_WITH_TIMEOUT(
+			0.5,
+			mDriverState != INITIALIZING_WAITING_FOR_RESET
+		);
 	}
 
 	do {
-		mDriverState = INITIALIZING_WAITING_FOR_RESET;
-
 		if (mNCPInstance->mFailureCount > mNCPInstance->mFailureThreshold) {
 			syslog(LOG_ALERT, "The NCP is misbehaving: Repeatedly unable to initialize NCP. Entering fault state.");
 			mNCPInstance->change_ncp_state(FAULT);
@@ -3204,7 +3208,10 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 					IS_EVENT_FROM_NCP(event)
 				);
 			} while(!eh_did_timeout);
-		} else if (mNCPInstance->mFailureCount > 0) {
+
+		} else if ( (mDriverState == INITIALIZING_WAITING_FOR_RESET)
+		         && (mNCPInstance->mFailureCount > 0)
+		) {
 			syslog(LOG_ERR, "Resetting and trying again... (retry %d)", mNCPInstance->mFailureCount);
 
 			mNCPInstance->change_ncp_state(UNINITIALIZED);
