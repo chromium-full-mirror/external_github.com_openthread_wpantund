@@ -2837,11 +2837,15 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 	} else {
 		// Backoff delay. Normaly zero. May increase if we are in a reset loop.
 		EH_SLEEP_FOR(mNCPInstance->mRunawayResetBackoffManager.delay_for_unexpected_reset());
+
+		// Wait a little bit and see if we get a reset.
+		EH_WAIT_UNTIL_WITH_TIMEOUT(
+			0.5,
+			mDriverState != INITIALIZING_WAITING_FOR_RESET
+		);
 	}
 
 	do {
-		mDriverState = INITIALIZING_WAITING_FOR_RESET;
-
 		if (mNCPInstance->mFailureCount > mNCPInstance->mFailureThreshold) {
 			syslog(LOG_ALERT, "The NCP is misbehaving: Repeatedly unable to initialize NCP. Entering fault state.");
 			mNCPInstance->change_ncp_state(FAULT);
@@ -2849,13 +2853,31 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 			EH_EXIT();
 		}
 
-		if (mNCPInstance->mAutoUpdateFirmware && (mNCPInstance->mFailureCount > (mNCPInstance->mFailureThreshold - 1)) && mNCPInstance->can_upgrade_firmware()) {
+		if ( mNCPInstance->mAutoUpdateFirmware
+		  && (mNCPInstance->mFailureCount > mNCPInstance->mFailureThreshold - 1)
+		  && mNCPInstance->can_upgrade_firmware()
+		) {
 			syslog(LOG_ALERT, "The NCP is misbehaving: Attempting a firmware update");
 			mNCPInstance->upgrade_firmware();
 			EH_RESTART();
 		}
 
-		if ((event != EVENT_EMBER_CB_RESET_MICRO_HANDLER) && (mNCPInstance->mFailureCount > 0)) {
+		if (event == EVENT_EMBER_CB_RESET_MICRO_HANDLER) {
+			// Wait until we haven't received a packet
+			// from the NCP for a full second, so that
+			// we make sure we have flushed out all
+			// of the inbound NCP traffic.
+			do {
+				event = EVENT_IDLE;
+				EH_WAIT_UNTIL_WITH_TIMEOUT(
+					1, /* seconds */
+					IS_EVENT_FROM_EMBER(event) || IS_EVENT_FROM_NCP(event)
+				);
+			} while(!eh_did_timeout);
+
+		} else if ( (mDriverState == INITIALIZING_WAITING_FOR_RESET)
+		         && (mNCPInstance->mFailureCount > 0)
+		) {
 			syslog(LOG_ERR, "Resetting and trying again... (retry %d)", mNCPInstance->mFailureCount);
 
 			mNCPInstance->change_ncp_state(UNINITIALIZED);
@@ -2865,6 +2887,18 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 			mNetworkKeyIndex = 0;
 
 			reset_callbacks(kWPANTUNDStatus_Canceled);
+
+			// Wait until we haven't received a packet
+			// from the NCP for a full second, so that
+			// we make sure we have flushed out all
+			// of the inbound NCP traffic.
+			do {
+				event = EVENT_IDLE;
+				EH_WAIT_UNTIL_WITH_TIMEOUT(
+					1, /* seconds */
+					IS_EVENT_FROM_EMBER(event) || IS_EVENT_FROM_NCP(event)
+				);
+			} while(!eh_did_timeout);
 
 			// Do a hard reset only on even attempts.
 			if ((mNCPInstance->mFailureCount & 1) == 0) {
