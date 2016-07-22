@@ -244,6 +244,7 @@ void emberEcho(const uint8_t *data,
 }
 
 void emberConfigureGateway(uint8_t borderRouterFlags,
+                           bool isStable,
                            const uint8_t *prefix,
                            uint8_t prefixLength,
                            uint8_t domainId,
@@ -251,8 +252,9 @@ void emberConfigureGateway(uint8_t borderRouterFlags,
                            uint32_t validLifetime)
 {
   emSendBinaryManagementCommand(EMBER_CONFIGURE_GATEWAY_COMMAND_IDENTIFIER,
-                                "ubuww",
+                                "uubuww",
                                 borderRouterFlags,
+                                isStable,
                                 prefix, prefixLength,
                                 domainId,
                                 preferredLifetime,
@@ -1031,16 +1033,19 @@ static void changeNodeTypeReturnCallback(void)
 static void getGlobalPrefixReturnCallback(void)
 {
   uint8_t borderRouterFlags;
+  bool isStable;
   uint8_t prefix[8];
   uint8_t domainId;
   uint32_t preferredLifetime;
   uint32_t validLifetime;
   borderRouterFlags = (uint8_t) emberUnsignedCommandArgument(0);
-  emberGetStringArgument(1, prefix, 8, false);
-  domainId = (uint8_t) emberUnsignedCommandArgument(2);
-  preferredLifetime = (uint32_t) emberUnsignedCommandArgument(3);
-  validLifetime = (uint32_t) emberUnsignedCommandArgument(4);
+  isStable = (bool) emberUnsignedCommandArgument(1);
+  emberGetStringArgument(2, prefix, 8, false);
+  domainId = (uint8_t) emberUnsignedCommandArgument(3);
+  preferredLifetime = (uint32_t) emberUnsignedCommandArgument(4);
+  validLifetime = (uint32_t) emberUnsignedCommandArgument(5);
   emberGetGlobalPrefixReturn(borderRouterFlags,
+                             isStable,
                              prefix,
                              domainId,
                              preferredLifetime,

@@ -657,6 +657,7 @@ EmberNCPControlInterface::config_gateway_address(uint8_t flags, const struct in6
 		boost::bind(
 			emberConfigureGateway,
 			flags,
+			true,
 			address_static.s6_addr,
 			sizeof(address),
 			0,

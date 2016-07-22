@@ -959,6 +959,7 @@ typedef uint8_t GlobalThreadFlag;
  *
  */
 void emberConfigureGateway(uint8_t borderRouterFlags,
+                           bool isStable,
                            const uint8_t *prefix,
                            const uint8_t prefixLength,
                            uint8_t domainId,
@@ -1047,12 +1048,14 @@ void emberGetGlobalPrefixes(void);
 /** @brief Provides the result of a call to ::emberGetGlobalPrefix
  *
  * @param borderRouterFlags   Border router flags (EMBER_BORDER_ROUTER_*)
+ * @param isStable            Stable or temporary prefix
  * @param prefix              Border router prefix
  * @param domainId            Provisioning domain ID
  * @param preferredLifetime   Preferred lifetime (in seconds)
  * @param validLifetime       Valid lifetime (in seconds)
  */
 void emberGetGlobalPrefixReturn(uint8_t borderRouterFlags,
+                                bool isStable,
                                 const uint8_t *prefix,
                                 uint8_t domainId,
                                 uint32_t preferredLifetime,

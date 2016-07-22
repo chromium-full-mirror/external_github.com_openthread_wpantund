@@ -1013,6 +1013,7 @@ void emberGetNodeStatusReturn(EmberStatus status,
 }
 
 void emberGetGlobalPrefixReturn(uint8_t borderRouterFlags,
+                                bool isStable,
                                 const uint8_t *prefix,
                                 uint8_t domainId,
                                 uint32_t preferredLifetime,
