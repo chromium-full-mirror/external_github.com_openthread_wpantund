@@ -194,6 +194,10 @@
 		B6A683F81C50457400D0FCAC /* ValueMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6A683F71C50457400D0FCAC /* ValueMap.cpp */; };
 		B6A683FC1C518FC800D0FCAC /* DBusIPCAPI_v0.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6A683FA1C518FC800D0FCAC /* DBusIPCAPI_v0.cpp */; };
 		B6A683FF1C518FEE00D0FCAC /* DBusIPCAPI_v1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6A683FD1C518FEE00D0FCAC /* DBusIPCAPI_v1.cpp */; };
+		B6B0D40C1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6B0D40A1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.cpp */; };
+		B6B0D40D1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6B0D40A1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.cpp */; };
+		B6B0D40E1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6B0D40A1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.cpp */; };
+		B6B0D40F1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6B0D40A1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.cpp */; };
 		B6B99A781BC324020043526B /* SootAdapter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6B99A761BC324020043526B /* SootAdapter.cpp */; };
 		B6CFE7341AC36CD2007D281D /* nlpt-select.c in Sources */ = {isa = PBXBuildFile; fileRef = B6CFE7331AC36CD2007D281D /* nlpt-select.c */; };
 		B6D1F6121A8AABCA00F70266 /* FirmwareInterface-1.1.3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6D1F6101A8AABCA00F70266 /* FirmwareInterface-1.1.3.cpp */; };
@@ -940,6 +944,8 @@
 		B6A683FD1C518FEE00D0FCAC /* DBusIPCAPI_v1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DBusIPCAPI_v1.cpp; sourceTree = "<group>"; };
 		B6A683FE1C518FEE00D0FCAC /* DBusIPCAPI_v1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBusIPCAPI_v1.h; sourceTree = "<group>"; };
 		B6A684001C51A0A500D0FCAC /* wpan-dbus-v1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "wpan-dbus-v1.h"; sourceTree = "<group>"; };
+		B6B0D40A1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SpinelNCPTaskChangeNetData.cpp; sourceTree = "<group>"; };
+		B6B0D40B1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpinelNCPTaskChangeNetData.h; sourceTree = "<group>"; };
 		B6B99A761BC324020043526B /* SootAdapter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SootAdapter.cpp; sourceTree = "<group>"; };
 		B6B99A771BC324020043526B /* SootAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SootAdapter.h; sourceTree = "<group>"; };
 		B6BF2C841C1F710D0083AD96 /* RingBuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RingBuffer.h; sourceTree = "<group>"; };
@@ -1195,6 +1201,8 @@
 				B618F77A1CCAEC4B008B4AD4 /* SpinelNCPTaskForm.h */,
 				B618F7751CCAEC4B008B4AD4 /* SpinelNCPTaskJoin.cpp */,
 				B618F77C1CCAEC4B008B4AD4 /* SpinelNCPTaskJoin.h */,
+				B6B0D40A1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.cpp */,
+				B6B0D40B1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.h */,
 				B618F7741CCAEC4B008B4AD4 /* SpinelNCPTaskLeave.cpp */,
 				B618F77B1CCAEC4B008B4AD4 /* SpinelNCPTaskLeave.h */,
 				B65301B71CC6EACE00B4F3DD /* spinel.h */,
@@ -2772,6 +2780,7 @@
 				B6F27E441AAF7F2800A6B996 /* SuperSocket.cpp in Sources */,
 				E1EB488B196C56F50018B2ED /* EmberNCPControlInterface-JoinTask.cpp in Sources */,
 				E1EB4891196C5AD30018B2ED /* EmberNCPControlInterface-ScanTask.cpp in Sources */,
+				B6B0D40C1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.cpp in Sources */,
 				B6174A221AC0C33E00048E4F /* EmberNCPControlInterface-SetNetworkKeyTask.cpp in Sources */,
 				B69A46241B0130B6001D8A8F /* EmberNCPControlInterface-WakeupTask.cpp in Sources */,
 				E1102C1D183ABA530081771A /* string-utils.c in Sources */,
@@ -2818,6 +2827,7 @@
 				B61206781CADDDA700A4E683 /* UnixSocket.cpp in Sources */,
 				B61206791CADDDA700A4E683 /* SocketAdapter.cpp in Sources */,
 				B612067A1CADDDA700A4E683 /* tunnel.c in Sources */,
+				B6B0D40E1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.cpp in Sources */,
 				B612067B1CADDDA700A4E683 /* DBUSHelpers.cpp in Sources */,
 				B612067C1CADDDA700A4E683 /* nlpt-select.c in Sources */,
 				B612067F1CADDDA700A4E683 /* DBusIPCAPI_v1.cpp in Sources */,
@@ -2876,6 +2886,7 @@
 				B653018E1CC6E9F200B4F3DD /* DBusIPCAPI_v1.cpp in Sources */,
 				B65301B41CC6EA2500B4F3DD /* SpinelNCPControlInterface.cpp in Sources */,
 				B618F7881CCAEC78008B4AD4 /* SpinelNCPTaskDeepSleep.cpp in Sources */,
+				B6B0D40F1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.cpp in Sources */,
 				B653018F1CC6E9F200B4F3DD /* DBUSIPCServer.cpp in Sources */,
 				B65301901CC6E9F200B4F3DD /* SuperSocket.cpp in Sources */,
 				B65301911CC6E9F200B4F3DD /* string-utils.c in Sources */,
@@ -2916,6 +2927,7 @@
 				B64F02F21C6BE43B00F4FACA /* tmsp-host-nest-specific.c in Sources */,
 				B68B79BF1C65268500EC9FB8 /* any-to.cpp in Sources */,
 				B68B7A001C6526F700EC9FB8 /* EmberNCPControlInterface.cpp in Sources */,
+				B6B0D40D1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.cpp in Sources */,
 				B68B79C11C65268500EC9FB8 /* SocketWrapper.cpp in Sources */,
 				B68B79FA1C6526F700EC9FB8 /* EmberNCPControlInterface-Mfg.cpp in Sources */,
 				B64F02F31C6BE89600F4FACA /* ember-ip-configuration.c in Sources */,
