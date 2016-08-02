@@ -43,6 +43,33 @@ using namespace wpantund;
 
 WPANTUND_DEFINE_NCPINSTANCE_PLUGIN(spinel, SpinelNCPInstance);
 
+void
+SpinelNCPInstance::handle_ncp_log(const uint8_t* data_ptr, int data_len)
+{
+    static char linebuffer[NCP_DEBUG_LINE_LENGTH_MAX + 1];
+    static int linepos = 0;
+    while (data_len--) {
+        char nextchar = *data_ptr++;
+
+        if ((nextchar == '\t') || (nextchar >= 32)) {
+            linebuffer[linepos++] = nextchar;
+        }
+
+        if ( (linepos != 0)
+          && ( (nextchar == '\n')
+            || (nextchar == '\r')
+            || (linepos >= (sizeof(linebuffer) - 1))
+          )
+        )
+        {
+            // flush.
+            linebuffer[linepos] = 0;
+            syslog(LOG_INFO, "NCP => %s\n", linebuffer);
+            linepos = 0;
+        }
+    }
+}
+
 int
 SpinelNCPInstance::start_new_task(const boost::shared_ptr<SpinelNCPTask> &task)
 {
@@ -460,7 +487,7 @@ SpinelNCPInstance::get_property(
 					cb,
 					SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_GET, cntr_key),
 					NCP_DEFAULT_COMMAND_RESPONSE_TIMEOUT,
-					SPINEL_DATATYPE_UINT8_S
+					SPINEL_DATATYPE_UINT32_S
 				)
 			));
 		} else {
@@ -820,6 +847,9 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 			signal_property_changed(kWPANTUNDProperty_NCPTXPower, mTXPower);
 		}
 
+	} else if (key == SPINEL_PROP_STREAM_DEBUG) {
+        handle_ncp_log(value_data_ptr, value_data_len);
+
 	} else if (key == SPINEL_PROP_NET_ROLE) {
 		uint8_t value;
 		spinel_datatype_unpack(value_data_ptr, value_data_len, SPINEL_DATATYPE_UINT8_S, &value);
@@ -856,6 +886,21 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 			}
 		}
 
+	} else if (key == SPINEL_PROP_THREAD_ASSISTING_PORTS) {
+		bool is_assisting = (value_data_len != 0);
+		uint16_t assisting_port(0);
+
+		spinel_datatype_unpack(value_data_ptr, value_data_len, SPINEL_DATATYPE_UINT16_S, &assisting_port);
+
+		if (is_assisting != get_current_network_instance().joinable) {
+			mCurrentNetworkInstance.joinable = is_assisting;
+			signal_property_changed(kWPANTUNDProperty_NestLabs_NetworkAllowingJoin, is_assisting);
+			if (is_assisting) {
+				syslog(LOG_NOTICE, "Network is joinable, assisting on port %d", assisting_port);
+			} else {
+				syslog(LOG_NOTICE, "Network is no longer joinable");
+			}
+		}
 
 	} else if ((key == SPINEL_PROP_STREAM_NET) || (key == SPINEL_PROP_STREAM_NET_INSECURE)) {
 		const uint8_t* frame_ptr(NULL);

@@ -191,6 +191,10 @@
 		B69A46201AF7F608001D8A8F /* EmberNCPControlInterface-LeaveTask.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69A461E1AF7F608001D8A8F /* EmberNCPControlInterface-LeaveTask.cpp */; };
 		B69A46241B0130B6001D8A8F /* EmberNCPControlInterface-WakeupTask.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69A46221B0130B6001D8A8F /* EmberNCPControlInterface-WakeupTask.cpp */; };
 		B69A46271B0130F2001D8A8F /* EmberNCPControlInterface-DeepSleepTask.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69A46251B0130F2001D8A8F /* EmberNCPControlInterface-DeepSleepTask.cpp */; };
+		B69D8A9A1D5110020060D2A8 /* sec-random.c in Sources */ = {isa = PBXBuildFile; fileRef = B69D8A981D5110020060D2A8 /* sec-random.c */; };
+		B69D8A9B1D5110020060D2A8 /* sec-random.c in Sources */ = {isa = PBXBuildFile; fileRef = B69D8A981D5110020060D2A8 /* sec-random.c */; };
+		B69D8A9C1D5110020060D2A8 /* sec-random.c in Sources */ = {isa = PBXBuildFile; fileRef = B69D8A981D5110020060D2A8 /* sec-random.c */; };
+		B69D8A9D1D5110020060D2A8 /* sec-random.c in Sources */ = {isa = PBXBuildFile; fileRef = B69D8A981D5110020060D2A8 /* sec-random.c */; };
 		B6A683F81C50457400D0FCAC /* ValueMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6A683F71C50457400D0FCAC /* ValueMap.cpp */; };
 		B6A683FC1C518FC800D0FCAC /* DBusIPCAPI_v0.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6A683FA1C518FC800D0FCAC /* DBusIPCAPI_v0.cpp */; };
 		B6A683FF1C518FEE00D0FCAC /* DBusIPCAPI_v1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6A683FD1C518FEE00D0FCAC /* DBusIPCAPI_v1.cpp */; };
@@ -932,6 +936,8 @@
 		B69A46251B0130F2001D8A8F /* EmberNCPControlInterface-DeepSleepTask.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "EmberNCPControlInterface-DeepSleepTask.cpp"; sourceTree = "<group>"; };
 		B69A46261B0130F2001D8A8F /* EmberNCPControlInterface-DeepSleepTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "EmberNCPControlInterface-DeepSleepTask.h"; sourceTree = "<group>"; };
 		B69C84801BFE69D10087EF73 /* wpantund.conf */ = {isa = PBXFileReference; lastKnownFileType = text; path = wpantund.conf; sourceTree = "<group>"; };
+		B69D8A981D5110020060D2A8 /* sec-random.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "sec-random.c"; sourceTree = "<group>"; };
+		B69D8A991D5110020060D2A8 /* sec-random.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "sec-random.h"; sourceTree = "<group>"; };
 		B6A3BE6C1C88BAC500976BE9 /* DummyNCPControlInterface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DummyNCPControlInterface.cpp; sourceTree = "<group>"; };
 		B6A3BE6D1C88BAC500976BE9 /* DummyNCPControlInterface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DummyNCPControlInterface.h; sourceTree = "<group>"; };
 		B6A3BE6E1C88BAC500976BE9 /* DummyNCPInstance.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DummyNCPInstance.cpp; sourceTree = "<group>"; };
@@ -2596,6 +2602,8 @@
 				B61206581CADC10E00A4E683 /* Timer.cpp */,
 				B61206591CADC10E00A4E683 /* ObjectPool.h */,
 				B612065A1CADC10E00A4E683 /* Timer.h */,
+				B69D8A981D5110020060D2A8 /* sec-random.c */,
+				B69D8A991D5110020060D2A8 /* sec-random.h */,
 			);
 			path = util;
 			sourceTree = "<group>";
@@ -2762,6 +2770,7 @@
 				E1102C16183AAD6F0081771A /* FirmwareInterface.cpp in Sources */,
 				E1102C20183ABE880081771A /* any-to.cpp in Sources */,
 				B6D1F6121A8AABCA00F70266 /* FirmwareInterface-1.1.3.cpp in Sources */,
+				B69D8A9A1D5110020060D2A8 /* sec-random.c in Sources */,
 				E127376F18C5100C00789919 /* SocketWrapper.cpp in Sources */,
 				B6B99A781BC324020043526B /* SootAdapter.cpp in Sources */,
 				E1102C13183AAC030081771A /* EmberNCPInstance.cpp in Sources */,
@@ -2832,6 +2841,7 @@
 				B612067C1CADDDA700A4E683 /* nlpt-select.c in Sources */,
 				B612067F1CADDDA700A4E683 /* DBusIPCAPI_v1.cpp in Sources */,
 				B61206801CADDDA700A4E683 /* DBUSIPCServer.cpp in Sources */,
+				B69D8A9C1D5110020060D2A8 /* sec-random.c in Sources */,
 				B61206821CADDDA700A4E683 /* SuperSocket.cpp in Sources */,
 				B61206871CADDDA700A4E683 /* string-utils.c in Sources */,
 				B61206881CADDDA700A4E683 /* NCPInstanceBase-AsyncIO.cpp in Sources */,
@@ -2906,6 +2916,7 @@
 				B653019C1CC6E9F200B4F3DD /* ValueMap.cpp in Sources */,
 				B65301B51CC6EA2500B4F3DD /* SpinelNCPInstance.cpp in Sources */,
 				B653019D1CC6E9F200B4F3DD /* Timer.cpp in Sources */,
+				B69D8A9D1D5110020060D2A8 /* sec-random.c in Sources */,
 				B653019E1CC6E9F200B4F3DD /* FirmwareUpgrade.cpp in Sources */,
 				B653019F1CC6E9F200B4F3DD /* NCPControlInterface.cpp in Sources */,
 				B65301A01CC6E9F200B4F3DD /* NCPTypes.cpp in Sources */,
@@ -2992,6 +3003,7 @@
 				B68B79E31C65268500EC9FB8 /* ValueMap.cpp in Sources */,
 				B68B79E51C65268500EC9FB8 /* FirmwareUpgrade.cpp in Sources */,
 				B68B79E61C65268500EC9FB8 /* NCPControlInterface.cpp in Sources */,
+				B69D8A9B1D5110020060D2A8 /* sec-random.c in Sources */,
 				B68B79F61C6526F700EC9FB8 /* EmberNCPControlInterface-GetRIPEntryTask.cpp in Sources */,
 				B68B79E81C65268500EC9FB8 /* NCPInstance.cpp in Sources */,
 				B68756971C6BDDFE00C879D1 /* command-interpreter2-util.c in Sources */,
