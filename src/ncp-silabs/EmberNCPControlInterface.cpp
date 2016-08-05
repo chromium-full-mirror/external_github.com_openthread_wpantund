@@ -3144,6 +3144,8 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 
 	syslog(LOG_INFO, "Initializing NCP");
 
+	mNCPInstance->set_initializing_ncp(true);
+
 	mNCPInstance->change_ncp_state(UNINITIALIZED);
 
 	mNCPInstance->set_ncp_power(true);
@@ -3418,6 +3420,7 @@ on_error:
 		mNCPInstance->mFailureCount++;
 	} while (true);
 
+	mNCPInstance->set_initializing_ncp(false);
 	mNCPInstance->mFailureCount = 0;
 	mResetIsExpected = false;
 	mDriverState = NORMAL_OPERATION;
