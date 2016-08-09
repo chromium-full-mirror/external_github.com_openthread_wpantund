@@ -44,7 +44,7 @@ nl::wpantund::EmberNCPControlInterface::LeaveTask::vprocess_event(int event, va_
 
 	if (!mInterface->mNCPInstance->mEnabled) {
 		ret = kWPANTUNDStatus_InvalidWhenDisabled;
-	} else if (ncp_state_is_initializing(mInterface->mNCPInstance->get_ncp_state())) {
+	} else if (mInterface->mNCPInstance->is_initializing_ncp()) {
 		ret = kWPANTUNDStatus_Busy;
 	} else {
 		ret = kWPANTUNDStatus_Ok;
