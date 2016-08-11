@@ -205,6 +205,10 @@
 		B6D1F6151A8AABF400F70266 /* FirmwareInterface-2.0.0.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6D1F6131A8AABF400F70266 /* FirmwareInterface-2.0.0.cpp */; };
 		B6D1F6181A8AAF2E00F70266 /* FirmwareInterface-Base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6D1F6161A8AAF2E00F70266 /* FirmwareInterface-Base.cpp */; };
 		B6D23B0A1AB8ACCD00441CB5 /* EmberNCPControlInterface-Mfg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6D23B081AB8ACCD00441CB5 /* EmberNCPControlInterface-Mfg.cpp */; };
+		B6E13FC71D5CF2A4001233C4 /* NetworkRetain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E13FC51D5CF2A4001233C4 /* NetworkRetain.cpp */; };
+		B6E13FC81D5CF2A4001233C4 /* NetworkRetain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E13FC51D5CF2A4001233C4 /* NetworkRetain.cpp */; };
+		B6E13FC91D5CF2A4001233C4 /* NetworkRetain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E13FC51D5CF2A4001233C4 /* NetworkRetain.cpp */; };
+		B6E13FCA1D5CF2A4001233C4 /* NetworkRetain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E13FC51D5CF2A4001233C4 /* NetworkRetain.cpp */; };
 		B6F27E351AAE241C00A6B996 /* EmberNCPControlInterface-MfgFinish.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6F27E331AAE241C00A6B996 /* EmberNCPControlInterface-MfgFinish.cpp */; };
 		B6F27E3E1AAF7E0B00A6B996 /* SocketAdapter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6F27E3C1AAF7E0B00A6B996 /* SocketAdapter.cpp */; };
 		B6F27E411AAF7EB400A6B996 /* UnixSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6F27E3F1AAF7EB400A6B996 /* UnixSocket.cpp */; };
@@ -966,6 +970,8 @@
 		B6D640941C3C62D000705A42 /* connectip-2.0 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "connectip-2.0"; path = "third_party/connectip-2.0"; sourceTree = SOURCE_ROOT; };
 		B6D640951C3C62D000705A42 /* connectip-1.1 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "connectip-1.1"; path = "third_party/connectip-1.1"; sourceTree = SOURCE_ROOT; };
 		B6D6409B1C3EF2EA00705A42 /* spi-server.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = "spi-server.md"; sourceTree = "<group>"; };
+		B6E13FC51D5CF2A4001233C4 /* NetworkRetain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NetworkRetain.cpp; sourceTree = "<group>"; };
+		B6E13FC61D5CF2A4001233C4 /* NetworkRetain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NetworkRetain.h; sourceTree = "<group>"; };
 		B6F27E331AAE241C00A6B996 /* EmberNCPControlInterface-MfgFinish.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "EmberNCPControlInterface-MfgFinish.cpp"; sourceTree = "<group>"; };
 		B6F27E341AAE241C00A6B996 /* EmberNCPControlInterface-MfgFinish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "EmberNCPControlInterface-MfgFinish.h"; sourceTree = "<group>"; };
 		B6F27E391AAE695700A6B996 /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = TODO.md; path = ../TODO.md; sourceTree = "<group>"; };
@@ -2545,6 +2551,8 @@
 				E1E20E3817FF2F5B000F39AA /* NetworkInstance.h */,
 				B612E2891AC9E47000E418E0 /* wpan-properties.h */,
 				B602785F1C56BF510066DA9E /* wpan-error.h */,
+				B6E13FC51D5CF2A4001233C4 /* NetworkRetain.cpp */,
+				B6E13FC61D5CF2A4001233C4 /* NetworkRetain.h */,
 			);
 			path = wpantund;
 			sourceTree = "<group>";
@@ -2784,6 +2792,7 @@
 				E1645420175FE4E90013F188 /* DBUSIPCServer.cpp in Sources */,
 				4C9B21B01B167277002F07A4 /* FirmwareInterface-Thread-1.0.0.cpp in Sources */,
 				B6F27E441AAF7F2800A6B996 /* SuperSocket.cpp in Sources */,
+				B6E13FC71D5CF2A4001233C4 /* NetworkRetain.cpp in Sources */,
 				E1EB488B196C56F50018B2ED /* EmberNCPControlInterface-JoinTask.cpp in Sources */,
 				E1EB4891196C5AD30018B2ED /* EmberNCPControlInterface-ScanTask.cpp in Sources */,
 				B6174A221AC0C33E00048E4F /* EmberNCPControlInterface-SetNetworkKeyTask.cpp in Sources */,
@@ -2850,6 +2859,7 @@
 				B61206941CADDDA700A4E683 /* time-utils.c in Sources */,
 				B61206951CADDDA700A4E683 /* socket-utils.c in Sources */,
 				B61206971CADDDA700A4E683 /* ValueMap.cpp in Sources */,
+				B6E13FC91D5CF2A4001233C4 /* NetworkRetain.cpp in Sources */,
 				B61206991CADDDA700A4E683 /* Timer.cpp in Sources */,
 				B612069A1CADDDA700A4E683 /* FirmwareUpgrade.cpp in Sources */,
 				B612069B1CADDDA700A4E683 /* NCPControlInterface.cpp in Sources */,
@@ -2910,6 +2920,7 @@
 				B653019B1CC6E9F200B4F3DD /* socket-utils.c in Sources */,
 				B653019C1CC6E9F200B4F3DD /* ValueMap.cpp in Sources */,
 				B65301B51CC6EA2500B4F3DD /* SpinelNCPInstance.cpp in Sources */,
+				B6E13FCA1D5CF2A4001233C4 /* NetworkRetain.cpp in Sources */,
 				B653019D1CC6E9F200B4F3DD /* Timer.cpp in Sources */,
 				B69D8A9D1D5110020060D2A8 /* sec-random.c in Sources */,
 				B653019E1CC6E9F200B4F3DD /* FirmwareUpgrade.cpp in Sources */,
@@ -2952,6 +2963,7 @@
 				B61206541CADBF6C00A4E683 /* RunawayResetBackoffManager.cpp in Sources */,
 				B63BBCCD1C7BA5FD00083591 /* crc.c in Sources */,
 				B68B79F41C6526F700EC9FB8 /* EmberNCPControlInterface-FormTask.cpp in Sources */,
+				B6E13FC81D5CF2A4001233C4 /* NetworkRetain.cpp in Sources */,
 				B68B79F71C6526F700EC9FB8 /* EmberNCPControlInterface-JoinTask.cpp in Sources */,
 				B68757051C6BDDFE00C879D1 /* Makefile in Sources */,
 				B68B79CA1C65268500EC9FB8 /* nlpt-select.c in Sources */,
