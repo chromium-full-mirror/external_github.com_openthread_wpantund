@@ -944,7 +944,9 @@ EmberNCPControlInterface::get_property(
 {
 	std::string key = in_key;
 
-	syslog(LOG_INFO, "get_property: key: \"%s\"", in_key.c_str());
+	if (!mNCPInstance->is_initializing_ncp()) {
+		syslog(LOG_INFO, "get_property: key: \"%s\"", in_key.c_str());
+	}
 
 	BEGIN_TRY_FOR_CMD(boost::bind(cb,_1,boost::any()));
 
