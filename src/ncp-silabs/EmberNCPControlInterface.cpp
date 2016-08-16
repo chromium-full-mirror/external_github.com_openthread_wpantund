@@ -607,7 +607,7 @@ EmberNCPControlInterface::config_gateway(bool defaultRoute, const uint8_t prefix
 	//flags |= DHCP_FLAG;
 
 	memcpy(address.s6_addr, prefix, 8);
-	memcpy(address.s6_addr + 8, mNCPInstance->mNCPHardwareAddress, 8);
+	memcpy(address.s6_addr + 8, mNCPInstance->mMACAddress, 8);
 	address.s6_addr[8] ^= 0x02; // flip the private-use bit on the hardware address.
 
 	config_gateway_address(flags, address, preferredLifetime, validLifetime, cb);
@@ -1795,7 +1795,7 @@ EmberNCPControlInterface::handle_cb_slaac_server_change(const Data& data)
 	    && (prefix_len == 8)
 		&& !mNCPInstance->lookup_address_for_prefix(NULL, address, 64)
 	) {
-		memcpy(address.s6_addr + 8, mNCPInstance->mNCPHardwareAddress, 8);
+		memcpy(address.s6_addr + 8, mNCPInstance->mMACAddress, 8);
 		address.s6_addr[8] ^= 0x02; // flip the private-use bit on the hardware address.
 		request_address_from_ncp(address, 128, 0);
 	}
@@ -2005,7 +2005,7 @@ EmberNCPControlInterface::refresh_addresses(void)
 
 	if (buffer_is_nonzero(mNCPInstance->mNCPV6LegacyPrefix, sizeof(mNCPInstance->mNCPV6LegacyPrefix))) {
 		memcpy(&legacy_addr, mNCPInstance->mNCPV6LegacyPrefix, sizeof(mNCPInstance->mNCPV6LegacyPrefix));
-		memcpy(&legacy_addr.s6_addr[8], mNCPInstance->mNCPHardwareAddress, sizeof(mNCPInstance->mNCPHardwareAddress));
+		memcpy(&legacy_addr.s6_addr[8], mNCPInstance->mMACAddress, sizeof(mNCPInstance->mMACAddress));
 		legacy_addr.s6_addr[8] ^= 0x02; // Flip the private-use bit on the hardware address.
 	} else {
 		memset(legacy_addr.s6_addr, 0, sizeof(legacy_addr));
@@ -2083,7 +2083,7 @@ EmberNCPControlInterface::handle_cb_state(const Data& data)
 		&tx_power,
 		&raw_type,
 		&association_state,
-		mNCPInstance->mNCPHardwareAddress,
+		mNCPInstance->mMACAddress,
 		mNCPInstance->mNCPV6Prefix,
 		mNCPInstance->mNCPV6LegacyPrefix
 	);
@@ -2116,9 +2116,9 @@ EmberNCPControlInterface::handle_cb_state(const Data& data)
 
 	syslog(
 		LOG_INFO,
-		"NCP Status: HWAddr: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
-		mNCPInstance->mNCPHardwareAddress[0],mNCPInstance->mNCPHardwareAddress[1],mNCPInstance->mNCPHardwareAddress[2],mNCPInstance->mNCPHardwareAddress[3],
-		mNCPInstance->mNCPHardwareAddress[4],mNCPInstance->mNCPHardwareAddress[5],mNCPInstance->mNCPHardwareAddress[6],mNCPInstance->mNCPHardwareAddress[7]
+		"NCP Status: MACAddr: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
+		mNCPInstance->mMACAddress[0],mNCPInstance->mMACAddress[1],mNCPInstance->mMACAddress[2],mNCPInstance->mMACAddress[3],
+		mNCPInstance->mMACAddress[4],mNCPInstance->mMACAddress[5],mNCPInstance->mMACAddress[6],mNCPInstance->mMACAddress[7]
 	);
 
 	syslog(
@@ -2138,7 +2138,7 @@ EmberNCPControlInterface::handle_cb_state(const Data& data)
 		mNCPInstance->enable_legacy_interface();
 	}
 
-	mNCPInstance->set_hardware_address(mNCPInstance->mNCPHardwareAddress);
+	mNCPInstance->set_mac_address(mNCPInstance->mMACAddress);
 
 	// determine whether to carry over the old joinable state over or not
 	new_network_instance.joinable = mNCPInstance->mCurrentNetworkInstance.joinable
