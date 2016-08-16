@@ -633,7 +633,7 @@ EmberNCPControlInterface::config_gateway(bool defaultRoute, const uint8_t prefix
 	flags |= EMBER_BORDER_ROUTER_SLAAC_PREFERRED_FLAG | EMBER_BORDER_ROUTER_SLAAC_VALID_FLAG;
 
 	memcpy(address.s6_addr, prefix, 8);
-	memcpy(address.s6_addr + 8, mNCPInstance->mNCPHardwareAddress, 8);
+	memcpy(address.s6_addr + 8, mNCPInstance->mMACAddress, 8);
 	address.s6_addr[8] ^= 0x02; // flip the private-use bit on the hardware address.
 
 	config_gateway_address(flags, address, preferredLifetime, validLifetime, cb);
@@ -1476,10 +1476,10 @@ EmberNCPControlInterface::handle_ncp_network_state_changed()
 		networkParams.nodeType
 	);
 
-	if (0 != memcmprev(mNCPInstance->mNCPHardwareAddress, emberEui64(), sizeof(mNCPInstance->mNCPHardwareAddress))) {
-		uint8_t hardware_address[sizeof(mNCPInstance->mNCPHardwareAddress)];
-		memcpyrev(&hardware_address, emberEui64(), sizeof(hardware_address));
-		mNCPInstance->set_hardware_address(hardware_address);
+	if (0 != memcmprev(mNCPInstance->mMACAddress, emberEui64(), sizeof(mNCPInstance->mMACAddress))) {
+		uint8_t mac_address[sizeof(mNCPInstance->mMACAddress)];
+		memcpyrev(&mac_address, emberEui64(), sizeof(mac_address));
+		mNCPInstance->set_mac_address(mac_address);
 	}
 
 	if (0 != memcmp(mNCPInstance->mNCPV6Prefix, networkParams.ulaPrefix.bytes, sizeof(mNCPInstance->mNCPV6Prefix))) {
@@ -2006,7 +2006,7 @@ EmberNCPControlInterface::handle_cb_slaac_server_change(va_list args)
 			&& (prefix_len == 8)
 			&& !mNCPInstance->lookup_address_for_prefix(NULL, address, 64)
 		) {
-			memcpy(address.s6_addr + 8, mNCPInstance->mNCPHardwareAddress, 8);
+			memcpy(address.s6_addr + 8, mNCPInstance->mMACAddress, 8);
 			address.s6_addr[8] ^= 0x02; // flip the private-use bit on the hardware address.
 			request_address_from_ncp(address, 128, 0);
 		}
@@ -2182,7 +2182,7 @@ EmberNCPControlInterface::refresh_addresses(void)
 
 	if (buffer_is_nonzero(mNCPInstance->mNCPV6LegacyPrefix, sizeof(mNCPInstance->mNCPV6LegacyPrefix))) {
 		memcpy(&legacy_addr, mNCPInstance->mNCPV6LegacyPrefix, sizeof(mNCPInstance->mNCPV6LegacyPrefix));
-		memcpy(&legacy_addr.s6_addr[8], mNCPInstance->mNCPHardwareAddress, sizeof(mNCPInstance->mNCPHardwareAddress));
+		memcpy(&legacy_addr.s6_addr[8], mNCPInstance->mMACAddress, sizeof(mNCPInstance->mMACAddress));
 		legacy_addr.s6_addr[8] ^= 0x02; // Flip the private-use bit on the hardware address.
 	} else {
 		memset(legacy_addr.s6_addr, 0, sizeof(legacy_addr));
