@@ -1,3 +1,298 @@
 ## New in 0.07.00
 
 * Initial Open-Source Release.
+
+# Keep this line immediately above the last non-open-source release -- begin pe8qf1P4GCme
+## New in 0.06.03
+
+* ncp-silabs_tmsp: Fix for assert in emberProcessbinaryCommand
+* wpanctl: Fix for segfault during scan when there are lots of scan results.
+* Connman-plugin: Change the default node type (for joining) to router
+* Various internal updates and improvements
+* wpan-error: Added `kWPANTUNDStatus_NCP_Reset`.
+* wpan-properties: Added `kWPANTUNDProperty_NCPRSSI` property.
+* Make sure that the channel renders as a base-10 integer.
+* wpan-properties: Add several thread-specific properties.
+* NCPInstanceBase: Change how the IPv6 prefix is rendered. (now a string)
+* ncp-silabs_tmsp: Add the lurker flag immediately if we just enabled legacy interfaces.
+* ncp-silabs_tmsp: Fix for forming a network with legacy enabled.
+* ncp-silabs_tmsp: Fix for joining without panid
+* NCPInstanceBase: Reset NCP if the version changes after being set successfully.
+* ncp-spinel: Support for OpenThread "Spinel" NCP Protocol
+* Keyword scrub and boilerplate updates in preparation for open source release.
+* ncp-silabs_tmsp: Fix for provisional join.
+
+## New in 0.06.02
+
+ *  Fix for dropped unsecured packets during legacy commissioning
+
+## New in 0.06.01
+
+ *  Timer: Add a check in schdedule() to ensure input interval is
+    valid
+ *  Major refactoring and consolidation (part 1)
+ *  SetNetworkKeyTask: Change to use the proper key when commissioning
+ *  ncp-silabs\_tmsp: Improvements to supporting the
+    `credentials-needed` state.
+ *  ncp-silabs: Fix for ConnectIP-2.0 NCP crash on join.
+ *  silabs-thread-1.0: Update to support Thread-Nest-1.0.5-build-521
+ *  TunnelIPv6Interface: Fix for problem where old mesh-local
+    addresses stick around.
+ *  socket-utils: Avoid printing out the scary (but harmless)
+    `tcsetaddr() failed` error.
+ *  NCPInstanceBase: Avoid complaining about the NCPDriverName
+    configuration option not being supported.
+ *  StatCollector: Add support for getting history for a specific node
+ *  Various minor fixes and improvements
+ *  Minor logging improvements
+
+## New in 0.06.00
+
+*  Full plug-in architecture, supporting multiple NCPs.
+    *  Rename `ncp-connectip` to `ncp-silabs`.
+    *  `ncp-dummy`: New dummy plugin. Does nothing.
+    *  `ncp-silabs_tmsp`: New plugin for SiLabs chips using TMSP
+*  Lots of refactoring and restructuring
+    *  New `third_party` directory where all third party code goes
+    *  Various documentation cleanups and improvements
+    *  New hierarchical property names.
+    *  New DBus API, NCPState, miscellaneous other improvements.
+    *  headers: Move installed headers into `wpantund` subdirectory,
+       instead of installing them directly into `include`
+    *  New error type, `wpantund_status_t`.
+*  libsoot: Alternative ASHv3 implementation for `ncp-silabs` plugin
+*  wpantund: Added ability to drop privileges
+*  wpantund: Added ability to chroot
+*  wpantund: Adding support to send "property changed" signals over
+   dbus
+*  wpantund: Add support for dumping the stack after a crash
+*  wpanctl: Change default node types for `join` and `form` to
+   `router` and `end-device`.
+*  General: Address various warnings indicated by clang and coverity
+*  configure: Improve libreadline detection and behavior.
+*  connman: Support for 6lowpan provision
+*  StatCollector: Adding a statistics collector module in wpantund
+*  Power optimization: Don't wake up the NCP if we are directly
+   controlling the power of the NCP
+
+## New in 0.05.08
+
+* Fixed a major issue in the packet matcher which caused joining
+  traffic to misbehave when there were lots of devices searching for
+  an assisting device.
+* Logging of TCP and UDP checksums.
+
+## New in 0.05.07
+
+* wpantund: Additional fix for user-added addresses after reset
+* Minor logging changes
+* wpan-connman-plugin: Always update the network key from NCP when we connect
+
+## New in 0.05.06
+
+* wpantund: Ensure user-added addresses remain usable across an NCP reset
+
+## New in 0.05.05
+
+* NCPControlInterface: New association state `fault`, which we now enter when bad things happen
+* ncp-connectip: New property `TerminateOnFault`, which when set restores the previous behavior
+* connman-plugin: Fix to enable ncp_state change to "disconnected" from "uninitialized"
+* EmberNCPCtrlInterface: Changed the sleep debounce test to avoid main loop thrashing
+* ncp-connectip: Fix LNA Bypass behavior
+* ncp-connectip: Adjustments to firmware update process, new property `AutoUpdateFirmware`
+* Coverity fixes.
+
+## New in 0.05.04
+
+* wpantund: Support for automatic NCP firmware upgrades
+* config-file: Fixed some bugs with respect to how quoted strings were parsed.
+* ncp-connectip: configure-gateway: Don't crash when the user erroneously leaves out the prefix.
+* ncp-connectip: Fixed `ChannelCalGet` mfg command
+* Reduced logging noise
+
+## New in 0.05.03
+
+* wpan-connman-plugin: Fix memory leak in plugin
+
+## New in 0.05.02
+
+* TunnelIPv6Interface: Fixed a NULL-pointer dereference
+
+## New in 0.05.01
+
+* Address various issues discovered by Coverty
+* ncp-connectip: Update ActiveScan data format for Thread 1.0.2
+* ncp-connectip: Added support to get the list of global IP addresses from NCP
+* ncp-connectip: Only add SLAAC address when we don't already have one for a given prefix
+* ncp-connectip: Various routing/addressing changes to help with being a border router
+* ncp-connectip: Various ASHv3 improvements
+* wpan-connman-plugin: Removed updating the IPv6 address in connman from plugin
+* autoconf: Added ability to disable building of the connman plugin
+* Various other minor changes and improvements
+
+## New in 0.05.00
+
+* Support for NCPs running SiLabs Thread 1.0 stack
+* Addressed various compiler warnings that were present when building in certain environments
+* conman-plugin: Various fixes and improvements
+* Improved ease of building on various linux distributions
+* main-loop: Added sanity checks for timeout values
+* Much improved management of how IP addresses are added and removed from interfaces
+* General refactoring and cleanup
+
+## New in 0.04.04
+
+* Renamed wpan-tunnel-driver to `wpantund`
+* Backport of previous changes that were made directly to Sapphire tree.
+* Fixed auto deep sleep
+* Added a change to resolve the (rare) insomnia timeout issue in wpan-tunnel-driver.
+* Bug fixes for connman plugin
+
+## New in 0.04.03
+
+* EmberNCPInstance: Fix for delay in sending management commands
+* connman-plugin: Minor cleanup.
+* Support for `ff03::1` multicast group on Linux
+* ncp-connectip: Remove support for fetching the "Nest Token".
+* Added ability to get or set the `SyslogMask` property at runtime
+* connman-plugin: Improve compatibility with more recent versions of ConnMan
+
+## New in 0.04.02
+
+* Fixing handling of Mfg RX callback
+
+## New in 0.04.01
+
+* Code comment additions and changes to ignore red-herrings from coverty
+* Update file boilerplate headers and refresh copyright year
+* ncp-connectip: Ensured that `va_end()` is called when it should be
+* ncp-connectip: Ensure continuity of commissioning connection after joining
+* ncp-connectip: Remove `mWantsDeepSleepNow` member variable from `EmberNCPControlInterface`
+* ncp-connectip: Only wait for `CB_LISTEN` after sleeping if NCP version has that bug
+
+## New in 0.04.00
+
+* Major code reorganization, refactoring, and cleanup.
+  * New directory structure and file organization
+  * Refactored async-I/O
+  * Consolidated and organized utility functions
+  * Simplified overall architecture
+  * Foundation for adding support for new NCP protocols
+  * Replaced most "magic numbers" with defined constants
+  * Dozens of miscelaneous bug fixes and improvements
+  * Cleaned up many compilation warnings
+  * Renamed project `wpantund`. Executible is still named `wpan-tunnel-driver` (for now)
+* Updated `man` pages for `wpanctl` and `wpan-tunnel-driver`.
+* `getopt` is now used for parsing all command line arguments.
+* string-utils: Properly handle interpreting the last nibble when parsing hexidecimal data blobs
+* wpantund: Interface properties are now case-insensitive.
+* wpantund: Support for hardware reset and explicit power-state control of NCP.
+* wpantund: Lowered the amount of default logging slightly.
+* wpantund: Moved property key macros to an independent header file.
+* wpantund: Handle `/etc/wpantund.conf` in addition to `/etc/wpan-tunnel-driver.conf`.
+* wpanctl: Now supports tab-completion, when compiled with libreadline or libedit
+* wpanctl: Add channel option to scan command
+* wpanctl: Fix for scan crash when there are lots of networks
+* wpanctl: Support strings to name a node type
+* wpanctl: Improved channel mask format for the `scan` command. (`-c 11-14,17,20-23`)
+* ncp-connectip: Better, more reliable sleep behavior.
+* ncp-connectip: Now supports ConnectIP-2.0.0b420, with issues.
+* ncp-connectip: Fixed minor bugs with support for some SiLabs manufacturing commands.
+* ncp-connectip: Added the ability to specify a ULA when joining a network.
+* ncp-connectip: Fixed issue when using the default port for `PermitJoin`
+* ncp-connectip: Preliminary support for separate legacy and mesh-local prefixes.
+* configure: Added `--enable-ash-v3-debug` option to configure script.
+* build-system: `make distclean` now works properly on systems with versions of `tar` that maxes out filenames at 99 characters.
+* build-system: Clean up output of bootstrap script.
+* build-system: Added pkg.m4, which contains config macros for pkg-config
+* build-system: Better git integration into version reporting (specifically in tarballs made from `make dist`)
+* README: Updated list of contributors.
+
+## New in 0.03.02
+
+* Have output from assert macros use syslog for output.
+* Added `RunawayResetBackoffManager` to avoid reset loops which use 100% of CPU.
+
+## New in 0.03.01
+
+* Prevents bringing the interface online until we transition to a joined state.
+* HostDidWake: Trigger beginning low power even when DISCONNECTED
+* DBus: Fix for memory leak of get property reply messages.
+* Improved support for SiLabs manufacturing commands.
+* Other minor changes.
+
+## New in 0.03.00
+
+* Support for management protocol version 7.
+* Aggressive power management for lurkers.
+* Supports both ConnectIP-1.1.3 and ConnectIP-2.0.0b301
+* Vastly improve how version numbers are handled and printed.
+* Removed work-arounds for firmware sleep bugs.
+* Now builds on a Raspberry PI.
+* connman-plugin: Don't try to explicitly resume.
+* Better support for interface being disabled.
+* Added support for `WRITE_NEST_MAC_ADDR` command.
+* Updated documentation, added `TODO.md`, `HACKING.md`.
+* Added `IsAssociated` property.
+* Only attempt to perform a hard reset on even failure attempts (except 0).
+* Raise the default logging threshold on non-debug builds.
+* EmberASHAdapter: Fix for condition which impeded throughput when loaded.
+* Major refactoring and code cleanup.
+* Many bug fixes.
+
+## New in 0.02.00
+
+* ConnectIP-2.0 support.
+* Massive refactoring and cleanup.
+* Improved ASH support.
+* Multiple interface support.
+* wpanctl: Support for retrieving multiple properties with a single call to `getprop`.
+* Only send a command to the NCP after the previous command has been fully sent.
+* Added file locking.
+* socket-utils: Better error checking and reporting.
+* Don't bring down the interface if we are in a net-wake state.
+* Improved logging
+* When we are in automatic deep sleep for more than 70 minutes, reset the NCP.
+* Multiple interface support.
+* Added many new properties.
+* Fixed many, many bugs.
+
+## New in 0.01.00
+
+* ConnectIP-1.1 and ASHv3 support.
+* Upgrade from `boost::signals` to `boost::signals2`
+* Build system cleanup
+
+## New in 0.00.06
+
+* Fix some crashers in the ConnMan plugin.
+* Fix for stripping non-ASCII characters from network names.
+* Added `SetPassthruPort`, so that NCP knows what port to filter on.
+* Added `any_to_bool`.
+* Support for NCP sleep and enable/disable.
+* Support for setting the TX power. Default is now -15dBm.
+* Support for automatic failure detection.
+* Updates based on feedback from https://fisheye.nestlabs.com/cru/SR-862
+* NCPFirewallRule: Remove some unnecessary logging.
+* connman-plugin: Make sure the lowpan device is powered at startup.
+* Turn on AutoDeepSleep by default. (SAPPHIRE-6854)
+* RIP table retrieval support
+* CallbackStore: Fix broken `handle_all()` method.
+* Use relative time instead of absolute time for various timeouts
+* socket-utils: Added support for sockets to executable processes.
+* Added data stream abstraction class NCPSocket.
+* wpan-tunnel-driver: Added option `SyslogMask`.
+
+## New in 0.00.05
+
+* Support for ConnectIP-1.0.2 (support for earlier NCP versions has been dropped)
+* Added NCP version check. Halts all interaction with the NCP until the version check passes.
+* Robustness Improvements.
+* Minor update to config script to add git commit hash to version string
+* connman-plugin: Don't create a new service until we have the network key.
+* connman-plugin: Stop using MTRACE, which was causing huge log files.
+* connman-plugin: Fix for truncated passphrase
+* Fix for: https://jira.nestlabs.com/browse/SAPPHIRE-6706
+* Tickle the NCP every 60 seconds
+* Miscelaneous fixes and improvements to ConnMan plugin.
+* Added auto-resume property.

@@ -1,0 +1,216 @@
+/*
+ *
+ *    Copyright (c) 2016 Nest Labs, Inc.
+ *    All rights reserved.
+ *
+ *    This document is the property of Nest. It is considered
+ *    confidential and proprietary information.
+ *
+ *    This document may not be reproduced or transmitted in any form,
+ *    in whole or in part, without the express written permission of
+ *    Nest.
+ *
+ */
+
+#ifndef __wpantund__EmberAPIGlue__
+#define __wpantund__EmberAPIGlue__
+
+#include <stdio.h>
+#include <string>
+
+#include "NCPControlInterface.h"
+#include "NCPInstanceBase.h"
+#include "time-utils.h"
+#include "wpan-error.h"
+
+__BEGIN_DECLS
+#include PLATFORM_HEADER
+#include "stack/include/ember.h"
+#include "stack/include/ember-types.h"
+#include "app/ip-ncp/uart-link-protocol.h"
+#include "app/tmsp/tmsp-enum.h"
+#include "app/tmsp/tmsp-custom-enum.h"
+#include "app/util/serial/command-interpreter2.h"
+#include "stack/ip/zigbee/key-management.h"
+#include "stack/ip/wakeup-specific.h"
+
+#define IS_EVENT_FROM_EMBER(x)               ((((x) >> 8) & 0xFF) == 'j')
+
+#define SKIP_TRANSMIT_HOOK_ACTIVE 1
+
+#define EMBER_EVENT_ID(x)                       (('j'<<8)+(x))
+
+#define EVENT_EMBER_CB_ABORT_WAKEUP_RETURN          EMBER_EVENT_ID(1)
+#define EVENT_EMBER_CB_ACTIVE_SCAN_HANDLER          EMBER_EVENT_ID(2)
+#define EVENT_EMBER_CB_ACTIVE_WAKEUP_RETURN          EMBER_EVENT_ID(3)
+#define EVENT_EMBER_CB_ADDRESS_CONFIGURATION_CHANGE          EMBER_EVENT_ID(4)
+#define EVENT_EMBER_CB_ADD_ADDRESS_DATA_RETURN          EMBER_EVENT_ID(5)
+#define EVENT_EMBER_CB_ALLOW_NATIVE_COMMISSIONER_RETURN          EMBER_EVENT_ID(6)
+#define EVENT_EMBER_CB_ASSERT_INFO_RETURN          EMBER_EVENT_ID(7)
+#define EVENT_EMBER_CB_ATTACH_TO_NETWORK_RETURN          EMBER_EVENT_ID(8)
+#define EVENT_EMBER_CB_BECOME_COMMISSIONER_RETURN          EMBER_EVENT_ID(9)
+#define EVENT_EMBER_CB_CHANGE_NODE_TYPE_RETURN          EMBER_EVENT_ID(10)
+#define EVENT_EMBER_CB_CLEAR_ADDRESS_CACHE_RETURN          EMBER_EVENT_ID(11)
+#define EVENT_EMBER_CB_COMMISSIONER_STATUS_HANDLER          EMBER_EVENT_ID(12)
+#define EVENT_EMBER_CB_COMMISSION_NETWORK_RETURN          EMBER_EVENT_ID(13)
+#define EVENT_EMBER_CB_CONFIGURE_DEFAULT_HOST_ADDRESS          EMBER_EVENT_ID(14)
+#define EVENT_EMBER_CB_CONFIGURE_EXTERNAL_ROUTE_RETURN          EMBER_EVENT_ID(15)
+#define EVENT_EMBER_CB_CONFIGURE_GATEWAY_RETURN          EMBER_EVENT_ID(16)
+#define EVENT_EMBER_CB_CONFIGURE_GLOBAL_HOST_ADDRESS          EMBER_EVENT_ID(17)
+#define EVENT_EMBER_CB_CONFIG_UART_RETURN          EMBER_EVENT_ID(18)
+#define EVENT_EMBER_CB_DEEP_SLEEP_CALLBACK          EMBER_EVENT_ID(19)
+#define EVENT_EMBER_CB_DEEP_SLEEP_RETURN          EMBER_EVENT_ID(20)
+#define EVENT_EMBER_CB_DHCP_SERVER_CHANGE          EMBER_EVENT_ID(21)
+#define EVENT_EMBER_CB_ECHO_RETURN          EMBER_EVENT_ID(22)
+#define EVENT_EMBER_CB_ENERGY_SCAN_HANDLER          EMBER_EVENT_ID(23)
+#define EVENT_EMBER_CB_EXTERNAL_ROUTE_CHANGE          EMBER_EVENT_ID(24)
+#define EVENT_EMBER_CB_FORM_NETWORK_RETURN          EMBER_EVENT_ID(25)
+#define EVENT_EMBER_CB_GET_CCA_THRESHOLD_RETURN          EMBER_EVENT_ID(26)
+#define EVENT_EMBER_CB_GET_CHANNEL_CAL_DATA_TOKEN_RETURN          EMBER_EVENT_ID(27)
+#define EVENT_EMBER_CB_GET_COUNTER_RETURN          EMBER_EVENT_ID(28)
+#define EVENT_EMBER_CB_GET_DHCP_CLIENT_RETURN          EMBER_EVENT_ID(29)
+#define EVENT_EMBER_CB_GET_GLOBAL_ADDRESS_RETURN          EMBER_EVENT_ID(30)
+#define EVENT_EMBER_CB_GET_GLOBAL_PREFIX_RETURN          EMBER_EVENT_ID(31)
+#define EVENT_EMBER_CB_GET_MFG_TOKEN_RETURN          EMBER_EVENT_ID(32)
+#define EVENT_EMBER_CB_GET_MULTICAST_ENTRY_RETURN          EMBER_EVENT_ID(33)
+#define EVENT_EMBER_CB_GET_NETWORK_DATA_TLV_RETURN          EMBER_EVENT_ID(34)
+#define EVENT_EMBER_CB_GET_NETWORK_KEY_INFO_RETURN          EMBER_EVENT_ID(35)
+#define EVENT_EMBER_CB_GET_NODE_STATUS_RETURN          EMBER_EVENT_ID(36)
+#define EVENT_EMBER_CB_GET_RADIO_POWER_RETURN          EMBER_EVENT_ID(37)
+#define EVENT_EMBER_CB_GET_RIP_ENTRY_RETURN          EMBER_EVENT_ID(38)
+#define EVENT_EMBER_CB_GET_ROUTING_LOCATOR_RETURN          EMBER_EVENT_ID(39)
+#define EVENT_EMBER_CB_GET_STANDALONE_BOOTLOADER_INFO_RETURN          EMBER_EVENT_ID(40)
+#define EVENT_EMBER_CB_GET_TX_POWER_MODE_RETURN          EMBER_EVENT_ID(41)
+#define EVENT_EMBER_CB_GET_VERSIONS_RETURN          EMBER_EVENT_ID(42)
+#define EVENT_EMBER_CB_GPIO_CURRENT_CONFIG_RETURN          EMBER_EVENT_ID(43)
+#define EVENT_EMBER_CB_GPIO_CURRENT_INPUT_RETURN          EMBER_EVENT_ID(44)
+#define EVENT_EMBER_CB_GPIO_POWER_CONFIG_RETURN          EMBER_EVENT_ID(45)
+#define EVENT_EMBER_CB_ICMP_TRANSMIT_COMPLETE          EMBER_EVENT_ID(46)
+#define EVENT_EMBER_CB_INITIALIZE_TFTP_BOOTLOADER          EMBER_EVENT_ID(47)
+#define EVENT_EMBER_CB_INIT_RETURN          EMBER_EVENT_ID(48)
+#define EVENT_EMBER_CB_JOIN_NETWORK_RETURN          EMBER_EVENT_ID(49)
+#define EVENT_EMBER_CB_LAUNCH_STANDALONE_BOOTLOADER_RETURN          EMBER_EVENT_ID(50)
+#define EVENT_EMBER_CB_LEADER_DATA_HANDLER          EMBER_EVENT_ID(51)
+#define EVENT_EMBER_CB_LISTEN_FOR_WAKEUP_RETURN          EMBER_EVENT_ID(52)
+#define EVENT_EMBER_CB_LOOKUP_ADDRESS_DATA_RETURN          EMBER_EVENT_ID(53)
+#define EVENT_EMBER_CB_MFGLIB_END_RETURN          EMBER_EVENT_ID(54)
+#define EVENT_EMBER_CB_MFGLIB_GET_CHANNEL_RETURN          EMBER_EVENT_ID(55)
+#define EVENT_EMBER_CB_MFGLIB_GET_POWER_MODE_RETURN          EMBER_EVENT_ID(56)
+#define EVENT_EMBER_CB_MFGLIB_GET_POWER_RETURN          EMBER_EVENT_ID(57)
+#define EVENT_EMBER_CB_MFGLIB_GET_SYN_OFFSET_RETURN          EMBER_EVENT_ID(58)
+#define EVENT_EMBER_CB_MFGLIB_RX_HANDLER          EMBER_EVENT_ID(59)
+#define EVENT_EMBER_CB_MFGLIB_SEND_PACKET_RETURN          EMBER_EVENT_ID(60)
+#define EVENT_EMBER_CB_MFGLIB_SET_CHANNEL_RETURN          EMBER_EVENT_ID(61)
+#define EVENT_EMBER_CB_MFGLIB_SET_POWER_RETURN          EMBER_EVENT_ID(62)
+#define EVENT_EMBER_CB_MFGLIB_START_RETURN          EMBER_EVENT_ID(63)
+#define EVENT_EMBER_CB_MFGLIB_START_STREAM_RETURN          EMBER_EVENT_ID(64)
+#define EVENT_EMBER_CB_MFGLIB_START_TONE_RETURN          EMBER_EVENT_ID(65)
+#define EVENT_EMBER_CB_MFGLIB_STOP_STREAM_RETURN          EMBER_EVENT_ID(66)
+#define EVENT_EMBER_CB_MFGLIB_STOP_TONE_RETURN          EMBER_EVENT_ID(67)
+#define EVENT_EMBER_CB_NCP_BUFFERED_PING_COMPLETE          EMBER_EVENT_ID(68)
+#define EVENT_EMBER_CB_NCP_BUFFERED_PING_RETURN          EMBER_EVENT_ID(69)
+#define EVENT_EMBER_CB_NCP_UDP_STORM_COMPLETE          EMBER_EVENT_ID(70)
+#define EVENT_EMBER_CB_NCP_UDP_STORM_RETURN          EMBER_EVENT_ID(71)
+#define EVENT_EMBER_CB_NETWORK_STATUS_HANDLER          EMBER_EVENT_ID(72)
+#define EVENT_EMBER_CB_NOTIFY_TFRP_BOOTLOADER_NETWORK_UP          EMBER_EVENT_ID(73)
+#define EVENT_EMBER_CB_OK_TO_NAP_RETURN          EMBER_EVENT_ID(74)
+#define EVENT_EMBER_CB_PERMIT_JOINING_HANDLER          EMBER_EVENT_ID(75)
+#define EVENT_EMBER_CB_PERMIT_JOINING_RETURN          EMBER_EVENT_ID(76)
+#define EVENT_EMBER_CB_POLL_FOR_DATA_RETURN          EMBER_EVENT_ID(77)
+#define EVENT_EMBER_CB_REQUEST_DHCP_ADDRESS_RETURN          EMBER_EVENT_ID(78)
+#define EVENT_EMBER_CB_REQUEST_SLAAC_ADDRESS_RETURN          EMBER_EVENT_ID(79)
+#define EVENT_EMBER_CB_RESET_MICRO_HANDLER          EMBER_EVENT_ID(80)
+#define EVENT_EMBER_CB_RESET_NCP_ASH_RETURN          EMBER_EVENT_ID(81)
+#define EVENT_EMBER_CB_RESET_NETWORK_STATE_RETURN          EMBER_EVENT_ID(82)
+#define EVENT_EMBER_CB_RESIGN_GLOBAL_ADDRESS_RETURN          EMBER_EVENT_ID(83)
+#define EVENT_EMBER_CB_RESUME_NETWORK_RETURN          EMBER_EVENT_ID(84)
+#define EVENT_EMBER_CB_RUN_TFTP_BOOTLOADER_EVENTS          EMBER_EVENT_ID(85)
+#define EVENT_EMBER_CB_SCAN_RETURN          EMBER_EVENT_ID(86)
+#define EVENT_EMBER_CB_SEND_STEERING_DATA_RETURN          EMBER_EVENT_ID(87)
+#define EVENT_EMBER_CB_SET_CCA_THRESHOLD_RETURN          EMBER_EVENT_ID(88)
+#define EVENT_EMBER_CB_SET_COMMISSIONER_KEY_RETURN          EMBER_EVENT_ID(89)
+#define EVENT_EMBER_CB_SET_MFG_TOKEN_RETURN          EMBER_EVENT_ID(90)
+#define EVENT_EMBER_CB_SET_NEXT_NETWORK_KEY_RETURN          EMBER_EVENT_ID(91)
+#define EVENT_EMBER_CB_SET_RADIO_POWER_RETURN          EMBER_EVENT_ID(92)
+#define EVENT_EMBER_CB_SET_RANDOMIZE_MAC_EXTENDED_ID_RETURN          EMBER_EVENT_ID(93)
+#define EVENT_EMBER_CB_SET_SECURITY_PARAMETERS_RETURN          EMBER_EVENT_ID(94)
+#define EVENT_EMBER_CB_SET_TX_POWER_MODE_RETURN          EMBER_EVENT_ID(95)
+#define EVENT_EMBER_CB_SET_WAKEUP_SEQUENCE_NUMBER_RETURN          EMBER_EVENT_ID(96)
+#define EVENT_EMBER_CB_SLAAC_SERVER_CHANGE          EMBER_EVENT_ID(97)
+#define EVENT_EMBER_CB_SLEEP_NO_TIMER_RETURN          EMBER_EVENT_ID(98)
+#define EVENT_EMBER_CB_STACK_POLL_FOR_DATA_RETURN          EMBER_EVENT_ID(99)
+#define EVENT_EMBER_CB_START_HOST_JOIN_CLIENT_HANDLER          EMBER_EVENT_ID(100)
+#define EVENT_EMBER_CB_START_UART_STORM_RETURN          EMBER_EVENT_ID(101)
+#define EVENT_EMBER_CB_START_WAKEUP_RETURN          EMBER_EVENT_ID(102)
+#define EVENT_EMBER_CB_STOP_UART_STORM_RETURN          EMBER_EVENT_ID(103)
+#define EVENT_EMBER_CB_SWITCH_TO_NEXT_NETWORK_KEY_RETURN          EMBER_EVENT_ID(104)
+#define EVENT_EMBER_CB_UART_SPEED_TEST_RETURN          EMBER_EVENT_ID(105)
+#define EVENT_EMBER_CB_WAKEUP_HANDLER          EMBER_EVENT_ID(106)
+#define EVENT_EMBER_CB_WAKEUP_STATE_RETURN          EMBER_EVENT_ID(107)
+#define EVENT_EMBER_CB_STATE_RETURN EMBER_EVENT_ID(108)
+#define EVENT_EMBER_CB_SET_COEX_PARAMETERS_RETURN EMBER_EVENT_ID(109)
+#define EVENT_EMBER_CB_GET_COEX_STATS_RETURN EMBER_EVENT_ID(110)
+#define EVENT_EMBER_CB_SET_TRANSMIT_HOOK_ACTIVE_RETURN EMBER_EVENT_ID(111)
+#define EVENT_EMBER_CB_SET_NETWORK_KEYS_HANDLER EMBER_EVENT_ID(112)
+
+#if EMBER_BUILD_NUMBER >= 509
+wpantund_status_t ember_join_failure_reason_to_wpantund_status(EmberJoinFailureReason reason);
+#elif EMBER_BUILD_NUMBER >= 426 && EMBER_BUILD_NUMBER < 509
+wpantund_status_t ember_network_status_reason_to_wpantund_status(EmberNetworkStatusReason reason);
+#endif
+
+
+extern const EmberCommandEntry managementCallbackCommandTable[];
+
+__END_DECLS
+
+#define EMBER_NODE_TYPE_LURKER_COMPATIBLE_FLAG      0x80
+#define EMBER_TYPE_SUPPORTS_LEGACY(x)               (((x)&EMBER_NODE_TYPE_LURKER_COMPATIBLE_FLAG)==EMBER_NODE_TYPE_LURKER_COMPATIBLE_FLAG)
+
+
+#define EMBER_MIN_RADIO_TX_POWER		(-43)
+#define EMBER_MAX_RADIO_TX_POWER		8
+
+namespace nl {
+namespace wpantund {
+namespace EmberGlue {
+
+void init(void);
+
+cms_t get_ms_to_next_ember_event(void);
+
+void process_ember(void);
+
+void process_message_from_ncp(SerialLinkMessageType type, const uint8_t *message, uint16_t length);
+
+wpantund_status_t status_to_wpantund_status(EmberStatus status);
+
+NCPState ncp_state_convert_from_ember(EmberNetworkStatus association_state);
+
+NodeType node_type_convert_from_ember(EmberNodeType node_type);
+
+EmberNodeType node_type_convert_to_ember(NodeType node_type, bool support_legacy);
+
+const char* reset_cause_to_cstr(EmberResetCause cause);
+
+WPAN::NetworkInstance network_instance_from_ember_network_parameters(const EmberNetworkParameters *parameters);
+
+std::string configure_gateway_flags_to_string(uint8_t flags);
+
+std::string counter_type_to_string(EmberCounterType type);
+
+EmberCounterType string_to_counter_type(const std::string& string);
+
+std::string describe_frame(const uint8_t* data, size_t len);
+
+int get_cmd_id(const uint8_t* data, size_t len);
+
+int unwrap_custom_callback(const uint8_t*&data, size_t&len);
+
+}; // EmberGlue
+}; // wpantund
+}; // nl
+
+
+
+#endif /* defined(__wpantund__EmberAPIGlue__) */

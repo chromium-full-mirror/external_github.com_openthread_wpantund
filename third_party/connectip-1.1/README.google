@@ -1,0 +1,13 @@
+URL: N/A
+Version: 1.1.3
+License: PROPRIETARY
+License File: LICENSE
+
+Description:
+Contains headers needed for code which communicates with chips running
+the ConnectIP-1.1 stack.
+
+Local Modifications:
+LICENSE file has been created for compliance purposes. Not included in original
+distribution. Removed all unnecessary source files. Minor adjustments for
+header paths. Added `stack/include/counter.h`.

@@ -303,3 +303,80 @@ AC_DEFUN([NL_CHECK_PTS], [
 	AM_CONDITIONAL([_XOPEN_SOURCE],[true])
 	AC_CHECK_FUNCS([forkpty ptsname], [$1], [$2])
 ])
+
+dnl begin pe8qf1P4GCme
+AC_DEFUN([NL_CONNECTIP_DROP], [
+	HAVE_CONNECTIP=false
+
+	AC_ARG_ENABLE(ash-v3-debug, AC_HELP_STRING([--enable-ash-v3-debug],
+				[enable debugging information for ASHv3]), [
+		if (test "${enableval}" = "yes" &&
+					test "${ac_cv_prog_cc_g}" = "yes"); then
+			CONNECTIP_CPPFLAGS="$CONNECTIP_CPPFLAGS -DUSE_ASH_V3_DEBUG=1"
+		fi
+	])
+
+	nl_connectip_full_srcdir="`cd "${srcdir}" && pwd `"
+	test x"${CONNECTIP_PATH}" = x && CONNECTIP_PATH="`cd "${srcdir}" && pwd `/third_party/silabs-thread-1.0"
+
+	AC_MSG_CHECKING([location of ConnectIP drop])
+	AC_ARG_WITH(
+		connectip,
+		AC_HELP_STRING([--with-connectip=PATH],[path to specific ConnectIP drop]),
+		[CONNECTIP_PATH="${withval}"]
+	)
+
+	if (test "${CONNECTIP_PATH}" = "no" )
+	then
+		CONNECTIP_PATH=""
+		AC_MSG_RESULT([disabled])
+	else
+		AC_MSG_RESULT([$CONNECTIP_PATH])
+		AC_MSG_CHECKING([for existance of ${CONNECTIP_PATH}/stack/config/config.h])
+
+		HAVE_CONNECTIP="test -f ${CONNECTIP_PATH}/stack/config/config.h"
+
+		if ${HAVE_CONNECTIP}
+		then AC_MSG_RESULT([yes])
+		else AC_MSG_RESULT([no])
+		fi
+	fi
+
+	if ${HAVE_CONNECTIP}
+	then {
+		CONNECTIP_CPPFLAGS+=" -I'${CONNECTIP_PATH}'"
+		CONNECTIP_CPPFLAGS+=" -I'${CONNECTIP_PATH}/stack'"
+		CONNECTIP_CPPFLAGS+=' -DPLATFORM_HEADER=\"hal/micro/unix/compiler/gcc.h\"'
+		CONNECTIP_CPPFLAGS+=" -DUNIX_HOST=1"
+		CONNECTIP_CPPFLAGS+=" -DEMBER_RIP_STACK=1"
+		CONNECTIP_CPPFLAGS+=" -DEMBER_STACK_IP=1"
+		CONNECTIP_CPPFLAGS+=" -DUNIX_HOST=1"
+		CONNECTIP_CPPFLAGS+=" -DAPP_SERIAL=0"
+		CONNECTIP_CPPFLAGS+=" -DPHY_NULL=1"
+		CONNECTIP_CPPFLAGS+=' -DBOARD_HEADER=\"'${CONNECTIP_PATH}'/hal/micro/unix/host/board/host.h\"'
+		CONNECTIP_CPPFLAGS+=" -DHAL_MICRO=1"
+		CONNECTIP_CPPFLAGS+=" -DUNIX=1"
+		CONNECTIP_CPPFLAGS+=" -DBOARD_HOST"
+		CONNECTIP_CPPFLAGS+=" -DEMBER_ASSERT_SERIAL_PORT=0"
+		CONNECTIP_CPPFLAGS+=" -DEMBER_SERIAL0_BLOCKING=1"
+		CONNECTIP_CPPFLAGS+=" -DEMBER_SERIAL0_MODE=EMBER_SERIAL_FIFO"
+		CONNECTIP_CPPFLAGS+=" -DEMBER_SERIAL0_TX_QUEUE_SIZE=128"
+		CONNECTIP_CPPFLAGS+=" -DEMBER_SERIAL0_RX_QUEUE_SIZE=128"
+		CONNECTIP_CPPFLAGS+=" -DEMBER_WAKEUP_STACK"
+		CONNECTIP_CPPFLAGS+=" -DMFGLIB"
+
+		AC_DEFINE_UNQUOTED([HAVE_CONNECTIP], 1, [Define to 1 if a ConnectIP drop is available.])
+		$1
+	}
+	else {
+		$2
+	}
+	fi
+
+	AM_CONDITIONAL([HAVE_CONNECTIP],[$HAVE_CONNECTIP])
+	[CONNECTIP_PATH="$(echo ${CONNECTIP_PATH} | sed 's:^'"${nl_connectip_full_srcdir}"':$(top_srcdir):')" ; ]
+
+	AC_SUBST(CONNECTIP_PATH)
+	AC_SUBST(CONNECTIP_CPPFLAGS)
+])
+dnl end pe8qf1P4GCme
