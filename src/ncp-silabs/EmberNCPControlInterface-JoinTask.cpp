@@ -54,10 +54,6 @@ EmberNCPControlInterface::JoinTask::vprocess_event(int event, va_list args)
 
 	if (!mInterface->mNCPInstance->mEnabled) {
 		ret = kWPANTUNDStatus_InvalidWhenDisabled;
-	} else if (ncp_state_is_initializing(mInterface->mNCPInstance->get_ncp_state())) {
-		ret = kWPANTUNDStatus_Busy;
-	} else if (mInterface->mNCPInstance->is_initializing_ncp()) {
-		ret = kWPANTUNDStatus_Busy;
 	} else if (ncp_state_is_joining_or_joined(mInterface->mNCPInstance->get_ncp_state())) {
 		ret = kWPANTUNDStatus_Already;
 	} else if (ncp_state_is_commissioned(mInterface->mNCPInstance->get_ncp_state())) {
@@ -75,6 +71,13 @@ EmberNCPControlInterface::JoinTask::vprocess_event(int event, va_list args)
 		   static_cast<long long unsigned>(mNetwork.get_xpanid_as_uint64()),
 		   mNetwork.panid,
 		   mNetwork.channel);
+
+	// Wait for a bit if NCP is being initialized for it to finish.
+	EH_REQUIRE_WITHIN(
+		NCP_DEFAULT_COMMAND_RESPONSE_TIMEOUT,
+		!mInterface->mNCPInstance->is_initializing_ncp(),
+		on_error
+	);
 
 	// The first event to a task is EVENT_STARTING_TASK. The following
 	// line makes sure that we don't start processing this task
