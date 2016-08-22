@@ -59,6 +59,8 @@ nl::wpantund::EmberNCPControlInterface::FormTask::vprocess_event(int event, va_l
 		ret = kWPANTUNDStatus_InvalidWhenDisabled;
 	} else if (ncp_state_is_initializing(mInterface->mNCPInstance->get_ncp_state())) {
 		ret = kWPANTUNDStatus_Busy;
+	} else if (mInterface->mNCPInstance->is_initializing_ncp()) {
+		ret = kWPANTUNDStatus_Busy;
 	} else if (ncp_state_is_joining_or_joined(mInterface->mNCPInstance->get_ncp_state())) {
 		ret = kWPANTUNDStatus_Already;
 	} else if (ncp_state_is_commissioned(mInterface->mNCPInstance->get_ncp_state())) {

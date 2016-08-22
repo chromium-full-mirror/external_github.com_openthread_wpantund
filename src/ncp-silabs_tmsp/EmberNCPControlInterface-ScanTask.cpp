@@ -84,6 +84,7 @@ nl::wpantund::EmberNCPControlInterface::ScanTask::vprocess_event(int event, va_l
 	EH_REQUIRE_WITHIN(
 		NCP_DEFAULT_COMMAND_RESPONSE_TIMEOUT,
 		!ncp_state_is_initializing(mInterface->mNCPInstance->get_ncp_state())
+		&& !mInterface->mNCPInstance->is_initializing_ncp()
 		&& (mInterface->mNCPInstance->get_ncp_state() != ASSOCIATING)
 		&& (mInterface->mNCPInstance->get_ncp_state() != CREDENTIALS_NEEDED)
 		&& (mInterface->mNCPInstance->get_ncp_state() != COMMISSIONED),
