@@ -632,9 +632,7 @@ EmberNCPControlInterface::config_gateway(bool defaultRoute, const uint8_t prefix
 
 	flags |= EMBER_BORDER_ROUTER_SLAAC_PREFERRED_FLAG | EMBER_BORDER_ROUTER_SLAAC_VALID_FLAG;
 
-	memcpy(address.s6_addr, prefix, 8);
-	memcpy(address.s6_addr + 8, mNCPInstance->mMACAddress, 8);
-	address.s6_addr[8] ^= 0x02; // flip the private-use bit on the hardware address.
+	address = make_slaac_addr_from_eui64(prefix, mNCPInstance->mMACAddress);
 
 	config_gateway_address(flags, address, preferredLifetime, validLifetime, cb);
 
@@ -1478,15 +1476,29 @@ EmberNCPControlInterface::handle_ncp_network_state_changed()
 
 	if (0 != memcmprev(mNCPInstance->mMACAddress, emberEui64(), sizeof(mNCPInstance->mMACAddress))) {
 		uint8_t mac_address[sizeof(mNCPInstance->mMACAddress)];
+
 		memcpyrev(&mac_address, emberEui64(), sizeof(mac_address));
+
 		mNCPInstance->set_mac_address(mac_address);
+
+		static const uint8_t link_local_prefix[8] = {0xfe, 0x80};
+		struct in6_addr new_ll_addr = make_slaac_addr_from_eui64(link_local_prefix, mac_address);
+
+		if (new_ll_addr != mNCPInstance->mNCPLinkLocalAddress) {
+			mNCPInstance->remove_address(mNCPInstance->mNCPLinkLocalAddress);
+			mNCPInstance->mNCPLinkLocalAddress = new_ll_addr;
+			mNCPInstance->add_address(mNCPInstance->mNCPLinkLocalAddress);
+		}
 	}
 
 	if (0 != memcmp(mNCPInstance->mNCPV6Prefix, networkParams.ulaPrefix.bytes, sizeof(mNCPInstance->mNCPV6Prefix))) {
 		// mNCPInstance->mNCPV6Prefix is a union with mNCPMeshLocalAddress.
-		emberGetLocalIpAddress(0, reinterpret_cast<EmberIpv6Address *>(mNCPInstance->mNCPMeshLocalAddress.s6_addr));
+		mNCPInstance->remove_address(mNCPInstance->mNCPMeshLocalAddress);
 
+		emberGetLocalIpAddress(0, reinterpret_cast<EmberIpv6Address *>(mNCPInstance->mNCPMeshLocalAddress.s6_addr));
 		memcpy(mNCPInstance->mNCPV6Prefix, networkParams.ulaPrefix.bytes, sizeof(mNCPInstance->mNCPV6Prefix));
+
+		mNCPInstance->add_address(mNCPInstance->mNCPMeshLocalAddress);
 
 		syslog(
 			LOG_INFO,
@@ -1914,7 +1926,7 @@ EmberNCPControlInterface::handle_cb_address_configuration_change(va_list args)
 			flags
 		);
 
-		mNCPInstance->update_global_address(address, valid_lifetime, preferred_lifetime, flags);
+		mNCPInstance->add_address(address, 64, valid_lifetime, preferred_lifetime);
 	} else {
 		syslog(
 			LOG_ERR,
@@ -1995,6 +2007,7 @@ EmberNCPControlInterface::handle_cb_slaac_server_change(va_list args)
 	std::string address_string;
 
 	require_action(prefix_len <= 16, bail, mNCPInstance->change_ncp_state(FAULT));
+
 	memcpy(address.s6_addr, prefix, prefix_len);
 
 	address_string = in6_addr_to_string(address);
@@ -2006,8 +2019,7 @@ EmberNCPControlInterface::handle_cb_slaac_server_change(va_list args)
 			&& (prefix_len == 8)
 			&& !mNCPInstance->lookup_address_for_prefix(NULL, address, 64)
 		) {
-			memcpy(address.s6_addr + 8, mNCPInstance->mMACAddress, 8);
-			address.s6_addr[8] ^= 0x02; // flip the private-use bit on the hardware address.
+			address = make_slaac_addr_from_eui64(prefix, mNCPInstance->mMACAddress);
 			request_address_from_ncp(address, 128, 0);
 		}
 	} else {
@@ -2179,17 +2191,16 @@ void
 EmberNCPControlInterface::refresh_addresses(void)
 {
 	struct in6_addr legacy_addr;
+	bool has_legacy_address = false;
 
 	if (buffer_is_nonzero(mNCPInstance->mNCPV6LegacyPrefix, sizeof(mNCPInstance->mNCPV6LegacyPrefix))) {
-		memcpy(&legacy_addr, mNCPInstance->mNCPV6LegacyPrefix, sizeof(mNCPInstance->mNCPV6LegacyPrefix));
-		memcpy(&legacy_addr.s6_addr[8], mNCPInstance->mMACAddress, sizeof(mNCPInstance->mMACAddress));
-		legacy_addr.s6_addr[8] ^= 0x02; // Flip the private-use bit on the hardware address.
+		legacy_addr = make_slaac_addr_from_eui64(mNCPInstance->mNCPV6LegacyPrefix, mNCPInstance->mMACAddress);
+		has_legacy_address = true;
 	} else {
 		memset(legacy_addr.s6_addr, 0, sizeof(legacy_addr));
 	}
 
 	if (!buffer_is_nonzero(mNCPInstance->mNCPV6Prefix, 8) && !buffer_is_nonzero(mNCPInstance->mNCPV6LegacyPrefix, 8)) {
-		mNCPInstance->mPrimaryInterface->set_realm_local_address(NULL);
 		return;
 	}
 
@@ -2199,15 +2210,13 @@ EmberNCPControlInterface::refresh_addresses(void)
 		}
 		memset(mNCPInstance->mNCPV6LegacyPrefix, 0, sizeof(mNCPInstance->mNCPV6LegacyPrefix));
 	} else {
-		if (mNCPInstance->is_legacy_interface_enabled()) {
-			mNCPInstance->mLegacyInterface->set_realm_local_address(&legacy_addr);
+		if (has_legacy_address && mNCPInstance->is_legacy_interface_enabled()) {
+			mNCPInstance->mLegacyInterface->add_address(&legacy_addr);
 		}
 	}
 
 	if (buffer_is_nonzero(&mNCPInstance->mNCPMeshLocalAddress.s6_addr[8], 8)) {
-		mNCPInstance->mPrimaryInterface->set_realm_local_address(&mNCPInstance->mNCPMeshLocalAddress);
-	} else {
-		mNCPInstance->mPrimaryInterface->set_realm_local_address(NULL);
+		mNCPInstance->add_address(mNCPInstance->mNCPMeshLocalAddress);
 	}
 }
 

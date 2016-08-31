@@ -135,6 +135,10 @@
 		B68756CA1C6BDDFE00C879D1 /* event-control.c in Sources */ = {isa = PBXBuildFile; fileRef = B68755A91C6BDDFE00C879D1 /* event-control.c */; };
 		B68756CB1C6BDDFE00C879D1 /* event-queue.c in Sources */ = {isa = PBXBuildFile; fileRef = B68755AA1C6BDDFE00C879D1 /* event-queue.c */; };
 		B68757051C6BDDFE00C879D1 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = B687564C1C6BDDFE00C879D1 /* Makefile */; };
+		B6888EEE1D6E289400287AB1 /* IPv6Helpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6888EED1D6E289400287AB1 /* IPv6Helpers.cpp */; };
+		B6888EEF1D6E289400287AB1 /* IPv6Helpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6888EED1D6E289400287AB1 /* IPv6Helpers.cpp */; };
+		B6888EF01D6E289400287AB1 /* IPv6Helpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6888EED1D6E289400287AB1 /* IPv6Helpers.cpp */; };
+		B6888EF11D6E289400287AB1 /* IPv6Helpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6888EED1D6E289400287AB1 /* IPv6Helpers.cpp */; };
 		B688ACD61C8F63670072622D /* NCPInstanceBase-NetInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B688ACD31C8F63670072622D /* NCPInstanceBase-NetInterface.cpp */; };
 		B688ACD71C8F63670072622D /* NCPInstanceBase-NetInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B688ACD31C8F63670072622D /* NCPInstanceBase-NetInterface.cpp */; };
 		B688ACD81C8F63670072622D /* NCPInstanceBase-Addresses.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B688ACD41C8F63670072622D /* NCPInstanceBase-Addresses.cpp */; };
@@ -347,7 +351,7 @@
 		B612E28B1AC9E4B000E418E0 /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
 		B6174A201AC0C33E00048E4F /* EmberNCPControlInterface-SetNetworkKeyTask.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "EmberNCPControlInterface-SetNetworkKeyTask.cpp"; sourceTree = "<group>"; };
 		B6174A211AC0C33E00048E4F /* EmberNCPControlInterface-SetNetworkKeyTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "EmberNCPControlInterface-SetNetworkKeyTask.h"; sourceTree = "<group>"; };
-		B618F7641CC82E79008B4AD4 /* spinel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = spinel.c; path = ../../third_party/openthread/src/ncp/spinel.c; sourceTree = "<group>"; };
+		B618F7641CC82E79008B4AD4 /* spinel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = spinel.c; path = ../../third_party/openthread/src/ncp/spinel.c; sourceTree = "<group>"; usesTabs = 0; };
 		B618F76C1CCAC260008B4AD4 /* SpinelNCPInstance-DataPump.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "SpinelNCPInstance-DataPump.cpp"; sourceTree = "<group>"; };
 		B618F76F1CCACA6F008B4AD4 /* SpinelNCPInstance-Protothreads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "SpinelNCPInstance-Protothreads.cpp"; sourceTree = "<group>"; };
 		B618F7711CCAEC4B008B4AD4 /* SpinelNCPTaskSendCommand.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SpinelNCPTaskSendCommand.cpp; sourceTree = "<group>"; };
@@ -379,7 +383,7 @@
 		B65301B11CC6EA2500B4F3DD /* SpinelNCPControlInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpinelNCPControlInterface.h; sourceTree = "<group>"; };
 		B65301B21CC6EA2500B4F3DD /* SpinelNCPInstance.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SpinelNCPInstance.cpp; sourceTree = "<group>"; };
 		B65301B31CC6EA2500B4F3DD /* SpinelNCPInstance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpinelNCPInstance.h; sourceTree = "<group>"; };
-		B65301B71CC6EACE00B4F3DD /* spinel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = spinel.h; path = ../../third_party/openthread/src/ncp/spinel.h; sourceTree = "<group>"; };
+		B65301B71CC6EACE00B4F3DD /* spinel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = spinel.h; path = ../../third_party/openthread/src/ncp/spinel.h; sourceTree = "<group>"; usesTabs = 0; };
 		B67DE7601CF4DE1300E4AE53 /* spinel-extra.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "spinel-extra.c"; sourceTree = "<group>"; };
 		B67DE7611CF4DE1300E4AE53 /* spinel-extra.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "spinel-extra.h"; sourceTree = "<group>"; };
 		B68754351C6BDDFD00C879D1 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
@@ -839,6 +843,7 @@
 		B687564D1C6BDDFE00C879D1 /* spi-server.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "spi-server.c"; sourceTree = "<group>"; };
 		B687564E1C6BDDFE00C879D1 /* spi-server.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "spi-server.sh"; sourceTree = "<group>"; };
 		B68756501C6BDDFE00C879D1 /* EM358-CDC.inf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "EM358-CDC.inf"; sourceTree = "<group>"; };
+		B6888EED1D6E289400287AB1 /* IPv6Helpers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IPv6Helpers.cpp; sourceTree = "<group>"; };
 		B688ACD31C8F63670072622D /* NCPInstanceBase-NetInterface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "NCPInstanceBase-NetInterface.cpp"; sourceTree = "<group>"; };
 		B688ACD41C8F63670072622D /* NCPInstanceBase-Addresses.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "NCPInstanceBase-Addresses.cpp"; sourceTree = "<group>"; };
 		B688ACD51C8F63670072622D /* NCPInstanceBase-AsyncIO.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "NCPInstanceBase-AsyncIO.cpp"; sourceTree = "<group>"; };
@@ -2580,6 +2585,7 @@
 				E123EE891832792D00467C2F /* Data.h */,
 				E1102C0C183A9B470081771A /* NilReturn.h */,
 				E1FD94091A81821600CB3CC7 /* IPv6Helpers.h */,
+				B6888EED1D6E289400287AB1 /* IPv6Helpers.cpp */,
 				E123EE85183272D200467C2F /* IPv6PacketMatcher.cpp */,
 				E123EE86183272D200467C2F /* IPv6PacketMatcher.h */,
 				E127376D18C5100C00789919 /* SocketWrapper.cpp */,
@@ -2814,6 +2820,7 @@
 				E1102C1A183AB3990081771A /* socket-utils.c in Sources */,
 				E1EB489A196C8A150018B2ED /* EmberNCPControlInterface-GetRIPEntryTask.cpp in Sources */,
 				B6A683F81C50457400D0FCAC /* ValueMap.cpp in Sources */,
+				B6888EEE1D6E289400287AB1 /* IPv6Helpers.cpp in Sources */,
 				B69A46201AF7F608001D8A8F /* EmberNCPControlInterface-LeaveTask.cpp in Sources */,
 				B612065B1CADC10E00A4E683 /* Timer.cpp in Sources */,
 				B6026B691BDAD356000D07DD /* FirmwareUpgrade.cpp in Sources */,
@@ -2843,6 +2850,7 @@
 				B612067A1CADDDA700A4E683 /* tunnel.c in Sources */,
 				B612067B1CADDDA700A4E683 /* DBUSHelpers.cpp in Sources */,
 				B612067C1CADDDA700A4E683 /* nlpt-select.c in Sources */,
+				B6888EF01D6E289400287AB1 /* IPv6Helpers.cpp in Sources */,
 				B612067F1CADDDA700A4E683 /* DBusIPCAPI_v1.cpp in Sources */,
 				B61206801CADDDA700A4E683 /* DBUSIPCServer.cpp in Sources */,
 				B69D8A9C1D5110020060D2A8 /* sec-random.c in Sources */,
@@ -2893,6 +2901,7 @@
 				B65301871CC6E9F200B4F3DD /* wpantund.cpp in Sources */,
 				B65301891CC6E9F200B4F3DD /* UnixSocket.cpp in Sources */,
 				B653018A1CC6E9F200B4F3DD /* SocketAdapter.cpp in Sources */,
+				B6888EF11D6E289400287AB1 /* IPv6Helpers.cpp in Sources */,
 				B653018B1CC6E9F200B4F3DD /* tunnel.c in Sources */,
 				B618F7821CCAEC4B008B4AD4 /* SpinelNCPTaskForm.cpp in Sources */,
 				B653018C1CC6E9F200B4F3DD /* DBUSHelpers.cpp in Sources */,
@@ -2979,6 +2988,7 @@
 				B63BBCC21C77B1E200083591 /* ash-v3.c in Sources */,
 				B64F02ED1C6BE2FA00F4FACA /* host-address-table.c in Sources */,
 				B68B79D01C65268500EC9FB8 /* SuperSocket.cpp in Sources */,
+				B6888EEF1D6E289400287AB1 /* IPv6Helpers.cpp in Sources */,
 				B68B7A021C6526F700EC9FB8 /* EmberPacked.cpp in Sources */,
 				B68B79D51C65268500EC9FB8 /* string-utils.c in Sources */,
 				B68B79D61C65268500EC9FB8 /* IPv6PacketMatcher.cpp in Sources */,

@@ -145,7 +145,7 @@ public:
 	int8_t mMfgFirstPacketRSSI;
 	uint8_t mMfgFirstPacketLQI;
 	cms_t mMfgRepeatRandomTXInterval;
-	uint8_t mMfgRepeatRandomTXLen;
+	int mMfgRepeatRandomTXLen;
 	/*********** END NCPMfgInterface ***********/
 
 protected:
