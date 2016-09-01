@@ -22,7 +22,7 @@
 #include <queue>
 #include "NCPInstance.h"
 #include "NCPControlInterface.h"
-#include "NCPMfgInterface.h"
+#include "NCPMfgInterface_v0.h"
 #include "CallbackStore.hpp"
 #include "nlpt.h"
 #include <set>
@@ -41,7 +41,7 @@ namespace wpantund {
 
 class EmberNCPInstance;
 
-class EmberNCPControlInterface : public NCPControlInterface, public NCPMfgInterface, public nl::EventHandler {
+class EmberNCPControlInterface : public NCPControlInterface, public NCPMfgInterface_v0, public nl::EventHandler {
 public:
 	class HelperTask;
 	class JoinTask;

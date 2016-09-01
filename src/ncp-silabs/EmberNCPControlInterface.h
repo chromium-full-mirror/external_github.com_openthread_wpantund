@@ -22,7 +22,7 @@
 #include <queue>
 #include "NCPInstance.h"
 #include "NCPControlInterface.h"
-#include "NCPMfgInterface.h"
+#include "NCPMfgInterface_v0.h"
 #include "CallbackStore.hpp"
 #include "nlpt.h"
 #include <set>
@@ -42,7 +42,7 @@ namespace EmberCommands {
 	class FirmwareInterface;
 }
 
-class EmberNCPControlInterface : public NCPControlInterface, public NCPMfgInterface, protected nl::EventHandler {
+class EmberNCPControlInterface : public NCPControlInterface, public NCPMfgInterface_v0, protected nl::EventHandler {
 public:
 	class HelperTask;
 	class JoinTask;
