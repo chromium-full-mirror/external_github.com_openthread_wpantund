@@ -34,6 +34,7 @@
 #include "SpinelNCPTaskWake.h"
 #include "SpinelNCPTaskSendCommand.h"
 #include "SpinelNCPTaskChangeNetData.h"
+#include "SpinelNCPTaskJoin.h"
 #include "any-to.h"
 #include "spinel-extra.h"
 
@@ -87,6 +88,49 @@ SpinelNCPInstance::start_new_task(const boost::shared_ptr<SpinelNCPTask> &task)
 		return 0;
 	}
 	return -1;
+}
+
+int
+nl::wpantund::spinel_status_to_wpantund_status(int spinel_status)
+{
+	wpantund_status_t ret;
+	switch (spinel_status) {
+	case SPINEL_STATUS_ALREADY:
+		ret = kWPANTUNDStatus_Already;
+		break;
+	case SPINEL_STATUS_BUSY:
+		ret = kWPANTUNDStatus_Busy;
+		break;
+	case SPINEL_STATUS_IN_PROGRESS:
+		ret = kWPANTUNDStatus_InProgress;
+		break;
+	case SPINEL_STATUS_JOIN_FAILURE:
+		ret = kWPANTUNDStatus_JoinFailedUnknown;
+		break;
+	case SPINEL_STATUS_JOIN_INCOMPATIBLE:
+		ret = kWPANTUNDStatus_JoinFailedAtScan;
+		break;
+	case SPINEL_STATUS_JOIN_SECURITY:
+		ret = kWPANTUNDStatus_JoinFailedAtAuthenticate;
+		break;
+	case SPINEL_STATUS_OK:
+		ret = kWPANTUNDStatus_Ok;
+		break;
+	case SPINEL_STATUS_PROP_NOT_FOUND:
+		ret = kWPANTUNDStatus_PropertyNotFound;
+		break;
+	case SPINEL_STATUS_INVALID_ARGUMENT:
+		ret = kWPANTUNDStatus_NCP_InvalidArgument;
+		break;
+	case SPINEL_STATUS_INVALID_STATE:
+		ret = kWPANTUNDStatus_InvalidForCurrentState;
+		break;
+	default:
+		ret = WPANTUND_NCPERROR_TO_STATUS(spinel_status);
+		break;
+	}
+
+	return ret;
 }
 
 int
@@ -205,6 +249,15 @@ SpinelNCPInstance::get_supported_property_keys()const
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_ERR_SECURITY");
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_ERR_BAD_FCS");
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_ERR_OTHER");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_IP_SEC_TOTAL");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_IP_INSEC_TOTAL");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_IP_DROPPED");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_IP_SEC_TOTAL");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_IP_INSEC_TOTAL");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_IP_DROPPED");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_SPINEL_TOTAL");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_SPINEL_TOTAL");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_SPINEL_ERR");
 	}
 
 	return properties;
@@ -506,6 +559,15 @@ SpinelNCPInstance::get_property(
 		CNTR_KEY(RX_ERR_SECURITY)
 		CNTR_KEY(RX_ERR_BAD_FCS)
 		CNTR_KEY(RX_ERR_OTHER)
+		CNTR_KEY(TX_IP_SEC_TOTAL)
+		CNTR_KEY(TX_IP_INSEC_TOTAL)
+		CNTR_KEY(TX_IP_DROPPED)
+		CNTR_KEY(RX_IP_SEC_TOTAL)
+		CNTR_KEY(RX_IP_INSEC_TOTAL)
+		CNTR_KEY(RX_IP_DROPPED)
+		CNTR_KEY(TX_SPINEL_TOTAL)
+		CNTR_KEY(RX_SPINEL_TOTAL)
+		CNTR_KEY(RX_SPINEL_ERR)
 
 #undef CNTR_KEY
 
@@ -580,6 +642,7 @@ SpinelNCPInstance::set_property(
 			))) {
 				cb(kWPANTUNDStatus_InvalidForCurrentState);
 			}
+
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NetworkKey)) {
 			Data network_key = any_to_data(value);
 
@@ -590,13 +653,25 @@ SpinelNCPInstance::set_property(
 				}
 			}
 
-			start_new_task(boost::shared_ptr<SpinelNCPTask>(
-				new SpinelNCPTaskSendCommand(
-					this,
-					boost::bind(cb,_1),
-					SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_DATA_S), SPINEL_PROP_NET_MASTER_KEY, network_key.data(), network_key.size())
-				)
-			));
+			if (get_ncp_state() == CREDENTIALS_NEEDED) {
+				ValueMap options;
+				options[kWPANTUNDProperty_NetworkKey] = value;
+				start_new_task(boost::shared_ptr<SpinelNCPTask>(
+					new SpinelNCPTaskJoin(
+						this,
+						boost::bind(cb,_1),
+						options
+					)
+				));
+			} else {
+				start_new_task(boost::shared_ptr<SpinelNCPTask>(
+					new SpinelNCPTaskSendCommand(
+						this,
+						boost::bind(cb,_1),
+						SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_DATA_S), SPINEL_PROP_NET_MASTER_KEY, network_key.data(), network_key.size())
+					)
+				));
+			}
 
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NCPMACAddress)) {
 			Data eui64_value = any_to_data(value);
@@ -978,6 +1053,16 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 				change_ncp_state(ASSOCIATING);
 			}
 		} else {
+			if (!ncp_state_is_joining(get_ncp_state())) {
+				change_ncp_state(OFFLINE);
+			}
+		}
+
+	} else if (key == SPINEL_PROP_NET_IF_UP) {
+		bool is_if_up;
+		spinel_datatype_unpack(value_data_ptr, value_data_len, SPINEL_DATATYPE_BOOL_S, &is_if_up);
+
+		if (ncp_state_is_interface_up(get_ncp_state()) && !is_if_up) {
 			change_ncp_state(OFFLINE);
 		}
 
