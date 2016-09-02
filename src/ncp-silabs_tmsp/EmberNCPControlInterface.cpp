@@ -1142,12 +1142,20 @@ EmberNCPControlInterface::set_property(
 				EVENT_EMBER_CB_CHANGE_NODE_TYPE_RETURN
 			);
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NetworkNodeType)) {
-			uint8_t type = EmberGlue::node_type_convert_to_ember(string_to_node_type(any_to_string(value)), mNCPInstance->mLegacyInterfaceEnabled);
-			start_send_command_task(
-				boost::bind(cb,_1),
-				boost::bind(emberChangeNodeType,type),
-				EVENT_EMBER_CB_CHANGE_NODE_TYPE_RETURN
-			);
+			NodeType node_type = string_to_node_type(any_to_string(value));
+
+			if (node_type != UNKNOWN)
+			{
+				uint8_t type = EmberGlue::node_type_convert_to_ember(node_type, mNCPInstance->mLegacyInterfaceEnabled);
+
+				start_send_command_task(
+					boost::bind(cb,_1),
+					boost::bind(emberChangeNodeType,type),
+					EVENT_EMBER_CB_CHANGE_NODE_TYPE_RETURN
+				);
+			} else {
+				cb(kWPANTUNDStatus_InvalidArgument);
+			}
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NetworkKeyIndex)) {
 			uint8_t index = (uint8_t)any_to_int(value);
 			switch (mNCPInstance->get_ncp_state()) {
