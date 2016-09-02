@@ -70,13 +70,9 @@ void emberSetClockMonitor(uint8_t enable,
 
 void emberEnableHostJoinClient(bool enable)
 {
-  uint8_t buffer[EMBER_CUSTOM_COMMAND_BUFFER_LENGTH];
-  uint16_t length = emFormatBinaryManagementCommand(buffer,
-                                                    sizeof(buffer),
-                                                    EMBER_ENABLE_HOST_JOIN_CLIENT_COMMAND_IDENTIFIER,
-                                                    "u",
-                                                    enable);
-  emberCustomHostToNcpMessage(buffer, length);
+  emSendBinaryManagementCommand(EMBER_ENABLE_HOST_JOIN_CLIENT_COMMAND_IDENTIFIER,
+                                "u",
+                                enable);
 }
 
 static void permitJoiningReturnCallback(void)

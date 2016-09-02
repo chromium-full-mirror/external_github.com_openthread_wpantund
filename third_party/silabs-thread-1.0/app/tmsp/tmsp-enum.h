@@ -100,6 +100,7 @@ enum {
   EMBER_LAUNCH_STANDALONE_BOOTLOADER_COMMAND_IDENTIFIER                = 0x697e,
   EMBER_GET_MFG_TOKEN_COMMAND_IDENTIFIER                               = 0x697f,
   EMBER_SET_MFG_TOKEN_COMMAND_IDENTIFIER                               = 0x6980,
+  EMBER_ENABLE_HOST_JOIN_CLIENT_COMMAND_IDENTIFIER                     = 0x6981,
   CB_RESET_MICRO_COMMAND_IDENTIFIER                                    = 0x6300,
   CB_STATE_COMMAND_IDENTIFIER                                          = 0x6301,
   CB_GET_VERSIONS_COMMAND_IDENTIFIER                                   = 0x6302,
