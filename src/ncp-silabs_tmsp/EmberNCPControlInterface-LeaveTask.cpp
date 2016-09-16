@@ -99,7 +99,8 @@ nl::wpantund::EmberNCPControlInterface::LeaveTask::vprocess_event(int event, va_
 
 	EH_REQUIRE_WITHIN(
 		NCP_DEFAULT_COMMAND_RESPONSE_TIMEOUT,
-		!ncp_state_is_initializing(mInterface->mNCPInstance->get_ncp_state()),
+		!ncp_state_is_initializing(mInterface->mNCPInstance->get_ncp_state())
+		&& !mInterface->mNCPInstance->is_initializing_ncp(),
 		on_error
 	);
 
