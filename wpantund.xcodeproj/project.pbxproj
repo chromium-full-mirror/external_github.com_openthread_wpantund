@@ -74,6 +74,7 @@
 		B63BBCC21C77B1E200083591 /* ash-v3.c in Sources */ = {isa = PBXBuildFile; fileRef = B68755261C6BDDFD00C879D1 /* ash-v3.c */; };
 		B63BBCCD1C7BA5FD00083591 /* crc.c in Sources */ = {isa = PBXBuildFile; fileRef = B687552C1C6BDDFE00C879D1 /* crc.c */; };
 		B643F6881B754DC2004F1AB1 /* EmberPacked.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B643F6861B754DC2004F1AB1 /* EmberPacked.cpp */; };
+		B64B205A1D8CA568007A3922 /* SpinelNCPTaskGetChildTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B64B20561D8CA553007A3922 /* SpinelNCPTaskGetChildTable.cpp */; };
 		B64B68121CE1542A00A113B4 /* spinel.c in Sources */ = {isa = PBXBuildFile; fileRef = B618F7641CC82E79008B4AD4 /* spinel.c */; };
 		B64F02CA1C6BE0D000F4FACA /* binary-management.c in Sources */ = {isa = PBXBuildFile; fileRef = B68754471C6BDDFD00C879D1 /* binary-management.c */; };
 		B64F02CB1C6BE11900F4FACA /* tmsp-frame-utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = B68754791C6BDDFD00C879D1 /* tmsp-frame-utilities.c */; };
@@ -376,6 +377,8 @@
 		B643F6871B754DC2004F1AB1 /* EmberPacked.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmberPacked.h; sourceTree = "<group>"; };
 		B649D15F1BE83BFD00C2E83A /* Makefile.am */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
 		B649D1C01BEACA8200C2E83A /* soot.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = soot.xcodeproj; path = "src/ncp-silabs/libsoot/soot.xcodeproj"; sourceTree = "<group>"; };
+		B64B20561D8CA553007A3922 /* SpinelNCPTaskGetChildTable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SpinelNCPTaskGetChildTable.cpp; sourceTree = "<group>"; };
+		B64B20571D8CA553007A3922 /* SpinelNCPTaskGetChildTable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpinelNCPTaskGetChildTable.h; sourceTree = "<group>"; };
 		B64B680B1CE153F000A113B4 /* spinel-unit-test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "spinel-unit-test"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B65301AC1CC6E9F200B4F3DD /* wpantund-ncp-dummy copy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "wpantund-ncp-dummy copy"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B65301AF1CC6EA2500B4F3DD /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
@@ -1217,6 +1220,8 @@
 				B618F77C1CCAEC4B008B4AD4 /* SpinelNCPTaskJoin.h */,
 				B6B0D40A1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.cpp */,
 				B6B0D40B1D4FE0B500092F1F /* SpinelNCPTaskChangeNetData.h */,
+				B64B20561D8CA553007A3922 /* SpinelNCPTaskGetChildTable.cpp */,
+				B64B20571D8CA553007A3922 /* SpinelNCPTaskGetChildTable.h */,
 				B618F7741CCAEC4B008B4AD4 /* SpinelNCPTaskLeave.cpp */,
 				B618F77B1CCAEC4B008B4AD4 /* SpinelNCPTaskLeave.h */,
 				B65301B71CC6EACE00B4F3DD /* spinel.h */,
@@ -2897,6 +2902,7 @@
 				B67DE7621CF4DE1300E4AE53 /* spinel-extra.c in Sources */,
 				B618F7851CCAEC4B008B4AD4 /* SpinelNCPTaskWake.cpp in Sources */,
 				B65301851CC6E9F200B4F3DD /* any-to.cpp in Sources */,
+				B64B205A1D8CA568007A3922 /* SpinelNCPTaskGetChildTable.cpp in Sources */,
 				B65301861CC6E9F200B4F3DD /* SocketWrapper.cpp in Sources */,
 				B65301871CC6E9F200B4F3DD /* wpantund.cpp in Sources */,
 				B65301891CC6E9F200B4F3DD /* UnixSocket.cpp in Sources */,
