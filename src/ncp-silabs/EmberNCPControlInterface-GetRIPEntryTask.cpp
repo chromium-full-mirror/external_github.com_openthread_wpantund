@@ -60,7 +60,7 @@ nl::wpantund::EmberNCPControlInterface::GetRIPEntryTask::RipEntryToString(const 
 		if ( (ripEntry.ripMetric != 0) || (ripEntry.nextHopIndex != 0) ||
 			 (ripEntry.incomingLinkQuality != 0) || (ripEntry.incomingLinkQuality != 0) )
 		{
-			char ripEntryCStr[100];
+			char ripEntryCStr[200];
 			char euiStr[21];
 
 			// Ember NCPs always store the EUI64 in reverse order.
@@ -69,11 +69,11 @@ nl::wpantund::EmberNCPControlInterface::GetRIPEntryTask::RipEntryToString(const 
 			// Encode the EUI64 into string format
 			encode_data_into_string(ripEntry.eui64, sizeof(ripEntry.eui64), euiStr, sizeof(euiStr), 8);
 
-			snprintf(ripEntryCStr, sizeof(ripEntryCStr), "[%02d] EUI:%s (%s) RSSI:%d LQI(in/out):%u/%u Sync:%s Age:%d Metric:%d",
+			snprintf(ripEntryCStr, sizeof(ripEntryCStr), "[%02d] EUI:%s (%s) RSSI:%d LQI(in/out):%u/%u Sync:%s Age:%d Metric:%d NextHopIndex:%d",
 				index, euiStr,
 				node_type_to_string(mInterface->mFirmwareInterface->NodeTypeConvertFromEmber(ripEntry.type)).c_str(),
 				ripEntry.rollingRssi, ripEntry.incomingLinkQuality, ripEntry.outgoingLinkQuality,
-				ripEntry.mleSync ? "y" : "n", ripEntry.age, ripEntry.ripMetric);
+				ripEntry.mleSync ? "y" : "n", ripEntry.age, ripEntry.ripMetric, ripEntry.nextHopIndex);
 
 			syslog(LOG_INFO, "RIP:%s", ripEntryCStr);
 			return std::string(ripEntryCStr);

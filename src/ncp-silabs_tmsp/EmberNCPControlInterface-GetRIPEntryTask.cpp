@@ -51,7 +51,7 @@ nl::wpantund::EmberNCPControlInterface::GetRIPEntryTask::RipEntryToString(uint8_
 	if ( (ripEntry->ripMetric != 0) || (ripEntry->nextHopIndex != 0) ||
 		 (ripEntry->incomingLinkQuality != 0) || (ripEntry->incomingLinkQuality != 0) )
 	{
-		char ripEntryCStr[100];
+		char ripEntryCStr[200];
 		char euiStr[21];
 		uint8_t longId[8];
 
@@ -61,11 +61,11 @@ nl::wpantund::EmberNCPControlInterface::GetRIPEntryTask::RipEntryToString(uint8_
 		// Encode the EUI64 into string format
 		encode_data_into_string(longId, sizeof(longId), euiStr, sizeof(euiStr), 8);
 
-		snprintf(ripEntryCStr, sizeof(ripEntryCStr), "[%02d] EUI:%s (%s) RSSI:%d LQI(in/out):%u/%u Sync:%s Age:%d Metric:%d",
+		snprintf(ripEntryCStr, sizeof(ripEntryCStr), "[%02d] EUI:%s (%s) RSSI:%d LQI(in/out):%u/%u Sync:%s Age:%d Metric:%d NextHopIndex:%d",
 			index, euiStr,
 			node_type_to_string(EmberGlue::node_type_convert_from_ember(ripEntry->type)).c_str(),
 			ripEntry->rollingRssi, ripEntry->incomingLinkQuality, ripEntry->outgoingLinkQuality,
-			ripEntry->mleSync ? "y" : "n", ripEntry->age, ripEntry->ripMetric);
+			ripEntry->mleSync ? "y" : "n", ripEntry->age, ripEntry->ripMetric, ripEntry->nextHopIndex);
 
 		syslog(LOG_INFO, "RIP:%s", ripEntryCStr);
 		return std::string(ripEntryCStr);
