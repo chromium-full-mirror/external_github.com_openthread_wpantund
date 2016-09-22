@@ -131,6 +131,9 @@ public:
 
 	virtual std::string get_name();
 
+	virtual void pcap_to_fd(int fd, CallbackWithStatus cb = NilReturn());
+	virtual void pcap_terminate(CallbackWithStatus cb = NilReturn());
+
 	/*********** BEGIN NCPMfgInterface ***********/
 	virtual void mfg_start(CallbackWithStatus cb);
 	virtual void mfg_finish(CallbackWithStatusArg1 cb);

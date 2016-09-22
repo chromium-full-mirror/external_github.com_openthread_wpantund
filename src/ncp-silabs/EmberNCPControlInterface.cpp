@@ -870,6 +870,18 @@ EmberNCPControlInterface::get_counter(uint8_t index, CallbackWithStatusArg1 cb)
 	));
 }
 
+void
+EmberNCPControlInterface::pcap_to_fd(int fd, CallbackWithStatus cb)
+{
+	cb(kWPANTUNDStatus_FeatureNotImplemented);
+}
+
+void
+EmberNCPControlInterface::pcap_terminate(CallbackWithStatus cb)
+{
+	cb(kWPANTUNDStatus_FeatureNotImplemented);
+}
+
 // MARK: -
 
 std::set<std::string>

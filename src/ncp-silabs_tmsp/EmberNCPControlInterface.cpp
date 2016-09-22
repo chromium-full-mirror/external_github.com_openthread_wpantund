@@ -871,6 +871,19 @@ EmberNCPControlInterface::get_current_network_instance(void)const
 	return mNCPInstance->get_current_network_instance();
 }
 
+void
+EmberNCPControlInterface::pcap_to_fd(int fd, CallbackWithStatus cb)
+{
+	cb(kWPANTUNDStatus_FeatureNotImplemented);
+}
+
+void
+EmberNCPControlInterface::pcap_terminate(CallbackWithStatus cb)
+{
+	cb(kWPANTUNDStatus_FeatureNotImplemented);
+}
+
+
 // ----------------------------------------------------------------------------
 // MARK: -
 

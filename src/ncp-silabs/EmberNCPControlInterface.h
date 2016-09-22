@@ -127,6 +127,9 @@ public:
 
 	std::set<std::string> get_supported_property_keys()const;
 
+	virtual void pcap_to_fd(int fd, CallbackWithStatus cb = NilReturn());
+
+	virtual void pcap_terminate(CallbackWithStatus cb = NilReturn());
 
 	virtual std::string get_name();
 
