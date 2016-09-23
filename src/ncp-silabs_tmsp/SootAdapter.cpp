@@ -199,11 +199,19 @@ SootAdapter::update_fd_set(fd_set *read_fd_set, fd_set *write_fd_set, fd_set *er
 	if ((write_fd_set != NULL) && soot_wants_to_tx_data(mSootInstance)) {
 		FD_SET(get_parent()->get_write_fd(), write_fd_set);
 		FD_SET(get_parent()->get_write_fd(), error_fd_set);
+
+		if (max_fd && *max_fd < get_parent()->get_write_fd()) {
+			*max_fd = get_parent()->get_write_fd();
+		}
 	}
 
 	if (read_fd_set != NULL) {
 		FD_SET(get_parent()->get_read_fd(), read_fd_set);
 		FD_SET(get_parent()->get_read_fd(), error_fd_set);
+
+		if (max_fd && *max_fd < get_parent()->get_read_fd()) {
+			*max_fd = get_parent()->get_read_fd();
+		}
 	}
 
 	return SocketAdapter::update_fd_set(read_fd_set, write_fd_set, error_fd_set, max_fd, timeout);

@@ -69,6 +69,10 @@
 		B618F7851CCAEC4B008B4AD4 /* SpinelNCPTaskWake.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B618F7761CCAEC4B008B4AD4 /* SpinelNCPTaskWake.cpp */; };
 		B618F7861CCAEC4B008B4AD4 /* SpinelNCPTask.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B618F7771CCAEC4B008B4AD4 /* SpinelNCPTask.cpp */; };
 		B618F7881CCAEC78008B4AD4 /* SpinelNCPTaskDeepSleep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B618F7871CCAEC78008B4AD4 /* SpinelNCPTaskDeepSleep.cpp */; };
+		B619A5631D9330AF006B97FD /* Pcap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B619A5611D9330AF006B97FD /* Pcap.cpp */; };
+		B619A5641D9330AF006B97FD /* Pcap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B619A5611D9330AF006B97FD /* Pcap.cpp */; };
+		B619A5651D9330AF006B97FD /* Pcap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B619A5611D9330AF006B97FD /* Pcap.cpp */; };
+		B619A5661D9330AF006B97FD /* Pcap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B619A5611D9330AF006B97FD /* Pcap.cpp */; };
 		B63BBCC01C77B18600083591 /* EmberNCPControlInterface-GetCounter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B63BBCBE1C77B18600083591 /* EmberNCPControlInterface-GetCounter.cpp */; };
 		B63BBCC11C77B1C500083591 /* EmberASHAdapter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B68B7A1F1C694BEA00EC9FB8 /* EmberASHAdapter.cpp */; };
 		B63BBCC21C77B1E200083591 /* ash-v3.c in Sources */ = {isa = PBXBuildFile; fileRef = B68755261C6BDDFD00C879D1 /* ash-v3.c */; };
@@ -371,6 +375,10 @@
 		B618F77E1CCAEC4B008B4AD4 /* SpinelNCPTaskDeepSleep.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpinelNCPTaskDeepSleep.h; sourceTree = "<group>"; };
 		B618F77F1CCAEC4B008B4AD4 /* SpinelNCPTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpinelNCPTask.h; sourceTree = "<group>"; };
 		B618F7871CCAEC78008B4AD4 /* SpinelNCPTaskDeepSleep.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SpinelNCPTaskDeepSleep.cpp; sourceTree = "<group>"; };
+		B619A5611D9330AF006B97FD /* Pcap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Pcap.cpp; sourceTree = "<group>"; };
+		B619A5621D9330AF006B97FD /* Pcap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Pcap.h; sourceTree = "<group>"; };
+		B619A56B1D945703006B97FD /* tool-cmd-pcap.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "tool-cmd-pcap.c"; sourceTree = "<group>"; };
+		B619A56C1D945703006B97FD /* tool-cmd-pcap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tool-cmd-pcap.h"; sourceTree = "<group>"; };
 		B63BBCBE1C77B18600083591 /* EmberNCPControlInterface-GetCounter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "EmberNCPControlInterface-GetCounter.cpp"; sourceTree = "<group>"; };
 		B63BBCBF1C77B18600083591 /* EmberNCPControlInterface-GetCounter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "EmberNCPControlInterface-GetCounter.h"; sourceTree = "<group>"; };
 		B643F6861B754DC2004F1AB1 /* EmberPacked.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EmberPacked.cpp; sourceTree = "<group>"; };
@@ -2494,6 +2502,8 @@
 				B69A460A1AF157D9001D8A8F /* tool-cmd-permit-join.h */,
 				B69A460D1AF157D9001D8A8F /* tool-cmd-poll.c */,
 				B69A460E1AF157D9001D8A8F /* tool-cmd-poll.h */,
+				B619A56B1D945703006B97FD /* tool-cmd-pcap.c */,
+				B619A56C1D945703006B97FD /* tool-cmd-pcap.h */,
 				B69A460F1AF157D9001D8A8F /* tool-cmd-reset.c */,
 				B69A46101AF157D9001D8A8F /* tool-cmd-reset.h */,
 				B69A46111AF157D9001D8A8F /* tool-cmd-resume.c */,
@@ -2563,6 +2573,8 @@
 				B602785F1C56BF510066DA9E /* wpan-error.h */,
 				B6E13FC51D5CF2A4001233C4 /* NetworkRetain.cpp */,
 				B6E13FC61D5CF2A4001233C4 /* NetworkRetain.h */,
+				B619A5611D9330AF006B97FD /* Pcap.cpp */,
+				B619A5621D9330AF006B97FD /* Pcap.h */,
 			);
 			path = wpantund;
 			sourceTree = "<group>";
@@ -2833,6 +2845,7 @@
 				B61206691CADCD8200A4E683 /* NCPTypes.cpp in Sources */,
 				A66B37EB1762466000B0E219 /* EmberNCPControlInterface.cpp in Sources */,
 				E1102C0B183A9AF60081771A /* NCPInstance.cpp in Sources */,
+				B619A5631D9330AF006B97FD /* Pcap.cpp in Sources */,
 				B688ACD81C8F63670072622D /* NCPInstanceBase-Addresses.cpp in Sources */,
 				B6D23B0A1AB8ACCD00441CB5 /* EmberNCPControlInterface-Mfg.cpp in Sources */,
 				B688ACD61C8F63670072622D /* NCPInstanceBase-NetInterface.cpp in Sources */,
@@ -2855,6 +2868,7 @@
 				B612067A1CADDDA700A4E683 /* tunnel.c in Sources */,
 				B612067B1CADDDA700A4E683 /* DBUSHelpers.cpp in Sources */,
 				B612067C1CADDDA700A4E683 /* nlpt-select.c in Sources */,
+				B619A5651D9330AF006B97FD /* Pcap.cpp in Sources */,
 				B6888EF01D6E289400287AB1 /* IPv6Helpers.cpp in Sources */,
 				B612067F1CADDDA700A4E683 /* DBusIPCAPI_v1.cpp in Sources */,
 				B61206801CADDDA700A4E683 /* DBUSIPCServer.cpp in Sources */,
@@ -2897,6 +2911,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B618F7701CCACA6F008B4AD4 /* SpinelNCPInstance-Protothreads.cpp in Sources */,
+				B619A5661D9330AF006B97FD /* Pcap.cpp in Sources */,
 				B65301831CC6E9F200B4F3DD /* RunawayResetBackoffManager.cpp in Sources */,
 				B65301841CC6E9F200B4F3DD /* config-file.c in Sources */,
 				B67DE7621CF4DE1300E4AE53 /* spinel-extra.c in Sources */,
@@ -2981,6 +2996,7 @@
 				B6E13FC81D5CF2A4001233C4 /* NetworkRetain.cpp in Sources */,
 				B68B79F71C6526F700EC9FB8 /* EmberNCPControlInterface-JoinTask.cpp in Sources */,
 				B68757051C6BDDFE00C879D1 /* Makefile in Sources */,
+				B619A5641D9330AF006B97FD /* Pcap.cpp in Sources */,
 				B68B79CA1C65268500EC9FB8 /* nlpt-select.c in Sources */,
 				B68B79FC1C6526F700EC9FB8 /* EmberNCPControlInterface-ScanTask.cpp in Sources */,
 				B68756951C6BDDFE00C879D1 /* command-interpreter2-binary.c in Sources */,
