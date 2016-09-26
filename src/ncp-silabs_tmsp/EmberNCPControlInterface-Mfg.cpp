@@ -133,6 +133,11 @@ EmberNCPControlInterface::mfg_end_test(uint8_t type, CallbackWithStatus cb)
 	END_TRY_FOR_CMD(cb);
 }
 
+static MfgStatus mfglibSendPacketHook(const Data &pkt_data, uint16_t repeat)
+{
+	return mfglibSendPacket(const_cast<uint8_t *>(pkt_data.data()), repeat);
+}
+
 void
 EmberNCPControlInterface::mfg_tx_packet(const Data& packet, int16_t repeat, CallbackWithStatus cb)
 {
@@ -141,7 +146,7 @@ EmberNCPControlInterface::mfg_tx_packet(const Data& packet, int16_t repeat, Call
 		new SendCommandTask(
 			this,
 			boost::bind(cb,_1),
-			boost::bind(mfglibSendPacket,Data(packet).data(), repeat),
+			boost::bind(mfglibSendPacketHook, Data(packet), repeat),
 			EVENT_EMBER_CB_MFGLIB_SEND_PACKET_RETURN
 		)
 	));
