@@ -54,6 +54,9 @@ EmberNCPInstance::EmberNCPInstance(const Settings& settings) :
 	boost::shared_ptr<SocketAdapter> socket_adapter;
 	mControlInterface.mNCPInstance = this;
 
+	mOutboundBufferLen = 0;
+	mOutboundBufferSent = 0;
+
 	// If this socket name is a device, chances are it will need libsoot.
 	// This can be overridden via the configuration file or the command line.
 	if (settings.count(kWPANTUNDProperty_ConfigNCPSocketPath)

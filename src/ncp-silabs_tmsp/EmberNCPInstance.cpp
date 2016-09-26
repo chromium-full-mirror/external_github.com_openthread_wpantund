@@ -69,6 +69,8 @@ EmberNCPInstance::EmberNCPInstance(const Settings& settings) :
 
 	assert(gNCPInstance == NULL);
 	gNCPInstance = this;
+	mOutboundBufferLen = 0;
+	mOutboundBufferSent = 0;
 
 	EmberGlue::init();
 
