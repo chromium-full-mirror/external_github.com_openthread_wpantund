@@ -57,6 +57,10 @@ SootAdapter::SootAdapter(boost::shared_ptr<SocketWrapper> parent)
 {
 	mSootInstance = soot_create();
 
+	if (mSootInstance == NULL) {
+		throw std::bad_alloc();
+	}
+
 	soot_set_callbacks(
 		mSootInstance,
 		&soot_adapter_tx_callback,
