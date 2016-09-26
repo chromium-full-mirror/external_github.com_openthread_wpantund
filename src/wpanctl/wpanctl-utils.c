@@ -138,6 +138,13 @@ void dump_info_from_iter(FILE* file, DBusMessageIter *iter, int indent, bool bar
 		fprintf(file, "%d", v);
 	}
 	break;
+	case DBUS_TYPE_DOUBLE:
+	{
+		double v;
+		dbus_message_iter_get_basic(iter, &v);
+		fprintf(file, "%f", v);
+	}
+	break;
 	case DBUS_TYPE_UINT64:
 	{
 		uint64_t v;

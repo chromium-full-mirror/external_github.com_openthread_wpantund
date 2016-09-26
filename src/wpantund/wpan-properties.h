@@ -103,6 +103,7 @@
 #define kWPANTUNDProperty_SiLabs_MfgFirstPacketRSSI            "com.silabs:Mfg:FirstPacketRSSI"
 #define kWPANTUNDProperty_SiLabs_MfgFirstPacketLQI             "com.silabs:Mfg:FirstPacketLQI"
 #define kWPANTUNDProperty_SiLabs_CounterPrefix                 "com.silabs:Counter:"
+#define kWPANTUNDProperty_SiLabs_NCPInitFlushTime              "com.silabs:NCPInitFlushTime"
 // Ignore this line --- end pe8qf1P4GCme
 
 #define kWPANTUNDProperty_NestLabs_NetworkAllowingJoin         "com.nestlabs.internal:Network:AllowingJoin"

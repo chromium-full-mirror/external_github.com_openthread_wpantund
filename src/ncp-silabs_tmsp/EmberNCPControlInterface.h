@@ -248,6 +248,7 @@ private:
 	int mRequestedTXPower;
 	bool mUseDeepSleepOnLowPower;
 	bool mAlwaysResetToWake;
+	float mNCPInitFlushTime;
 
 	// Configurable NCP State
 	int mTXPower;
