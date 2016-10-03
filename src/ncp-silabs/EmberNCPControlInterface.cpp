@@ -141,6 +141,8 @@ EmberNCPControlInterface::EmberNCPControlInterface() :
 	mDriverState = INITIALIZING_WAITING_FOR_RESET;
 	mLastCommandSent = 0;
 	mGotInitCallback = false;
+	mNCPInitFlushTime = 1.0; // In Seconds
+	mNCPInitResetWaitTime = 0.5; // In Seconds
 
 	PT_INIT(&mSleepPT);
 	PT_INIT(&mSubPT);
@@ -948,6 +950,8 @@ EmberNCPControlInterface::get_supported_property_keys()const
 
 	properties.insert(kWPANTUNDProperty_SiLabs_NCPTXPowerMode);
 	properties.insert(kWPANTUNDProperty_SiLabs_MfgTestMode);
+	properties.insert(kWPANTUNDProperty_SiLabs_NCPInitFlushTime);
+	properties.insert(kWPANTUNDProperty_SiLabs_NCPInitResetWaitTime);
 
 	properties.insert(kWPANTUNDProperty_ConfigNCPDriverName);
 
@@ -1051,6 +1055,10 @@ EmberNCPControlInterface::get_property(
 		cb(0, boost::any(mMfgFirstPacketRSSI));
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_SiLabs_MfgFirstPacketLQI)) {
 		cb(0, boost::any(mMfgFirstPacketLQI));
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_SiLabs_NCPInitFlushTime)) {
+		cb(0, boost::any(mNCPInitFlushTime));
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_SiLabs_NCPInitResetWaitTime)) {
+		cb(0, boost::any(mNCPInitResetWaitTime));
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NestLabs_HackUseDeepSleepOnLowPower)) {
 		cb(0, boost::any(mUseDeepSleepOnLowPower));
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NestLabs_NCPTransmitHookActive)) {
@@ -1350,6 +1358,12 @@ EmberNCPControlInterface::set_property(
 			cb(0);
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_SiLabs_MfgRepeatRandomTXLen)) {
 			mMfgRepeatRandomTXLen = any_to_int(value);
+			cb(0);
+		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_SiLabs_NCPInitFlushTime)) {
+			mNCPInitFlushTime = any_to_float(value);
+			cb(0);
+		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_SiLabs_NCPInitResetWaitTime)) {
+			mNCPInitResetWaitTime = any_to_float(value);
 			cb(0);
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_IPv6MeshLocalAddress)) {
 			if (mNCPInstance->get_ncp_state() <= OFFLINE) {
@@ -3202,7 +3216,7 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 
 		// Wait a little bit and see if we get a reset.
 		EH_WAIT_UNTIL_WITH_TIMEOUT(
-			0.5,
+			mNCPInitResetWaitTime,
 			mDriverState != INITIALIZING_WAITING_FOR_RESET
 		);
 	}
@@ -3226,13 +3240,13 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 
 		if (event == mFirmwareInterface->GetIDFor_CBReset()) {
 			// Wait until we haven't received a packet
-			// from the NCP for a full second, so that
+			// from the NCP for mNCPInitFlushTime, so that
 			// we make sure we have flushed out all
 			// of the inbound NCP traffic.
 			do {
 				event = EVENT_IDLE;
 				EH_WAIT_UNTIL_WITH_TIMEOUT(
-					1, /* seconds */
+					mNCPInitFlushTime,
 					IS_EVENT_FROM_NCP(event)
 				);
 			} while(!eh_did_timeout);
@@ -3249,13 +3263,13 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 			mNetworkKeyIndex = 0;
 
 			// Wait until we haven't received a packet
-			// from the NCP for a full second, so that
+			// from the NCP for mNCPInitFlushTime, so that
 			// we make sure we have flushed out all
 			// of the inbound NCP traffic.
 			do {
 				event = EVENT_IDLE;
 				EH_WAIT_UNTIL_WITH_TIMEOUT(
-					1, /* seconds */
+					mNCPInitFlushTime,
 					IS_EVENT_FROM_NCP(event)
 				);
 			} while(!eh_did_timeout);
