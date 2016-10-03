@@ -142,6 +142,7 @@ EmberNCPControlInterface::EmberNCPControlInterface() :
 	mLastCommandSent = 0;
 	mGotInitCallback = false;
 	mNCPInitFlushTime = 1.0; // In Seconds
+	mNCPInitResetWaitTime = 0.5; // In Seconds
 
 	PT_INIT(&mSleepPT);
 	PT_INIT(&mSubPT);
@@ -950,6 +951,7 @@ EmberNCPControlInterface::get_supported_property_keys()const
 	properties.insert(kWPANTUNDProperty_SiLabs_NCPTXPowerMode);
 	properties.insert(kWPANTUNDProperty_SiLabs_MfgTestMode);
 	properties.insert(kWPANTUNDProperty_SiLabs_NCPInitFlushTime);
+	properties.insert(kWPANTUNDProperty_SiLabs_NCPInitResetWaitTime);
 
 	properties.insert(kWPANTUNDProperty_ConfigNCPDriverName);
 
@@ -1055,6 +1057,8 @@ EmberNCPControlInterface::get_property(
 		cb(0, boost::any(mMfgFirstPacketLQI));
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_SiLabs_NCPInitFlushTime)) {
 		cb(0, boost::any(mNCPInitFlushTime));
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_SiLabs_NCPInitResetWaitTime)) {
+		cb(0, boost::any(mNCPInitResetWaitTime));
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NestLabs_HackUseDeepSleepOnLowPower)) {
 		cb(0, boost::any(mUseDeepSleepOnLowPower));
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NestLabs_NCPTransmitHookActive)) {
@@ -1357,6 +1361,9 @@ EmberNCPControlInterface::set_property(
 			cb(0);
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_SiLabs_NCPInitFlushTime)) {
 			mNCPInitFlushTime = any_to_float(value);
+			cb(0);
+		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_SiLabs_NCPInitResetWaitTime)) {
+			mNCPInitResetWaitTime = any_to_float(value);
 			cb(0);
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_IPv6MeshLocalAddress)) {
 			if (mNCPInstance->get_ncp_state() <= OFFLINE) {
@@ -3209,7 +3216,7 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 
 		// Wait a little bit and see if we get a reset.
 		EH_WAIT_UNTIL_WITH_TIMEOUT(
-			0.5,
+			mNCPInitResetWaitTime,
 			mDriverState != INITIALIZING_WAITING_FOR_RESET
 		);
 	}
