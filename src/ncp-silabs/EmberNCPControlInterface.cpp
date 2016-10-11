@@ -3458,6 +3458,8 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 on_error:
 		EH_SLEEP_FOR(0.5);
 		mNCPInstance->mFailureCount++;
+		mNCPInstance->change_ncp_state(UNINITIALIZED);
+		mDriverState = INITIALIZING_WAITING_FOR_RESET;
 	} while (true);
 
 	mNCPInstance->set_initializing_ncp(false);

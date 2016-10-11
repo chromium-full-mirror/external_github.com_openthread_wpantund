@@ -188,14 +188,22 @@ EmberNCPControlInterface::JoinTask::vprocess_event(int event, va_list args)
 	// joining process.
 	emberState();
 
-	EH_REQUIRE_WITHIN(
+	EH_WAIT_UNTIL_WITH_TIMEOUT(
 		NCP_JOIN_TIMEOUT,
 		event == EVENT_EMBER_CB_JOIN_NETWORK_RETURN
-		|| event == EVENT_EMBER_CB_START_HOST_JOIN_CLIENT_HANDLER,
-		on_error
+		|| event == EVENT_EMBER_CB_START_HOST_JOIN_CLIENT_HANDLER
 	);
 
-	if (event == EVENT_EMBER_CB_JOIN_NETWORK_RETURN) {
+	if (eh_did_timeout) {
+		if (ncp_state_has_joined(mInterface->mNCPInstance->get_ncp_state())) {
+			ret = kWPANTUNDStatus_Ok;
+		} else {
+			ret = kWPANTUNDStatus_Timeout;
+		}
+
+		require_noerr(ret, on_error);
+
+	} else if (event == EVENT_EMBER_CB_JOIN_NETWORK_RETURN) {
 		ret = EmberGlue::status_to_wpantund_status(va_arg(args, int));
 
 		if (ret == kWPANTUNDStatus_Ok) {
@@ -248,6 +256,7 @@ EmberNCPControlInterface::JoinTask::vprocess_event(int event, va_list args)
 		}
 	}
 
+	// Don't combine this with the above `if` block with an `else`.
 	if (event == EVENT_EMBER_CB_START_HOST_JOIN_CLIENT_HANDLER) {
 		const uint8_t *parent_address = va_arg(args, const uint8_t*);
 
