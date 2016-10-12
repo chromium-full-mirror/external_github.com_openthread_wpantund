@@ -128,7 +128,6 @@ nl::wpantund::EmberNCPControlInterface::FormTask::vprocess_event(int event, va_l
 		mInterface->mNCPInstance->mLegacyInterfaceEnabled = true;
 	}
 
-#if EMBER_BUILD_NUMBER >= 426
 	do {
 		EH_REQUIRE_WITHIN(
 			NCP_FORM_TIMEOUT,
@@ -145,13 +144,8 @@ nl::wpantund::EmberNCPControlInterface::FormTask::vprocess_event(int event, va_l
 			ret = kWPANTUNDStatus_Ok;
 			break; // out of while loop.
 		} else {
-#if EMBER_BUILD_NUMBER >= 509
 			EmberJoinFailureReason reason = va_arg_small(args, EmberJoinFailureReason);
 			ret = ember_join_failure_reason_to_wpantund_status(reason);
-#elif EMBER_BUILD_NUMBER >= 426 && EMBER_BUILD_NUMBER < 509
-			EmberNetworkStatusReason reason = va_arg_small(args, EmberNetworkStatusReason);
-			ret = ember_network_status_reason_to_wpantund_status(reason);
-#endif
 			require(ret == kWPANTUNDStatus_Ok, on_error);
 		}
 
@@ -161,12 +155,6 @@ nl::wpantund::EmberNCPControlInterface::FormTask::vprocess_event(int event, va_l
 
 	// Fetch the state to ensure wpantund NCP state gets updated (no need to wait for callback).
 	emberState();
-
-#else
-	if (ret == 0) {
-		mInterface->mNCPInstance->change_ncp_state(ASSOCIATED);
-	}
-#endif
 
 	finish(ret);
 

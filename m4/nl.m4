@@ -317,7 +317,7 @@ AC_DEFUN([NL_CONNECTIP_DROP], [
 	])
 
 	nl_connectip_full_srcdir="`cd "${srcdir}" && pwd `"
-	test x"${CONNECTIP_PATH}" = x && CONNECTIP_PATH="`cd "${srcdir}" && pwd `/third_party/silabs-thread-1.0"
+	test x"${CONNECTIP_PATH}" = x && CONNECTIP_PATH="`cd "${srcdir}" && pwd `/third_party/silabs-thread"
 
 	AC_MSG_CHECKING([location of ConnectIP drop])
 	AC_ARG_WITH(
@@ -332,9 +332,9 @@ AC_DEFUN([NL_CONNECTIP_DROP], [
 		AC_MSG_RESULT([disabled])
 	else
 		AC_MSG_RESULT([$CONNECTIP_PATH])
-		AC_MSG_CHECKING([for existance of ${CONNECTIP_PATH}/stack/config/config.h])
+		AC_MSG_CHECKING([for existance of ${CONNECTIP_PATH}/protocol/thread_2.0/stack/config/config.h])
 
-		HAVE_CONNECTIP="test -f ${CONNECTIP_PATH}/stack/config/config.h"
+		HAVE_CONNECTIP="test -f ${CONNECTIP_PATH}/protocol/thread_2.0/stack/config/config.h"
 
 		if ${HAVE_CONNECTIP}
 		then AC_MSG_RESULT([yes])
@@ -344,16 +344,20 @@ AC_DEFUN([NL_CONNECTIP_DROP], [
 
 	if ${HAVE_CONNECTIP}
 	then {
-		CONNECTIP_CPPFLAGS+=" -I'${CONNECTIP_PATH}'"
-		CONNECTIP_CPPFLAGS+=" -I'${CONNECTIP_PATH}/stack'"
-		CONNECTIP_CPPFLAGS+=' -DPLATFORM_HEADER=\"hal/micro/unix/compiler/gcc.h\"'
+		CONNECTIP_CPPFLAGS+=" -I'\${CONNECTIP_PATH}'"
+		CONNECTIP_CPPFLAGS+=" -I'\${CONNECTIP_PATH}/platform/base'"
+		CONNECTIP_CPPFLAGS+=" -I'\${CONNECTIP_PATH}/platform/base/hal'"
+		CONNECTIP_CPPFLAGS+=" -I'\${CONNECTIP_PATH}/platform/base/hal/plugin'"
+		CONNECTIP_CPPFLAGS+=" -I'\${CONNECTIP_PATH}/protocol/thread_2.0'"
+		CONNECTIP_CPPFLAGS+=" -I'\${CONNECTIP_PATH}/protocol/thread_2.0/stack'"
+		CONNECTIP_CPPFLAGS+=' -DPLATFORM_HEADER=\"platform/base/hal/micro/unix/compiler/gcc.h\"'
 		CONNECTIP_CPPFLAGS+=" -DUNIX_HOST=1"
 		CONNECTIP_CPPFLAGS+=" -DEMBER_RIP_STACK=1"
 		CONNECTIP_CPPFLAGS+=" -DEMBER_STACK_IP=1"
 		CONNECTIP_CPPFLAGS+=" -DUNIX_HOST=1"
 		CONNECTIP_CPPFLAGS+=" -DAPP_SERIAL=0"
 		CONNECTIP_CPPFLAGS+=" -DPHY_NULL=1"
-		CONNECTIP_CPPFLAGS+=' -DBOARD_HEADER=\"'${CONNECTIP_PATH}'/hal/micro/unix/host/board/host.h\"'
+		CONNECTIP_CPPFLAGS+=' -DBOARD_HEADER=\"'\${CONNECTIP_PATH}'/platform/base/hal/micro/unix/host/board/host.h\"'
 		CONNECTIP_CPPFLAGS+=" -DHAL_MICRO=1"
 		CONNECTIP_CPPFLAGS+=" -DUNIX=1"
 		CONNECTIP_CPPFLAGS+=" -DBOARD_HOST"

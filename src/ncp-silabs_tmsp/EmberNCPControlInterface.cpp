@@ -632,7 +632,7 @@ EmberNCPControlInterface::config_gateway(bool defaultRoute, const uint8_t prefix
 		flags |= EMBER_BORDER_ROUTER_DEFAULT_ROUTE_FLAG;
 	}
 
-	flags |= EMBER_BORDER_ROUTER_SLAAC_PREFERRED_FLAG | EMBER_BORDER_ROUTER_SLAAC_VALID_FLAG;
+	flags |= EMBER_BORDER_ROUTER_PREFERRED_FLAG | EMBER_BORDER_ROUTER_SLAAC_FLAG;
 
 	address = make_slaac_addr_from_eui64(prefix, mNCPInstance->mMACAddress);
 
@@ -694,7 +694,7 @@ EmberNCPControlInterface::add_external_route(const uint8_t *route, int route_pre
 void
 EmberNCPControlInterface::remove_external_route(const uint8_t *route, int route_prefix_len, int domain_id, CallbackWithStatus cb)
 {
-	uint8_t flags = EMBER_BORDER_ROUTER_TEMPORARY_FLAG;
+	uint8_t flags = EMBER_BORDER_ROUTER_ON_MESH_FLAG;
 	syslog(LOG_INFO, "Removing external route");
 	config_external_route(flags, route, route_prefix_len, domain_id, cb);
 }
@@ -1701,7 +1701,9 @@ EmberNCPControlInterface::handle_ncp_get_versions(const uint8_t *versionName,
 		goto bail;
 	}
 
-	if (management_version != mManagementVersion) {
+	if ( (management_version != mManagementVersion)
+	  || (version_major != EMBER_MAJOR_VERSION)
+	) {
 		mManagementVersion = management_version;
 
 		if ( ((EMBER_MANAGEMENT_VERSION >> 8) == 0x0D)
@@ -1716,7 +1718,9 @@ EmberNCPControlInterface::handle_ncp_get_versions(const uint8_t *versionName,
 			management_version = 0;
 		}
 
-		if ((management_version >> 8) != (EMBER_MANAGEMENT_VERSION >> 8)) {
+		if ( (management_version >> 8) != (EMBER_MANAGEMENT_VERSION >> 8)
+		  || (version_major != EMBER_MAJOR_VERSION) // Assume major version number changes are incompatible
+		) {
 			syslog(LOG_ERR, "NCP FIRMWARE VERSION IS UNSUPPORTED");
 			mNCPInstance->change_ncp_state(FAULT);
 
@@ -2312,7 +2316,7 @@ EmberNCPControlInterface::request_manual_address_from_ncp(const struct in6_addr&
 	if (is_router()) {
 		const uint32_t kForeverLifetime = 0xFFFFFFFF;
 		// Router roles always register a prefix by configuring a gateway
-		config_gateway_address(EMBER_BORDER_ROUTER_SLAAC_PREFERRED_FLAG | EMBER_BORDER_ROUTER_SLAAC_VALID_FLAG,
+		config_gateway_address(EMBER_BORDER_ROUTER_PREFERRED_FLAG | EMBER_BORDER_ROUTER_SLAAC_FLAG,
 			addr, kForeverLifetime, kForeverLifetime, NilReturn());
 	} else {
 		// non-Router roles do the usual thing

@@ -73,6 +73,8 @@
 		B619A5641D9330AF006B97FD /* Pcap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B619A5611D9330AF006B97FD /* Pcap.cpp */; };
 		B619A5651D9330AF006B97FD /* Pcap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B619A5611D9330AF006B97FD /* Pcap.cpp */; };
 		B619A5661D9330AF006B97FD /* Pcap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B619A5611D9330AF006B97FD /* Pcap.cpp */; };
+		B61A45FB1DAED50800B044E5 /* event-control.c in Sources */ = {isa = PBXBuildFile; fileRef = B68755A91C6BDDFE00C879D1 /* event-control.c */; };
+		B61A45FC1DAED57300B044E5 /* ember-ip-configuration.c in Sources */ = {isa = PBXBuildFile; fileRef = B68755951C6BDDFE00C879D1 /* ember-ip-configuration.c */; };
 		B63BBCC01C77B18600083591 /* EmberNCPControlInterface-GetCounter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B63BBCBE1C77B18600083591 /* EmberNCPControlInterface-GetCounter.cpp */; };
 		B63BBCC11C77B1C500083591 /* EmberASHAdapter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B68B7A1F1C694BEA00EC9FB8 /* EmberASHAdapter.cpp */; };
 		B63BBCC21C77B1E200083591 /* ash-v3.c in Sources */ = {isa = PBXBuildFile; fileRef = B68755261C6BDDFD00C879D1 /* ash-v3.c */; };
@@ -92,7 +94,6 @@
 		B64F02EF1C6BE2FA00F4FACA /* unix-driver-utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = B68755E01C6BDDFE00C879D1 /* unix-driver-utilities.c */; };
 		B64F02F01C6BE30600F4FACA /* ip-address.c in Sources */ = {isa = PBXBuildFile; fileRef = B68755E61C6BDDFE00C879D1 /* ip-address.c */; };
 		B64F02F21C6BE43B00F4FACA /* tmsp-host-nest-specific.c in Sources */ = {isa = PBXBuildFile; fileRef = B687547B1C6BDDFD00C879D1 /* tmsp-host-nest-specific.c */; };
-		B64F02F31C6BE89600F4FACA /* ember-ip-configuration.c in Sources */ = {isa = PBXBuildFile; fileRef = B68755951C6BDDFE00C879D1 /* ember-ip-configuration.c */; };
 		B653017A1CB7070500B4F3DD /* log.c in Sources */ = {isa = PBXBuildFile; fileRef = B687559B1C6BDDFE00C879D1 /* log.c */; };
 		B65301831CC6E9F200B4F3DD /* RunawayResetBackoffManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B612064F1CADBF6C00A4E683 /* RunawayResetBackoffManager.cpp */; };
 		B65301841CC6E9F200B4F3DD /* config-file.c in Sources */ = {isa = PBXBuildFile; fileRef = A618B056175A8DBE0097500B /* config-file.c */; };
@@ -137,7 +138,6 @@
 		B68756981C6BDDFE00C879D1 /* command-interpreter2.c in Sources */ = {isa = PBXBuildFile; fileRef = B68754CA1C6BDDFD00C879D1 /* command-interpreter2.c */; };
 		B68756B31C6BDDFE00C879D1 /* micro.c in Sources */ = {isa = PBXBuildFile; fileRef = B687555C1C6BDDFE00C879D1 /* micro.c */; };
 		B68756C91C6BDDFE00C879D1 /* byte-utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = B68755A41C6BDDFE00C879D1 /* byte-utilities.c */; };
-		B68756CA1C6BDDFE00C879D1 /* event-control.c in Sources */ = {isa = PBXBuildFile; fileRef = B68755A91C6BDDFE00C879D1 /* event-control.c */; };
 		B68756CB1C6BDDFE00C879D1 /* event-queue.c in Sources */ = {isa = PBXBuildFile; fileRef = B68755AA1C6BDDFE00C879D1 /* event-queue.c */; };
 		B68757051C6BDDFE00C879D1 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = B687564C1C6BDDFE00C879D1 /* Makefile */; };
 		B6888EEE1D6E289400287AB1 /* IPv6Helpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6888EED1D6E289400287AB1 /* IPv6Helpers.cpp */; };
@@ -979,7 +979,7 @@
 		B6D1F6171A8AAF2E00F70266 /* FirmwareInterface-Base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "FirmwareInterface-Base.h"; sourceTree = "<group>"; };
 		B6D23B071AB8A99500441CB5 /* NCPMfgInterface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NCPMfgInterface.h; sourceTree = "<group>"; };
 		B6D23B081AB8ACCD00441CB5 /* EmberNCPControlInterface-Mfg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "EmberNCPControlInterface-Mfg.cpp"; sourceTree = "<group>"; };
-		B6D640931C3C62D000705A42 /* silabs-thread-1.0 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "silabs-thread-1.0"; path = "third_party/silabs-thread-1.0"; sourceTree = SOURCE_ROOT; };
+		B6D640931C3C62D000705A42 /* silabs-thread */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "silabs-thread"; path = "third_party/silabs-thread"; sourceTree = SOURCE_ROOT; };
 		B6D640941C3C62D000705A42 /* connectip-2.0 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "connectip-2.0"; path = "third_party/connectip-2.0"; sourceTree = SOURCE_ROOT; };
 		B6D640951C3C62D000705A42 /* connectip-1.1 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "connectip-1.1"; path = "third_party/connectip-1.1"; sourceTree = SOURCE_ROOT; };
 		B6D6409B1C3EF2EA00705A42 /* spi-server.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = "spi-server.md"; sourceTree = "<group>"; };
@@ -1235,7 +1235,7 @@
 			path = "ncp-spinel";
 			sourceTree = "<group>";
 		};
-		B68754341C6BDDFD00C879D1 /* silabs-thread-1.0 */ = {
+		B68754341C6BDDFD00C879D1 /* silabs-thread */ = {
 			isa = PBXGroup;
 			children = (
 				B68754351C6BDDFD00C879D1 /* LICENSE */,
@@ -1248,8 +1248,8 @@
 				B68756461C6BDDFE00C879D1 /* tool */,
 			);
 			indentWidth = 2;
-			name = "silabs-thread-1.0";
-			path = "third_party/silabs-thread-1.0";
+			name = "silabs-thread";
+			path = "third_party/silabs-thread";
 			sourceTree = SOURCE_ROOT;
 			tabWidth = 4;
 			usesTabs = 0;
@@ -1264,7 +1264,8 @@
 				B68754841C6BDDFD00C879D1 /* udp */,
 				B68754921C6BDDFD00C879D1 /* util */,
 			);
-			path = app;
+			name = app;
+			path = protocol/thread_2.0/app;
 			sourceTree = "<group>";
 		};
 		B68754381C6BDDFD00C879D1 /* afv6 */ = {
@@ -1549,7 +1550,8 @@
 				B68755091C6BDDFD00C879D1 /* micro */,
 				B68755641C6BDDFE00C879D1 /* test */,
 			);
-			path = hal;
+			name = hal;
+			path = platform/base/hal;
 			sourceTree = "<group>";
 		};
 		B68754D31C6BDDFD00C879D1 /* config */ = {
@@ -1884,7 +1886,8 @@
 				B68755871C6BDDFE00C879D1 /* simulation */,
 				B687558A1C6BDDFE00C879D1 /* test */,
 			);
-			path = phy;
+			name = phy;
+			path = platform/base/phy;
 			sourceTree = "<group>";
 		};
 		B68755701C6BDDFE00C879D1 /* bridge */ = {
@@ -1989,7 +1992,8 @@
 				B687563B1C6BDDFE00C879D1 /* platform */,
 				B68756411C6BDDFE00C879D1 /* routing */,
 			);
-			path = stack;
+			name = stack;
+			path = protocol/thread_2.0/stack;
 			sourceTree = "<group>";
 		};
 		B68755911C6BDDFE00C879D1 /* config */ = {
@@ -2289,7 +2293,8 @@
 				B687564B1C6BDDFE00C879D1 /* spi-server */,
 				B687564F1C6BDDFE00C879D1 /* usb-host-drivers */,
 			);
-			path = tool;
+			name = tool;
+			path = protocol/thread_2.0/tool;
 			sourceTree = "<group>";
 		};
 		B68756471C6BDDFE00C879D1 /* simulator */ = {
@@ -2338,7 +2343,7 @@
 		B68B78D11C65244500EC9FB8 /* ncp-silabs-tmsp */ = {
 			isa = PBXGroup;
 			children = (
-				B68754341C6BDDFD00C879D1 /* silabs-thread-1.0 */,
+				B68754341C6BDDFD00C879D1 /* silabs-thread */,
 				B68B78FC1C65244500EC9FB8 /* Makefile.am */,
 				B63BBCBE1C77B18600083591 /* EmberNCPControlInterface-GetCounter.cpp */,
 				B63BBCBF1C77B18600083591 /* EmberNCPControlInterface-GetCounter.h */,
@@ -2419,7 +2424,7 @@
 		E123EE8B18327B0300467C2F /* ncp-silabs */ = {
 			isa = PBXGroup;
 			children = (
-				B6D640931C3C62D000705A42 /* silabs-thread-1.0 */,
+				B6D640931C3C62D000705A42 /* silabs-thread */,
 				B6D640941C3C62D000705A42 /* connectip-2.0 */,
 				B6D640951C3C62D000705A42 /* connectip-1.1 */,
 				B69A46211AF7F654001D8A8F /* Makefile.am */,
@@ -2970,7 +2975,6 @@
 				B68B7A001C6526F700EC9FB8 /* EmberNCPControlInterface.cpp in Sources */,
 				B68B79C11C65268500EC9FB8 /* SocketWrapper.cpp in Sources */,
 				B68B79FA1C6526F700EC9FB8 /* EmberNCPControlInterface-Mfg.cpp in Sources */,
-				B64F02F31C6BE89600F4FACA /* ember-ip-configuration.c in Sources */,
 				B688ACDB1C8F63670072622D /* NCPInstanceBase-AsyncIO.cpp in Sources */,
 				B68B79F51C6526F700EC9FB8 /* EmberNCPControlInterface-GetGlobalAddressesTask.cpp in Sources */,
 				B63BBCC01C77B18600083591 /* EmberNCPControlInterface-GetCounter.cpp in Sources */,
@@ -2998,6 +3002,7 @@
 				B68B79FF1C6526F700EC9FB8 /* EmberNCPControlInterface-WakeupTask.cpp in Sources */,
 				B68B79FB1C6526F700EC9FB8 /* EmberNCPControlInterface-MfgFinish.cpp in Sources */,
 				B64F02CD1C6BE11900F4FACA /* tmsp-host.c in Sources */,
+				B61A45FC1DAED57300B044E5 /* ember-ip-configuration.c in Sources */,
 				B68B7A011C6526F700EC9FB8 /* EmberNCPInstance.cpp in Sources */,
 				B68B79CD1C65268500EC9FB8 /* DBusIPCAPI_v1.cpp in Sources */,
 				B68B79CE1C65268500EC9FB8 /* DBUSIPCServer.cpp in Sources */,
@@ -3012,6 +3017,7 @@
 				B68B79F81C6526F700EC9FB8 /* EmberNCPControlInterface-LeaveTask.cpp in Sources */,
 				B68B79F31C6526F700EC9FB8 /* EmberNCPControlInterface-DeepSleepTask.cpp in Sources */,
 				B68B79FD1C6526F700EC9FB8 /* EmberNCPControlInterface-SendCommandTask.cpp in Sources */,
+				B61A45FB1DAED50800B044E5 /* event-control.c in Sources */,
 				B68B79DC1C65268500EC9FB8 /* TunnelIPv6Interface.cpp in Sources */,
 				B68756B31C6BDDFE00C879D1 /* micro.c in Sources */,
 				B68756C91C6BDDFE00C879D1 /* byte-utilities.c in Sources */,
@@ -3019,7 +3025,6 @@
 				B688ACD71C8F63670072622D /* NCPInstanceBase-NetInterface.cpp in Sources */,
 				B68756CB1C6BDDFE00C879D1 /* event-queue.c in Sources */,
 				B68B79DE1C65268500EC9FB8 /* EventHandler.cpp in Sources */,
-				B68756CA1C6BDDFE00C879D1 /* event-control.c in Sources */,
 				B68B79DF1C65268500EC9FB8 /* Data.cpp in Sources */,
 				B612065C1CADC10E00A4E683 /* Timer.cpp in Sources */,
 				B64F02D11C6BE1BF00F4FACA /* counters.c in Sources */,
@@ -3054,6 +3059,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
+				LIBRARY_SEARCH_PATHS = (
+					"~/homebrew/opt/d-bus/lib/",
+					/usr/local/opt/lib,
+					/usr/local/lib,
+					"${inherited}",
+				);
 				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Debug;
@@ -3061,6 +3072,12 @@
 		A618B049175A8D740097500B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
+					"~/homebrew/opt/d-bus/lib/",
+					/usr/local/opt/lib,
+					/usr/local/lib,
+					"${inherited}",
+				);
 			};
 			name = Release;
 		};
@@ -3119,12 +3136,6 @@
 					"/usr/local/lib/dbus-1.0/include",
 					"${SRCROOT}/third_party",
 					"${SRCROOT}/src/**",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"${inherit}",
-					/usr/local/lib,
-					"/usr/local/Library/LinkedKegs/d-bus/lib",
-					"~/homebrew/Library/LinkedKegs/d-bus/lib/",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3187,12 +3198,6 @@
 					"/usr/local/lib/dbus-1.0/include",
 					"${SRCROOT}/third_party",
 					"${SRCROOT}/src/**",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"${inherit}",
-					/usr/local/lib,
-					"/usr/local/Library/LinkedKegs/d-bus/lib",
-					"~/homebrew/Library/LinkedKegs/d-bus/lib/",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = wpantund;
@@ -3257,12 +3262,6 @@
 					"${SRCROOT}/third_party",
 					"${SRCROOT}/src/**",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"${inherit}",
-					/usr/local/lib,
-					"/usr/local/Library/LinkedKegs/d-bus/lib",
-					"~/homebrew/Library/LinkedKegs/d-bus/lib/",
-				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "wpantund copy";
@@ -3324,12 +3323,6 @@
 					"/usr/local/lib/dbus-1.0/include",
 					"${SRCROOT}/third_party",
 					"${SRCROOT}/src/**",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"${inherit}",
-					/usr/local/lib,
-					"/usr/local/Library/LinkedKegs/d-bus/lib",
-					"~/homebrew/Library/LinkedKegs/d-bus/lib/",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = "wpantund copy";
@@ -3476,12 +3469,6 @@
 					"${SRCROOT}/third_party",
 					"${SRCROOT}/src/**",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"${inherit}",
-					/usr/local/lib,
-					"/usr/local/Library/LinkedKegs/d-bus/lib",
-					"~/homebrew/Library/LinkedKegs/d-bus/lib/",
-				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "wpantund-ncp-dummy copy";
@@ -3544,12 +3531,6 @@
 					"${SRCROOT}/third_party",
 					"${SRCROOT}/src/**",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"${inherit}",
-					/usr/local/lib,
-					"/usr/local/Library/LinkedKegs/d-bus/lib",
-					"~/homebrew/Library/LinkedKegs/d-bus/lib/",
-				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = "wpantund-ncp-dummy copy";
 				SDKROOT = macosx;
@@ -3573,7 +3554,8 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CONNECTIP_CPPFLAGS = "-I'${SRCROOT}/third_party/silabs-thread-1.0' -I'${SRCROOT}/third_party/silabs-thread-1.0/stack' -DPLATFORM_HEADER=\\\"hal/micro/unix/compiler/gcc.h\\\" -DUNIX_HOST=1 -DEMBER_RIP_STACK=1 -DEMBER_STACK_IP=1 -DAPP_SERIAL=0 -DPHY_NULL=1 -DBOARD_HEADER=\\\"${SRCROOT}/third_party/silabs-thread-1.0/hal/micro/unix/host/board/host.h\\\" -DHAL_MICRO=1 -DUNIX_HOST=1 -DUNIX=1 -DBOARD_HOST -DEMBER_ASSERT_SERIAL_PORT=0 -DEMBER_SERIAL0_BLOCKING=1 -DEMBER_SERIAL0_MODE=EMBER_SERIAL_FIFO -DEMBER_SERIAL0_TX_QUEUE_SIZE=128 -DEMBER_SERIAL0_RX_QUEUE_SIZE=128 -DEMBER_WAKEUP_STACK -DMFGLIB '-DCONFIGURATION_HEADER=\"wpantund-configuration.h\"'";
+				CONNECTIP_CPPFLAGS = "-I'${CONNECTIP_PATH}' -I'${CONNECTIP_PATH}/platform/base' -I'${CONNECTIP_PATH}/platform/base/hal' -I'${CONNECTIP_PATH}/platform/base/hal/plugin' -I'${CONNECTIP_PATH}/protocol/thread_2.0' -I'${CONNECTIP_PATH}/protocol/thread_2.0/stack' -DPLATFORM_HEADER=\\\"platform/base/hal/micro/unix/compiler/gcc.h\\\" -DUNIX_HOST=1 -DEMBER_RIP_STACK=1 -DEMBER_STACK_IP=1 -DUNIX_HOST=1 -DAPP_SERIAL=0 -DPHY_NULL=1 -DBOARD_HEADER=\\\"${CONNECTIP_PATH}/platform/base/hal/micro/unix/host/board/host.h\\\" -DHAL_MICRO=1 -DUNIX=1 -DBOARD_HOST -DEMBER_ASSERT_SERIAL_PORT=0 -DEMBER_SERIAL0_BLOCKING=1 -DEMBER_SERIAL0_MODE=EMBER_SERIAL_FIFO -DEMBER_SERIAL0_TX_QUEUE_SIZE=128 -DEMBER_SERIAL0_RX_QUEUE_SIZE=128 -DEMBER_WAKEUP_STACK -DMFGLIB -D'CONFIGURATION_HEADER=\"wpantund-configuration.h\"'";
+				CONNECTIP_PATH = "${SRCROOT}/third_party/silabs-thread";
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -3614,12 +3596,6 @@
 					"${SRCROOT}/third_party",
 					"${SRCROOT}/src/**",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"${inherit}",
-					/usr/local/lib,
-					"/usr/local/Library/LinkedKegs/d-bus/lib",
-					"~/homebrew/Library/LinkedKegs/d-bus/lib/",
-				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "${CONNECTIP_CPPFLAGS}";
@@ -3646,7 +3622,8 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CONNECTIP_CPPFLAGS = "-I'${SRCROOT}/third_party/silabs-thread-1.0' -I'${SRCROOT}/third_party/silabs-thread-1.0/stack' -DPLATFORM_HEADER=\\\"hal/micro/unix/compiler/gcc.h\\\" -DUNIX_HOST=1 -DEMBER_RIP_STACK=1 -DEMBER_STACK_IP=1 -DAPP_SERIAL=0 -DPHY_NULL=1 -DBOARD_HEADER=\\\"${SRCROOT}/third_party/silabs-thread-1.0/hal/micro/unix/host/board/host.h\\\" -DHAL_MICRO=1 -DUNIX_HOST=1 -DUNIX=1 -DBOARD_HOST -DEMBER_ASSERT_SERIAL_PORT=0 -DEMBER_SERIAL0_BLOCKING=1 -DEMBER_SERIAL0_MODE=EMBER_SERIAL_FIFO -DEMBER_SERIAL0_TX_QUEUE_SIZE=128 -DEMBER_SERIAL0_RX_QUEUE_SIZE=128 -DEMBER_WAKEUP_STACK -DMFGLIB '-DCONFIGURATION_HEADER=\"wpantund-configuration.h\"'";
+				CONNECTIP_CPPFLAGS = "-I'${CONNECTIP_PATH}' -I'${CONNECTIP_PATH}/platform/base' -I'${CONNECTIP_PATH}/platform/base/hal' -I'${CONNECTIP_PATH}/platform/base/hal/plugin' -I'${CONNECTIP_PATH}/protocol/thread_2.0' -I'${CONNECTIP_PATH}/protocol/thread_2.0/stack' -DPLATFORM_HEADER=\\\"platform/base/hal/micro/unix/compiler/gcc.h\\\" -DUNIX_HOST=1 -DEMBER_RIP_STACK=1 -DEMBER_STACK_IP=1 -DUNIX_HOST=1 -DAPP_SERIAL=0 -DPHY_NULL=1 -DBOARD_HEADER=\\\"${CONNECTIP_PATH}/platform/base/hal/micro/unix/host/board/host.h\\\" -DHAL_MICRO=1 -DUNIX=1 -DBOARD_HOST -DEMBER_ASSERT_SERIAL_PORT=0 -DEMBER_SERIAL0_BLOCKING=1 -DEMBER_SERIAL0_MODE=EMBER_SERIAL_FIFO -DEMBER_SERIAL0_TX_QUEUE_SIZE=128 -DEMBER_SERIAL0_RX_QUEUE_SIZE=128 -DEMBER_WAKEUP_STACK -DMFGLIB -D'CONFIGURATION_HEADER=\"wpantund-configuration.h\"'";
+				CONNECTIP_PATH = "${SRCROOT}/third_party/silabs-thread";
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -3684,12 +3661,6 @@
 					"/usr/local/lib/dbus-1.0/include",
 					"${SRCROOT}/third_party",
 					"${SRCROOT}/src/**",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"${inherit}",
-					/usr/local/lib,
-					"/usr/local/Library/LinkedKegs/d-bus/lib",
-					"~/homebrew/Library/LinkedKegs/d-bus/lib/",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				OTHER_CFLAGS = "${CONNECTIP_CPPFLAGS}";

@@ -97,6 +97,10 @@ boolean halHostUartTxIdle(void)
 
 extern int16u halHostEnqueueTx(const int8u *data, int16u length);
 
+void halHostUartStopTxDma(void)
+{
+}
+
 __END_DECLS
 
 // --------------------

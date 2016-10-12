@@ -38,21 +38,26 @@ __BEGIN_DECLS
 #include "stack/ip/ip-address.h"
 #include "app/ip-ncp/serial-link.h"
 #include "stack/ip/host/host-address-table.h"
-#include "stack/ip/wakeup-specific.h"
 #include "hal/hal.h"
-#include "app/util/serial/serial.h"
+#include "hal/plugin/serial/serial.h"
 #include "stack/include/thread-debug.h"
 #include "stack/ip/host/host-listener-table.h"
 #include "stack/core/ember-stack.h"
 #include "stack/framework/event-queue.h"
 #include "app/ip-ncp/ip-modem-link.h"
 #include "stack/framework/buffer-management.h"
+#include "app/tmsp/tmsp-host-nest-specific.h"
 
 
 #define USE_STUB_emMarkBufferPointer
 #define USE_STUB_emberSerialReadByte
 #define USE_STUB_emberCloseListeners
 #define USE_STUB_emberSerialWaitSend
+#define USE_STUB_emCoapInitialize
+#define USE_STUB_emberGetCtuneReturn
+#define USE_STUB_emberSetCtuneReturn
+//#define USE_STUB_emberSetLegacyFilterMaxThresholdReturn
+//#define USE_STUB_emberSetLegacyFilterMinThresholdReturn
 #include "stack/ip/stubs.c"
 
 static EmberCommandState callbackCommandState = {0};
@@ -219,7 +224,6 @@ nl::wpantund::EmberGlue::ncp_state_convert_from_ember(EmberNetworkStatus associa
 		ret = ASSOCIATING;
 		break;
 
-#if EMBER_BUILD_NUMBER >= 426
 	case EMBER_JOINED_NETWORK_ATTACHED:
 		ret = ASSOCIATED;
 		break;
@@ -228,15 +232,6 @@ nl::wpantund::EmberGlue::ncp_state_convert_from_ember(EmberNetworkStatus associa
 	case EMBER_JOINED_NETWORK_NO_PARENT:
 		ret = ISOLATED;
 		break;
-#else
-	case EMBER_JOINED_NETWORK:
-		ret = ASSOCIATED;
-		break;
-
-	case EMBER_JOINED_NETWORK_NO_PARENT:
-		ret = ISOLATED;
-		break;
-#endif
 
 	default:
 		ret = FAULT;
@@ -310,7 +305,7 @@ nl::wpantund::EmberGlue::node_type_convert_to_ember(NodeType node_type, bool sup
 	default:
 	case ROUTER:
 		ncp_node_type = support_legacy
-			? EMBER_ROUTER_LURKER
+			? EMBER_ROUTER | EMBER_NODE_TYPE_LURKER_COMPATIBLE_FLAG
 			: EMBER_ROUTER;
 		break;
 	}
@@ -341,17 +336,17 @@ nl::wpantund::EmberGlue::configure_gateway_flags_to_string(uint8_t flags)
 		case EMBER_BORDER_ROUTER_DHCP_FLAG:
 			ret += 'D';
 			break;
-		case EMBER_BORDER_ROUTER_SLAAC_VALID_FLAG:
+		case EMBER_BORDER_ROUTER_SLAAC_FLAG:
 			ret += 'V';
 			break;
-		case EMBER_BORDER_ROUTER_SLAAC_PREFERRED_FLAG:
+		case EMBER_BORDER_ROUTER_PREFERRED_FLAG:
 			ret += 'P';
 			break;
 		case EMBER_BORDER_ROUTER_HIGH_PREFERENCE:
 			ret += 'H';
 			break;
-		case EMBER_BORDER_ROUTER_TEMPORARY_FLAG:
-			ret += 'T';
+		case EMBER_BORDER_ROUTER_ON_MESH_FLAG:
+			ret += 'M';
 			break;
 		default:
 			ret += '0' + i;
@@ -506,8 +501,7 @@ nl::wpantund::EmberGlue::process_message_from_ncp(
 				(int)length
 			);
 
-			emberRunCommandInterpreter(
-				true,
+			emberRunBinaryCommandInterpreter(
 				&callbackCommandState,
 				managementCallbackCommandTable,
 				&wpantundCommandErrorHandler,
@@ -600,17 +594,11 @@ EmberGlue::status_to_wpantund_status(EmberStatus status)
 	case EMBER_BAD_ARGUMENT: return kWPANTUNDStatus_NCP_InvalidArgument;
 	case EMBER_INDEX_OUT_OF_RANGE: return kWPANTUNDStatus_NCP_InvalidRange;
 
-#if EMBER_BUILD_NUMBER < 426 // These were removed after build number 426.
-	case EMBER_JOIN_FAILED_SCANNING: return kWPANTUNDStatus_JoinFailedAtScan;
-	case EMBER_JOIN_FAILED_SECURITY: return kWPANTUNDStatus_JoinFailedAtAuthenticate;
-#endif
-
 	default: return WPANTUND_NCPERROR_TO_STATUS(status);
 	}
 
 }
 
-#if EMBER_BUILD_NUMBER >= 509
 wpantund_status_t
 ember_join_failure_reason_to_wpantund_status(EmberJoinFailureReason reason)
 {
@@ -624,25 +612,9 @@ ember_join_failure_reason_to_wpantund_status(EmberJoinFailureReason reason)
 		return WPANTUND_NCPERROR_TO_STATUS(0x8000 + reason);
 	}
 }
-#elif EMBER_BUILD_NUMBER >= 426 && EMBER_BUILD_NUMBER < 509
-wpantund_status_t
-ember_network_status_reason_to_wpantund_status(EmberNetworkStatusReason reason)
-{
-	switch(reason) {
-	case EMBER_NETWORK_STATUS_REASON_SUCCESS: return kWPANTUNDStatus_Ok;
-	case EMBER_NETWORK_STATUS_REASON_FORM_SCAN_FAILED: return kWPANTUNDStatus_FormFailedAtScan;
-	case EMBER_NETWORK_STATUS_REASON_ACTIVE_SCAN_FAILED: return kWPANTUNDStatus_JoinFailedAtScan;
-	case EMBER_NETWORK_STATUS_REASON_SECURITY_FAILED: return kWPANTUNDStatus_JoinFailedAtAuthenticate;
-
-	default:
-		return WPANTUND_NCPERROR_TO_STATUS(0x8000 + reason);
-	}
-}
-#endif
 
 
 
-#if EMBER_BUILD_NUMBER >= 426
 void
 emberStateReturn(
 	const EmberNetworkParameters *parameters,
@@ -654,18 +626,6 @@ emberStateReturn(
 
 	gNCPControlInterface->process_event(EVENT_EMBER_CB_STATE_RETURN, parameters, eui64, extendedMacId, networkStatus);
 }
-#else
-void
-emberStateReturn(
-	const EmberNetworkParameters *parameters,
-	const EmberEui64 *eui64,
-	EmberNetworkStatus networkStatus
-) {
-	gNCPControlInterface->handle_ncp_network_state_changed();
-
-	gNCPControlInterface->process_event(EVENT_EMBER_CB_STATE_RETURN, parameters, eui64, networkStatus);
-}
-#endif
 
 void emberInitReturn(EmberStatus status)
 {
@@ -898,7 +858,7 @@ void emberDeepSleepReturn(EmberStatus status)
 	gNCPControlInterface->process_event(EVENT_EMBER_CB_DEEP_SLEEP_RETURN, status);
 }
 
-void emberDeepSleepCallback(uint16_t sleepDuration)
+void emberDeepSleepCompleteHandler(uint16_t sleepDuration)
 {
 	gNCPControlInterface->process_event(EVENT_EMBER_CB_DEEP_SLEEP_CALLBACK, sleepDuration);
 }
@@ -1040,28 +1000,28 @@ void emberConfigUartReturn(void)
 	gNCPControlInterface->process_event(EVENT_EMBER_CB_CONFIG_UART_RETURN, 0);
 }
 
-void emberExternalRouteChange(const uint8_t *prefix,
+void emberExternalRouteChangeHandler(const uint8_t *prefix,
                               uint8_t prefixLength,
                               bool available)
 {
 	gNCPControlInterface->process_event(EVENT_EMBER_CB_EXTERNAL_ROUTE_CHANGE, prefix, prefixLength, available);
 }
 
-void emberDhcpServerChange(const uint8_t *prefix,
+void emberDhcpServerChangeHandler(const uint8_t *prefix,
                            uint8_t prefixLength,
                            bool available)
 {
 	gNCPControlInterface->process_event(EVENT_EMBER_CB_DHCP_SERVER_CHANGE, prefix, prefixLength, available);
 }
 
-void emberSlaacServerChange(const uint8_t *prefix,
+void emberSlaacServerChangeHandler(const uint8_t *prefix,
                             uint8_t prefixLength,
                             bool available)
 {
 	gNCPControlInterface->process_event(EVENT_EMBER_CB_SLAAC_SERVER_CHANGE, prefix, prefixLength, available);
 }
 
-void emberAddressConfigurationChange(const EmberIpv6Address *address,
+void emberAddressConfigurationChangeHandler(const EmberIpv6Address *address,
                                      uint32_t preferredLifetime,
                                      uint32_t validLifetime,
                                      uint8_t addressFlags)
@@ -1185,6 +1145,11 @@ void emberConfigureDefaultHostAddress(const EmberIpv6Address *mlAddress)
 	gNCPControlInterface->process_event(EVENT_EMBER_CB_CONFIGURE_DEFAULT_HOST_ADDRESS, mlAddress);
 }
 
+void emberConfigureLegacyHostAddress(const EmberIpv6Address *mlAddress)
+{
+	gNCPControlInterface->process_event(EVENT_EMBER_CB_CONFIGURE_LEGACY_HOST_ADDRESS, mlAddress);
+}
+
 void emberConfigureGlobalHostAddress(const EmberIpv6Address *address,
                                      uint32_t preferredLifetime,
                                      uint32_t validLifetime,
@@ -1234,7 +1199,6 @@ void emberSetNetworkKeysHandler(uint32_t sequence,
 
 
 
-#if EMBER_BUILD_NUMBER >= 509
 void emberNetworkStatusHandler(EmberNetworkStatus newNetworkStatus,
                                EmberNetworkStatus oldNetworkStatus,
 							   EmberJoinFailureReason reason)
@@ -1248,29 +1212,7 @@ void emberNetworkStatusHandler(EmberNetworkStatus newNetworkStatus,
 		reason
 	);
 }
-#elif EMBER_BUILD_NUMBER >= 426 && EMBER_BUILD_NUMBER < 509
-void emberNetworkStatusHandler(EmberNetworkStatus newNetworkStatus,
-                               EmberNetworkStatus oldNetworkStatus)
-{
-	EmberNetworkStatusReason reason = EMBER_NETWORK_STATUS_REASON_SUCCESS;
 
-	if ((oldNetworkStatus == EMBER_JOINING_NETWORK)
-	 && (newNetworkStatus < EMBER_JOINING_NETWORK)
-	){
-		reason = EMBER_NETWORK_STATUS_REASON_LAST; // just some bogus error
-	}
-	gNCPControlInterface->handle_ncp_network_state_changed();
-
-	gNCPControlInterface->process_event(
-		EVENT_EMBER_CB_NETWORK_STATUS_HANDLER,
-		newNetworkStatus,
-		oldNetworkStatus,
-		reason
-	);
-}
-#endif
-
-#if EMBER_BUILD_NUMBER >= 426
 
 void emberAllowNativeCommissionerReturn(EmberStatus status)
 {
@@ -1314,4 +1256,12 @@ void emberLaunchStandaloneBootloaderReturn(EmberStatus status)
 	gNCPControlInterface->process_event(EVENT_EMBER_CB_LAUNCH_STANDALONE_BOOTLOADER_RETURN, status);
 }
 
-#endif
+void emberSetLegacyFilterMaxThresholdReturn(EmberStatus status)
+{
+	// Ignore for now.
+}
+
+void emberSetLegacyFilterMinThresholdReturn(EmberStatus status)
+{
+	// Ignore for now.
+}
