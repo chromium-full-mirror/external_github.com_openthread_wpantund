@@ -955,16 +955,16 @@ void emberGetRoutingLocatorReturn(const EmberIpv6Address *rloc);
 /** @brief Border router flags (see Thread spec chapter 5 for more information)
  */
 typedef enum {
-  EMBER_BORDER_ROUTER_MEDIUM_PREFERENCE    = 0,
   EMBER_BORDER_ROUTER_ON_MESH_FLAG         = 0x01,
   EMBER_BORDER_ROUTER_DEFAULT_ROUTE_FLAG   = 0x02,
   EMBER_BORDER_ROUTER_CONFIGURE_FLAG       = 0x04,
   EMBER_BORDER_ROUTER_DHCP_FLAG            = 0x08,
   EMBER_BORDER_ROUTER_SLAAC_FLAG           = 0x10,
   EMBER_BORDER_ROUTER_PREFERRED_FLAG       = 0x20,
+  EMBER_BORDER_ROUTER_PREFERENCE_MASK      = 0xC0,
   EMBER_BORDER_ROUTER_HIGH_PREFERENCE      = 0x40,
+  EMBER_BORDER_ROUTER_MEDIUM_PREFERENCE    = 0,
   EMBER_BORDER_ROUTER_LOW_PREFERENCE       = 0xC0,
-  EMBER_BORDER_ROUTER_PREFERENCE_MASK      = 0xC0
 } EmberBorderRouterTlvFlag_e;
 
 typedef uint8_t EmberBorderRouterTlvFlag;
@@ -988,22 +988,21 @@ typedef uint8_t EmberBorderRouterTlvFlag;
  * by network devices to configure routable addresses.
  *
  * Also de-configures a border router prefix (if it exists), if the prefix and
- * prefixLength are specified, and the borderRouterFlags argument is 0xFF.
+ * prefixLengthInBits are specified, and the borderRouterFlags argument is 0xFF.
  *
  * This triggers an address configuration change on the border router, and the
  * application is informed of this by ::emberAddressConfigurationChangeHandler.
  *
  * Note:  If the application wants to manually configure an address and not have
  * the stack create one, then it should pass in the entire IPv6 address (in
- * bytes) for the prefix argument, with prefixLength as 16.
+ * bytes) for the prefix argument, with prefixLengthInBits as 128.
  *
  * Examples:
  *
  * SLAAC:
  * -----
  * To configure a valid SLAAC border router, use:
- * EMBER_BORDER_ROUTER_PREFERRED_FLAG
- * | EMBER_BORDER_ROUTER_SLAAC_FLAG
+ * EMBER_BORDER_ROUTER_SLAAC_FLAG
  * | EMBER_BORDER_ROUTER_DEFAULT_ROUTE_FLAG
  *
  * The preference of the SLAAC prefix can be set using
@@ -1036,12 +1035,11 @@ typedef uint8_t EmberBorderRouterTlvFlag;
  * other devices may choose to request a DHCP address by calling
  * ::emberRequestDhcpAddress. If they get an address, they are informed
  * via ::emberAddressConfigurationChangeHandler.
- *
  */
 void emberConfigureGateway(uint8_t borderRouterFlags,
                            bool isStable,
                            const uint8_t *prefix,
-                           const uint8_t prefixLength,
+                           const uint8_t prefixLengthInBits,
                            uint8_t domainId,
                            uint32_t preferredLifetime,
                            uint32_t validLifetime);
@@ -1056,22 +1054,21 @@ void emberConfigureGatewayReturn(EmberStatus status);
  * packet that must traverse a border router and be forwarded to an exterior
  * network.
  *
- * Also de-configures an external route prefix (if it exists), if the prefix and
- * prefixLength arguments are specified, and the externalRouteFlags argument is
- * 0xFF.
+ * Also de-configures an external route prefix (if it exists), if the
+ * extRoutePrefix and extRoutePrefixLengthInBits arguments are specified, and
+ * the externalRouteFlags argument is 0xFF.
  *
- * @param externalRouteFlags         Used for two flags:
- *                                   EMBER_EXTERNAL_ROUTE_TEMPORARY_FLAG and
- *                                   EMBER_BORDER_ROUTER_PREFERENCE_*
- * @param externalRoutePrefix        Prefix for the route
- * @param externalRoutePrefixLength  Prefix length
- * @param externalRouteDomainId      Domain ID
- *
+ * @param extRouteFlags               Used for two flags:
+ *                                    EMBER_EXTERNAL_ROUTE_TEMPORARY_FLAG and
+ *                                    EMBER_BORDER_ROUTER_PREFERENCE_*
+ * @param extRoutePrefix              Prefix for the route
+ * @param extRoutePrefixLengthInBits  Prefix length in bits
+ * @param extRouteDomainId            Domain ID
  */
-void emberConfigureExternalRoute(uint8_t externalRouteFlags,
-                                 const uint8_t *externalRouteprefix,
-                                 uint8_t externalRoutePrefixLength,
-                                 uint8_t externalRouteDomainId);
+void emberConfigureExternalRoute(uint8_t extRouteFlags,
+                                 const uint8_t *extRoutePrefix,
+                                 uint8_t extRoutePrefixLengthInBits,
+                                 uint8_t extRouteDomainId);
 
 /** @brief Provides the result of a call to ::emberConfigureExternalRoute */
 void emberConfigureExternalRouteReturn(EmberStatus status);
@@ -1138,6 +1135,7 @@ void emberGetGlobalPrefixes(void);
  * @param borderRouterFlags   Border router flags (EMBER_BORDER_ROUTER_*)
  * @param isStable            Stable or temporary prefix
  * @param prefix              Border router prefix
+ * @param prefixLengthInBits  Prefix length in bits
  * @param domainId            Provisioning domain ID
  * @param preferredLifetime   Preferred lifetime (in seconds)
  * @param validLifetime       Valid lifetime (in seconds)
@@ -1145,6 +1143,7 @@ void emberGetGlobalPrefixes(void);
 void emberGetGlobalPrefixReturn(uint8_t borderRouterFlags,
                                 bool isStable,
                                 const uint8_t *prefix,
+                                uint8_t prefixLengthInBits,
                                 uint8_t domainId,
                                 uint32_t preferredLifetime,
                                 uint32_t validLifetime);
@@ -1167,12 +1166,12 @@ void emberGetDhcpClientReturn(const EmberIpv6Address *address);
  * "available" means the DHCP server can offer us an address if
  * requested.
  *
- * @param prefix            dhcp server prefix
- * @param prefixLength      length of the prefix
- * @param available         whether this dhcp server is available
+ * @param prefix                  dhcp server prefix
+ * @param prefixLengthInBits      length in bits of the prefix
+ * @param available               whether this dhcp server is available
  */
 void emberDhcpServerChangeHandler(const uint8_t *prefix,
-                                  uint8_t prefixLength,
+                                  uint8_t prefixLengthInBits,
                                   bool available);
 
 /** @brief
@@ -1185,10 +1184,10 @@ void emberDhcpServerChangeHandler(const uint8_t *prefix,
  * When the address is obtained, the application is informed of this via
  * ::emberAddressConfigurationChangeHandler.
  *
- * @param prefix            dhcp server prefix
- * @param prefixLength      length of the prefix
+ * @param prefix                  dhcp server prefix
+ * @param prefixLengthInBits      length in bits of the prefix
  */
-void emberRequestDhcpAddress(const uint8_t *prefix, uint8_t prefixLength);
+void emberRequestDhcpAddress(const uint8_t *prefix, uint8_t prefixLengthInBits);
 
 /** @brief
  * Provides the result of a call to ::emberRequestDhcpAddress
@@ -1197,13 +1196,14 @@ void emberRequestDhcpAddress(const uint8_t *prefix, uint8_t prefixLength);
  * DHCP server is found, and EMBER_SUCCESS otherwise).  The assigned IPv6
  * address is returned via ::emberAddressConfigurationChangeHandler
  *
- * @param status            Status of DHCP Address Request
- * @param prefix            Prefix requested in ::emberRequestDhcpAddress
- * @param prefixLength      Prefix length requested in ::emberRequestDhcpAddress
+ * @param status                  Status of DHCP Address Request
+ * @param prefix                  Prefix requested in ::emberRequestDhcpAddress
+ * @param prefixLengthInBits      Prefix length in bits requested in
+ *                                ::emberRequestDhcpAddress
  */
 void emberRequestDhcpAddressReturn(EmberStatus status,
                                    const uint8_t *prefix,
-                                   uint8_t prefixLength);
+                                   uint8_t prefixLengthInBits);
 
 /** @brief
  * This is called when the stack knows about a new SLAAC prefix or if
@@ -1211,12 +1211,12 @@ void emberRequestDhcpAddressReturn(EmberStatus status,
  *
  * "available" means we can configure a SLAAC address.
  *
- * @param prefix            SLAAC prefix
- * @param prefixLength      length of the prefix
- * @param available         whether we can configure an address
+ * @param prefix                  SLAAC prefix
+ * @param prefixLengthInBits      length in bits of the prefix
+ * @param available               whether we can configure an address
  */
 void emberSlaacServerChangeHandler(const uint8_t *prefix,
-                                   uint8_t prefixLength,
+                                   uint8_t prefixLengthInBits,
                                    bool available);
 
 /** @brief
@@ -1228,15 +1228,15 @@ void emberSlaacServerChangeHandler(const uint8_t *prefix,
  *
  * If the application wants to manually configure an address and not have
  * the stack create one, then it should pass in the entire IPv6 address (in
- * bytes) for the prefix argument, with prefixLength as 16.
+ * bytes) for the prefix argument, with prefixLengthInBits as 128.
  *
  * When the address is obtained, the application is informed of this via
  * ::emberAddressConfigurationChangeHandler.
  *
- * @param prefix            SLAAC prefix
- * @param prefixLength      length of the prefix
+ * @param prefix                  SLAAC prefix
+ * @param prefixLengthInBits      length in bits of the prefix
  */
-void emberRequestSlaacAddress(const uint8_t *prefix, uint8_t prefixLength);
+void emberRequestSlaacAddress(const uint8_t *prefix, uint8_t prefixLengthInBits);
 
 /** @brief
  * Provides the result of a call to ::emberRequestSlaacAddress
@@ -1245,21 +1245,25 @@ void emberRequestSlaacAddress(const uint8_t *prefix, uint8_t prefixLength);
  * SLAAC server is found, and EMBER_SUCCESS otherwise).  The assigned IPv6
  * address is returned via ::emberAddressConfigurationChangeHandler
  *
- * @param status            Status of SLAAC Address Request
- * @param prefix            Prefix requested in ::emberRequestSlaacAddress
- * @param prefixLength      Prefix length requested in ::emberRequestSlaacAddress
+ * @param status                  Status of SLAAC Address Request
+ * @param prefix                  Prefix requested in ::emberRequestSlaacAddress
+ * @param prefixLengthInBits      Prefix length in bits requested in
+ *                                ::emberRequestSlaacAddress
  */
 void emberRequestSlaacAddressReturn(EmberStatus status,
                                     const uint8_t *prefix,
-                                    uint8_t prefixLength);
+                                    uint8_t prefixLengthInBits);
 
 /** @brief
  * Returns the list of global addresses configured on this device.
  *
  * ::emberGetGlobalAddressReturn callbacks contain information about these
  * global addresses.
+ *
+ * @param prefix                  Address prefix
+ * @param prefixLengthInBits      length in bits of the prefix
  */
-void emberGetGlobalAddresses(const uint8_t *prefix, uint8_t prefixLength);
+void emberGetGlobalAddresses(const uint8_t *prefix, uint8_t prefixLengthInBits);
 
 /** @brief Provides the result of a call to ::emberGetGlobalAddresses
  *
@@ -1289,12 +1293,12 @@ void emberResignGlobalAddressReturn(EmberStatus status);
  * This is called when the stack knows about a border router that has
  * an external route to a prefix.
  *
- * @param prefix            external route prefix
- * @param prefixLength      length of the prefix
- * @param available         whether this external route is available.
+ * @param prefix                  external route prefix
+ * @param prefixLengthInBits      length in bits of the prefix
+ * @param available               whether this external route is available.
  */
 void emberExternalRouteChangeHandler(const uint8_t *prefix,
-                                     uint8_t prefixLength,
+                                     uint8_t prefixLengthInBits,
                                      bool available);
 
 /** @} // END addtogroup
@@ -1578,7 +1582,8 @@ void emberChangeNodeTypeReturn(EmberStatus status);
  *
  * @param deviceNameLength    The length of the name.
  */
-void emberBecomeCommissioner(const uint8_t *deviceName, uint8_t deviceNameLength);
+void emberBecomeCommissioner(const uint8_t *deviceName,
+                             uint8_t deviceNameLength);
 
 /** @brief Return call for emberBecomeCommissioner().  The status is
  * EMBER_SUCCESS if a petition was sent or EMBER_ERR_FATAL if some
@@ -1978,5 +1983,86 @@ bool emberIpv6StringToAddress(const uint8_t *src, EmberIpv6Address *dst);
 bool emberIpv6StringToPrefix(const uint8_t *src,
                              EmberIpv6Address *dst,
                              uint8_t *dstPrefixBits);
+
+/** @brief Enables or disables Radio HoldOff support
+ *
+ * @param enable  When true, configures ::RHO_GPIO in BOARD_HEADER
+ * as an input which, when asserted, will prevent the radio from
+ * transmitting.  When false, configures ::RHO_GPIO for its original
+ * default purpose.
+ */
+void emberSetRadioHoldOff(bool enable);
+
+/** @brief
+ * Provides the result of a call to ::emberSetRadioHoldOff.
+ *
+ * @param status An EmberStatus value indicating success or the
+ *               reason for failure. EMBER_SUCCESS if Radio HoldOff
+ *               was configured as desired or EMBER_BAD_ARGUMENT
+ *               if requesting it be enabled but RHO has not been
+ *               configured by the BOARD_HEADER.
+ */
+void emberSetRadioHoldOffReturn(EmberStatus status);
+
+/** @brief
+ * Fetch whether packet traffic arbitration is enabled or disabled.
+ */
+void emberGetPtaEnable(void);
+
+/** @brief
+ * Provides the result of a call to ::emberGetPtaEnable.
+ *
+ * @param enabled When true, indicates packet traffic arbitration
+ * is enabed. When false, indicates packet traffic arbitration is
+ * disabled.
+ */
+void emberGetPtaEnableReturn(bool enabled);
+
+/** @brief
+ * Enable or disable packet traffic arbitration
+ *
+ * @param enabled When true, enables packet traffic arbitration.
+ * When false, disables packet traffic arbitration.
+ */
+void emberSetPtaEnable(bool enabled);
+
+/** @brief
+ * Provides the result of a call to ::emberSetPtaEnable.
+ *
+ * @param status An EmberStatus value indicating success or the
+ *               reason for failure.
+ */
+void emberSetPtaEnableReturn(EmberStatus status);
+
+/** @brief
+ * Fetch the current antenna mode.
+ */
+void emberGetAntennaMode(void);
+
+/** @brief
+ * Provides the result of a call to ::emberGetAntennaMode.
+ *
+ * @param status An EmberStatus value indicating success or the
+ *               reason for failure.
+ * @param mode the current antenna mode, 0-primary,
+ *             1-secondary, 2-toggle on tx ack fail
+ */
+void emberGetAntennaModeReturn(EmberStatus status,
+                               uint8_t mode);
+
+/** @brief
+ * Configure the antenna mode.
+ *
+ * @param mode 0-primary, 1-secondary, 2-toggle on tx ack fail
+ */
+void emberSetAntennaMode(uint8_t mode);
+
+/** @brief
+ * Provides the result of a call to ::emberSetAntennaMode.
+ *
+ * @param EMBER_SUCCESS if antenna mode is configured as desired
+ * or EMBER_BAD_ARGUMENT if antenna mode is not supported.
+ */
+void emberSetAntennaModeReturn(EmberStatus status);
 
 #endif

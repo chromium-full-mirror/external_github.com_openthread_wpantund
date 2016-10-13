@@ -40,6 +40,12 @@
 
 #ifdef CORTEXM3_EFM32_MICRO
   #include "em_usart.h"
+
+  // Connect uses a different header, the ifndef check can be removed once
+  // they're unified.
+  #ifndef EMBER_STACK_CONNECT
+    #include "plugin/serial/com.h"
+  #endif
 #endif
 
 //[[
@@ -608,9 +614,20 @@ void emSerialBufferNextBlockIsr(EmSerialBufferQueue *q, uint8_t port);
  * @param length   Length of the data received
  */
 #if defined(CORTEXM3_EFM32_MICRO)
-#define halStackReceiveVuartMessage(data, length)
+  // Only ZNet is currently ready to support VUART on EFR32.
+  #if defined(EMBER_STACK_CONNECT) || defined(EMBER_STACK_IP)
+    // This stub should be removed when Connect and SL-Thread are ready.
+    #define halStackReceiveVuartMessage(data, length)
+  #else
+    #define halStackReceiveVuartMessage(data, length) COM_ReceiveData(COM_VCP, data, length)
+  #endif
 #else
 void halStackReceiveVuartMessage(uint8_t* data, uint8_t length);
+#endif
+
+#if defined(EMBER_STACK_CONNECT) || defined(EMBER_STACK_IP)
+  // This stub should be removed when Connect and SL-Thread are ready.
+  #define emDebugReceiveData()
 #endif
 
 /** @} END Virtual UART API  */

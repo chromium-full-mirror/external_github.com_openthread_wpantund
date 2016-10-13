@@ -334,7 +334,7 @@ bool emIsAssignedInMask(const uint8_t *mask, uint8_t ripId)
 #endif
 
 #ifdef USE_STUB_emIsOnMeshPrefix
-bool emIsOnMeshPrefix(const uint8_t *address)
+bool emIsOnMeshPrefix(const uint8_t *prefix, uint8_t prefixLengthInBits)
 {
   return false;
 }
@@ -368,6 +368,7 @@ void emGlobalAddressTableInit(void) {}
 void emberGetGlobalPrefixReturn(uint8_t borderRouterFlags,
                                 bool isStable,
                                 const uint8_t *prefix,
+                                uint8_t prefixLength,
                                 uint8_t domainId,
                                 uint32_t preferredLifetime,
                                 uint32_t validLifetime) {}
@@ -386,10 +387,9 @@ void emberGetDhcpClientReturn(const EmberIpv6Address *address) {}
 
 #ifdef USE_STUB_emNoteGlobalPrefix
 void emNoteGlobalPrefix(uint8_t *prefix,
-                        uint8_t prefixLengthBytes,
+                        uint8_t prefixLengthInBits,
                         uint8_t prefixFlags,
-                        uint8_t domainId,
-                        bool hasExternalRoute) {}
+                        uint8_t domainId) {}
 #endif
 
 #ifdef USE_STUB_emRipEntry
@@ -434,14 +434,14 @@ void emSetGatewayDhcpAddressTimeout(GlobalAddressEntry *entry) {}
 
 #ifdef USE_STUB_emberExternalRouteChangeHandler
 void emberExternalRouteChangeHandler(const uint8_t *prefix,
-                                     uint8_t prefixLength,
+                                     uint8_t prefixLengthInBits,
                                      bool open) {}
 
 #endif
 
 #ifdef USE_STUB_emberDhcpServerChangeHandler
 void emberDhcpServerChangeHandler(const uint8_t *prefix,
-                                  uint8_t prefixLength,
+                                  uint8_t prefixLengthInBits,
                                   bool available) {}
 #endif
 
@@ -472,7 +472,7 @@ uint8_t emNetworkDataTlvOverhead(const uint8_t *finger)
 
 #ifdef USE_STUB_emberSlaacServerChangeHandler
 void emberSlaacServerChangeHandler(const uint8_t *prefix,
-                                   uint8_t prefixLength,
+                                   uint8_t prefixLengthInBits,
                                    bool available) {}
 #endif
 
@@ -486,13 +486,13 @@ void emberAddressConfigurationChangeHandler(const EmberIpv6Address *address,
 #ifdef USE_STUB_emberRequestDhcpAddressReturn
 void emberRequestDhcpAddressReturn(EmberStatus status,
                                    const uint8_t *prefix,
-                                   uint8_t prefixLength) {}
+                                   uint8_t prefixLengthInBits) {}
 #endif
 
 #ifdef USE_STUB_emberRequestSlaacAddressReturn
 void emberRequestSlaacAddressReturn(EmberStatus status,
                                     const uint8_t *prefix,
-                                    uint8_t prefixLength) {}
+                                    uint8_t prefixLengthInBits) {}
 #endif
 
 #ifdef USE_STUB_emberResignGlobalAddressReturn
@@ -649,6 +649,18 @@ void sendLogEvent(char *foo, char *bar) {}
 
 #ifdef USE_STUB_emCoapInitialize
 void emCoapInitialize(void) {}
+#endif
+
+#ifdef USE_STUB_emCountNodeInNetworkData
+uint8_t emCountNodeInNetworkData(EmberNodeId nodeId) { return 0; }
+#endif
+
+#ifdef USE_STUB_emCountNodeInLocalServerData
+uint8_t emCountNodeInLocalServerData(EmberNodeId nodeId) { return 0; }
+#endif
+
+#ifdef USE_STUB_emSendNodeServerData
+void emSendNodeServerData(EmberNodeId nodeId, bool includeNetworkData) {}
 #endif
 
 #ifdef USE_STUB_emCostDivision
@@ -938,7 +950,9 @@ uint8_t *emMakeLocalServerData(uint8_t *finger, uint8_t *end)
 #endif
 
 #ifdef USE_STUB_emIsOurDhcpServerPrefix
-bool emIsOurDhcpServerPrefix(const uint8_t *prefix)
+bool emIsOurDhcpServerPrefix(const uint8_t *prefix,
+                             uint8_t prefixLengthInBits,
+                             bool match)
 {
   return false;
 }
@@ -983,6 +997,10 @@ typedef enum {
 
 #ifdef USE_STUB_emAttachState
 uint8_t emAttachState = ATTACH_COMPLETE;
+#endif
+
+#ifdef USE_STUB_emAttachParentLongId
+const uint8_t *emAttachParentLongId(void) { return NULL; }
 #endif
 
 #ifdef USE_STUB_emEraseChild
@@ -1068,10 +1086,6 @@ uint8_t emFragmentState = 0;
 
 #ifdef USE_STUB_emFragmentInit
 void emFragmentInit(void) {}
-#endif
-
-#ifdef USE_STUB_emIsRepairingFragment
-bool emIsRepairingFragment(void) {}
 #endif
 
 #ifdef USE_STUB_emIncomingForMeToUart
@@ -1372,7 +1386,7 @@ void emberAddAddressData(const uint8_t *longId, uint16_t shortId) {}
 #endif
 
 #ifdef USE_STUB_emFindNearestDhcpServer
-EmberNodeId emFindNearestDhcpServer(const uint8_t *prefix)
+EmberNodeId emFindNearestDhcpServer(const uint8_t *prefix, uint8_t prefixLengthInBits)
 {
   return 0xFFFE;
 }
@@ -1882,6 +1896,10 @@ bool emGetThreadNativeCommission(void)
 {
   return true;
 }
+#endif
+
+#ifdef USE_STUB_emAcceptUnsecuredFragment
+bool emAcceptUnsecuredFragment(PacketHeader firstFragment) { return false; }
 #endif
 
 #ifdef USE_STUB_emNoteExternalCommissioner
@@ -2908,7 +2926,7 @@ bool emSendDhcpAddressRelease(uint16_t shortId, const uint8_t *longId)
 void emberConfigureGateway(uint8_t borderRouterFlags,
                            bool isStable,
                            const uint8_t *prefix,
-                           const uint8_t prefixLength,
+                           const uint8_t prefixLengthInBits,
                            uint8_t domainId,
                            uint32_t preferredLifetime,
                            uint32_t validLifetime)
@@ -3752,13 +3770,6 @@ void emOpenDtlsServer(DtlsConnection *connection) {}
 void emSubmitDtlsPayload(DtlsConnection *connection, Buffer payload) {}
 #endif
 
-#ifdef USE_STUB_emConvertChannelToMask
-uint32_t emConvertChannelToMask(uint32_t channel)
-{
-  return 0;
-}
-#endif
-
 #ifdef USE_STUB_emAddRoute64Tlv
 uint8_t *emAddRoute64Tlv(uint8_t *finger, const uint8_t *ipDest)
 {
@@ -4166,14 +4177,15 @@ uint8_t emGetPhyRadioChannel(void)
 
 #ifdef USE_STUB_emGetPrefixAddressEntry
 GlobalAddressEntry *emGetPrefixAddressEntry(const uint8_t *prefix,
-                                            uint8_t prefixLengthBytes)
+                                            uint8_t prefixLengthInBits,
+                                            bool match)
 {
   return NULL;
 }
 #endif
 
 #ifdef USE_STUB_emHaveExternalRoute
-bool emHaveExternalRoute(const uint8_t *prefix, uint8_t prefixLength)
+bool emHaveExternalRoute(const uint8_t *prefix, uint8_t prefixLengthInBits)
 {
   return false;
 }
@@ -4187,11 +4199,11 @@ uint16_t emGenericQueueRemove(Buffer *queue, Buffer buffer, uint16_t i)
 #endif
 
 #ifdef USE_STUB_emDeleteGlobalAddressEntry
-void emDeleteGlobalAddressEntry(const uint8_t *prefix, uint8_t prefixLength) {}
+void emDeleteGlobalAddressEntry(const uint8_t *prefix, uint8_t prefixLengthInBits) {}
 #endif
 
 #ifdef USE_STUB_emDeleteGatewayAddressEntry
-void emDeleteGatewayAddressEntry(const uint8_t *prefix, uint8_t prefixLength) {}
+void emDeleteGatewayAddressEntry(const uint8_t *prefix, uint8_t prefixLengthInBits) {}
 #endif
 
 #ifdef USE_STUB_emberGetMfgTokenReturn
@@ -4236,4 +4248,35 @@ boolean emIsBlacklistedIslandId(const int8u *id) { return false; }
 
 #ifdef USE_STUB_emNetworkIncomingMessageHandler
 void emNetworkIncomingMessageHandler(PacketHeader header) {}
+#endif
+
+#ifdef USE_STUB_emberCoapSendUri
+EmberStatus emberCoapSendUri(EmberCoapCode code,
+                             const EmberIpv6Address *destination,
+                             const uint8_t *uri,
+                             const uint8_t *body,
+                             uint16_t bodyLength,
+                             EmberCoapResponseHandler responseHandler) {
+  return EMBER_SUCCESS;
+}
+#endif
+
+#ifdef USE_STUB_emberSetRadioHoldOffReturn
+void emberSetRadioHoldOffReturn(EmberStatus status) {}
+#endif
+
+#ifdef USE_STUB_emberGetPtaEnableReturn
+void emberGetPtaEnableReturn(bool enabled) {}
+#endif
+
+#ifdef USE_STUB_emberSetPtaEnableReturn
+void emberSetPtaEnableReturn(EmberStatus status) {}
+#endif
+
+#ifdef USE_STUB_emberGetAntennaModeReturn
+void emberGetAntennaModeReturn(EmberStatus status, uint8_t mode) {}
+#endif
+
+#ifdef USE_STUB_emberSetAntennaModeReturn
+void emberSetAntennaModeReturn(EmberStatus status) {}
 #endif

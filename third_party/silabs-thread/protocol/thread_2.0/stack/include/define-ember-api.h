@@ -63,6 +63,8 @@
   #define emApiForceAssert emberForceAssert
   #define emApiFormNetwork emberFormNetwork
   #define emApiFormNetworkReturn emberFormNetworkReturn
+  #define emApiGetAntennaMode emberGetAntennaMode
+  #define emApiGetAntennaModeReturn emberGetAntennaModeReturn
   #define emApiGetCcaThreshold emberGetCcaThreshold
   #define emApiGetCcaThresholdReturn emberGetCcaThresholdReturn
   #define emApiGetChannelCalDataTokenReturn emberGetChannelCalDataTokenReturn
@@ -91,6 +93,8 @@
   #define emApiGetNodeStatus emberGetNodeStatus
   #define emApiGetNodeStatusReturn emberGetNodeStatusReturn
   #define emApiGetPanId emberGetPanId
+  #define emApiGetPtaEnable emberGetPtaEnable
+  #define emApiGetPtaEnableReturn emberGetPtaEnableReturn
   #define emApiGetRadioPower emberGetRadioPower
   #define emApiGetRadioPowerReturn emberGetRadioPowerReturn
   #define emApiGetRipEntry emberGetRipEntry
@@ -186,6 +190,8 @@
   #define emApiSetDriverAddressHandler emberSetDriverAddressHandler
   #define emApiSetEui64 emberSetEui64
   #define emApiSendJoinerEntrust emberSendJoinerEntrust
+  #define emApiSetAntennaMode emberSetAntennaMode
+  #define emApiSetAntennaModeReturn emberSetAntennaModeReturn
   #define emApiSetJoiningMode emberSetJoiningMode
   #define emApiSetJoinKey emberSetJoinKey
   #define emApiSetLegacyFilterMaxThreshold emberSetLegacyFilterMaxThreshold
@@ -198,6 +204,10 @@
   #define emApiSetNextNetworkKey emberSetNextNetworkKey
   #define emApiSetNextNetworkKeyReturn emberSetNextNetworkKeyReturn
   #define emApiSetPassthroughPort emberSetPassthroughPort
+  #define emApiSetPtaEnable emberSetPtaEnable
+  #define emApiSetPtaEnableReturn emberSetPtaEnableReturn
+  #define emApiSetRadioHoldOff emberSetRadioHoldOff
+  #define emApiSetRadioHoldOffReturn emberSetRadioHoldOffReturn
   #define emApiSetRadioPower emberSetRadioPower
   #define emApiSetRadioPowerReturn emberSetRadioPowerReturn
   #define emApiSetRandomizeMacExtendedId emberSetRandomizeMacExtendedId
@@ -319,6 +329,8 @@
   #define emberForceAssert emApiForceAssert
   #define emberFormNetwork emApiFormNetwork
   #define emberFormNetworkReturn emApiFormNetworkReturn
+  #define emberGetAntennaMode emApiGetAntennaMode
+  #define emberGetAntennaModeReturn emApiGetAntennaModeReturn
   #define emberGetCcaThreshold emApiGetCcaThreshold
   #define emberGetCcaThresholdReturn emApiGetCcaThresholdReturn
   #define emberGetChannelCalDataTokenReturn emApiGetChannelCalDataTokenReturn
@@ -347,6 +359,8 @@
   #define emberGetNodeStatus emApiGetNodeStatus
   #define emberGetNodeStatusReturn emApiGetNodeStatusReturn
   #define emberGetPanId emApiGetPanId
+  #define emberGetPtaEnable emApiGetPtaEnable
+  #define emberGetPtaEnableReturn emApiGetPtaEnableReturn
   #define emberGetRadioPower emApiGetRadioPower
   #define emberGetRadioPowerReturn emApiGetRadioPowerReturn
   #define emberGetRipEntry emApiGetRipEntry
@@ -442,6 +456,8 @@
   #define emberSetDriverAddressHandler emApiSetDriverAddressHandler
   #define emberSetEui64 emApiSetEui64
   #define emberSendJoinerEntrust emApiSendJoinerEntrust
+  #define emberSetAntennaMode emApiSetAntennaMode
+  #define emberSetAntennaModeReturn emApiSetAntennaModeReturn
   #define emberSetJoiningMode emApiSetJoiningMode
   #define emberSetJoinKey emApiSetJoinKey
   #define emberSetLegacyFilterMaxThreshold emApiSetLegacyFilterMaxThreshold
@@ -454,6 +470,10 @@
   #define emberSetNextNetworkKey emApiSetNextNetworkKey
   #define emberSetNextNetworkKeyReturn emApiSetNextNetworkKeyReturn
   #define emberSetPassthroughPort emApiSetPassthroughPort
+  #define emberSetPtaEnable emApiSetPtaEnable
+  #define emberSetPtaEnableReturn emApiSetPtaEnableReturn
+  #define emberSetRadioHoldOff emApiSetRadioHoldOff
+  #define emberSetRadioHoldOffReturn emApiSetRadioHoldOffReturn
   #define emberSetRadioPower emApiSetRadioPower
   #define emberSetRadioPowerReturn emApiSetRadioPowerReturn
   #define emberSetRandomizeMacExtendedId emApiSetRandomizeMacExtendedId

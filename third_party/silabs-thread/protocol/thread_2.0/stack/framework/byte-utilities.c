@@ -138,7 +138,7 @@ int8_t emStrcmp(const uint8_t *s1, const uint8_t *s2)
 // Returns length of the matching prefix of x and y in bits.
 
 uint16_t emMatchingPrefixBitLength(const uint8_t *x, uint16_t xLength,
-                                 const uint8_t *y, uint16_t yLength)
+                                   const uint8_t *y, uint16_t yLength)
 {
   uint16_t length = (xLength < yLength
                    ? xLength
@@ -167,20 +167,48 @@ void emBitCopy(uint8_t *to, const uint8_t *from, uint16_t count)
   }
 }
 
-uint32_t emReverseBitsInt32u(uint32_t num)
-{
-  uint32_t bitCount = sizeof(uint32_t) * 8;
-  unsigned int reversed = 0;
-  int i;
+static const uint8_t nibbleBitCounts[] = {
+  0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4
+};
 
-  for (i = 0; i < bitCount; i++) {
-    if ((num & (1 << i)) != 0) {
-      reversed |= 1 << ((bitCount - 1) - i);
-    }
+uint8_t emBitCountInt32u(uint32_t num)
+{
+  uint8_t result;
+
+  for (result = 0; num != 0; num >>= 4) {
+    result += nibbleBitCounts[num & 0x0F];
   }
 
-  return reversed;
+  return result;
 }
+
+// If you change the above function, run this to test it.
+void emTestBitCount(void)
+{
+  assert(emBitCountInt32u(0) == 0);
+  uint32_t i;
+  for (i = 1; i; i++) {
+    uint32_t num = i;
+    uint8_t count = 0;
+    for ( ; num; num >>= 1) {
+      count += num & 1;
+    }
+    assert(emBitCountInt32u(i) == count);
+  }
+}
+
+// This is from http://graphics.stanford.edu/~seander/bithacks.html.
+// I've checked that it always gets the right answer.  On my PC it
+// runs about four times faster than the above version when run on
+// all possible 32-bit values.  But (a) it depends on having a fast
+// multiply and (b) it's not the most obvious code in the world.
+//
+// uint8_t emBitCountInt32u(uint32_t num)
+// {
+//   num -= ((num >> 1) & 0x55555555);
+//   num = (num & 0x33333333) + ((num >> 2) & 0x33333333);
+//   return (((num + (num >> 4)) & 0xF0F0F0F) * 0x1010101) >> 24;
+// }
 
 uint8_t emberHexToInt(uint8_t ch)
 {

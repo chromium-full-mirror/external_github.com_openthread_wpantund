@@ -502,5 +502,5 @@ const EmberCommandEntry customManagementCallbackCommandTable[] = {
                                 "u",
                                 NULL),
 #endif /* EMBER_WAKEUP_STACK */
-  { NULL }    // terminator
+  {{ NULL }}  // terminator
 };

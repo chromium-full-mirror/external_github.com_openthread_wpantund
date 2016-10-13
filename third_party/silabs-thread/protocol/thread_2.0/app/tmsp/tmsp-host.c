@@ -245,16 +245,17 @@ void emberEcho(const uint8_t *data,
 void emberConfigureGateway(uint8_t borderRouterFlags,
                            bool isStable,
                            const uint8_t *prefix,
-                           uint8_t prefixLength,
+                           uint8_t prefixLengthInBits,
                            uint8_t domainId,
                            uint32_t preferredLifetime,
                            uint32_t validLifetime)
 {
   emSendBinaryManagementCommand(EMBER_CONFIGURE_GATEWAY_COMMAND_IDENTIFIER,
-                                "uubuww",
+                                "uubuuww",
                                 borderRouterFlags,
                                 isStable,
-                                prefix, prefixLength,
+                                prefix, 16,
+                                prefixLengthInBits,
                                 domainId,
                                 preferredLifetime,
                                 validLifetime);
@@ -346,11 +347,12 @@ void emberCommissionNetwork(uint8_t preferredChannel,
 }
 
 void emberRequestDhcpAddress(const uint8_t *prefix,
-                             uint8_t prefixLength)
+                             uint8_t prefixLengthInBits)
 {
   emSendBinaryManagementCommand(EMBER_REQUEST_DHCP_ADDRESS_COMMAND_IDENTIFIER,
-                                "b",
-                                prefix, prefixLength);
+                                "bu",
+                                prefix, 16,
+                                prefixLengthInBits);
 }
 
 void emberHostToNcpNoOp(const uint8_t *bytes,
@@ -362,11 +364,12 @@ void emberHostToNcpNoOp(const uint8_t *bytes,
 }
 
 void emberGetGlobalAddresses(const uint8_t *prefix,
-                             uint8_t prefixLength)
+                             uint8_t prefixLengthInBits)
 {
   emSendBinaryManagementCommand(EMBER_GET_GLOBAL_ADDRESSES_COMMAND_IDENTIFIER,
-                                "b",
-                                prefix, prefixLength);
+                                "bu",
+                                prefix, 16,
+                                prefixLengthInBits);
 }
 
 void emberGetDhcpClients(void)
@@ -472,11 +475,12 @@ void emberSetEui64(const EmberEui64 *eui64)
 }
 
 void emberRequestSlaacAddress(const uint8_t *prefix,
-                              uint8_t prefixLength)
+                              uint8_t prefixLengthInBits)
 {
   emSendBinaryManagementCommand(EMBER_REQUEST_SLAAC_ADDRESS_COMMAND_IDENTIFIER,
-                                "b",
-                                prefix, prefixLength);
+                                "bu",
+                                prefix, 16,
+                                prefixLengthInBits);
 }
 
 void emberCustomHostToNcpMessage(const uint8_t *message,
@@ -511,13 +515,14 @@ void emberSetRandomizeMacExtendedId(bool value)
 
 void emberConfigureExternalRoute(uint8_t externalRouteFlags,
                                  const uint8_t *prefix,
-                                 uint8_t prefixLength,
+                                 uint8_t prefixLengthInBits,
                                  uint8_t externalRouteDomainId)
 {
   emSendBinaryManagementCommand(EMBER_CONFIGURE_EXTERNAL_ROUTE_COMMAND_IDENTIFIER,
-                                "ubu",
+                                "ubuu",
                                 externalRouteFlags,
-                                prefix, prefixLength,
+                                prefix, 16,
+                                prefixLengthInBits,
                                 externalRouteDomainId);
 }
 
@@ -592,6 +597,39 @@ void emberSetBeaconSteeringData(const uint8_t *steeringData,
   emSendBinaryManagementCommand(EMBER_SET_BEACON_STEERING_DATA_COMMAND_IDENTIFIER,
                                 "b",
                                 steeringData, steeringDataLength);
+}
+
+void emberSetRadioHoldOff(bool enabled)
+{
+  emSendBinaryManagementCommand(EMBER_SET_RADIO_HOLD_OFF_COMMAND_IDENTIFIER,
+                                "u",
+                                enabled);
+}
+
+void emberGetPtaEnable(void)
+{
+  emSendBinaryManagementCommand(EMBER_GET_PTA_ENABLE_COMMAND_IDENTIFIER,
+                                "");
+}
+
+void emberSetPtaEnable(bool enabled)
+{
+  emSendBinaryManagementCommand(EMBER_SET_PTA_ENABLE_COMMAND_IDENTIFIER,
+                                "u",
+                                enabled);
+}
+
+void emberGetAntennaMode(void)
+{
+  emSendBinaryManagementCommand(EMBER_GET_ANTENNA_MODE_COMMAND_IDENTIFIER,
+                                "");
+}
+
+void emberSetAntennaMode(uint8_t mode)
+{
+  emSendBinaryManagementCommand(EMBER_SET_ANTENNA_MODE_COMMAND_IDENTIFIER,
+                                "u",
+                                mode);
 }
 
 static void resetMicroHandlerCallback(void)
@@ -933,25 +971,27 @@ static void resetNetworkStateReturnCallback(void)
 
 static void externalRouteChangeHandlerCallback(void)
 {
-  uint8_t *prefix;
-  uint8_t prefixLength;
+  uint8_t prefix[16];
+  uint8_t prefixLengthInBits;
   bool available;
-  prefix = emberStringCommandArgument(0, &prefixLength);
-  available = (bool) emberUnsignedCommandArgument(1);
+  emberGetStringArgument(0, prefix, 16, false);
+  prefixLengthInBits = (uint8_t) emberUnsignedCommandArgument(1);
+  available = (bool) emberUnsignedCommandArgument(2);
   emberExternalRouteChangeHandler(prefix,
-                                  prefixLength,
+                                  prefixLengthInBits,
                                   available);
 }
 
 static void dhcpServerChangeHandlerCallback(void)
 {
-  uint8_t *prefix;
-  uint8_t prefixLength;
+  uint8_t prefix[16];
+  uint8_t prefixLengthInBits;
   bool available;
-  prefix = emberStringCommandArgument(0, &prefixLength);
-  available = (bool) emberUnsignedCommandArgument(1);
+  emberGetStringArgument(0, prefix, 16, false);
+  prefixLengthInBits = (uint8_t) emberUnsignedCommandArgument(1);
+  available = (bool) emberUnsignedCommandArgument(2);
   emberDhcpServerChangeHandler(prefix,
-                               prefixLength,
+                               prefixLengthInBits,
                                available);
 }
 
@@ -981,13 +1021,14 @@ static void addressConfigurationChangeHandlerCallback(void)
 static void requestDhcpAddressReturnCallback(void)
 {
   EmberStatus status;
-  uint8_t *prefix;
-  uint8_t prefixLength;
+  uint8_t prefix[16];
+  uint8_t prefixLengthInBits;
   status = (EmberStatus) emberUnsignedCommandArgument(0);
-  prefix = emberStringCommandArgument(1, &prefixLength);
+  emberGetStringArgument(1, prefix, 16, false);
+  prefixLengthInBits = (uint8_t) emberUnsignedCommandArgument(2);
   emberRequestDhcpAddressReturn(status,
                                 prefix,
-                                prefixLength);
+                                prefixLengthInBits);
 }
 
 static void commissionNetworkReturnCallback(void)
@@ -1047,19 +1088,22 @@ static void getGlobalPrefixReturnCallback(void)
 {
   uint8_t borderRouterFlags;
   bool isStable;
-  uint8_t prefix[8];
+  uint8_t prefix[16];
+  uint8_t prefixLengthInBits;
   uint8_t domainId;
   uint32_t preferredLifetime;
   uint32_t validLifetime;
   borderRouterFlags = (uint8_t) emberUnsignedCommandArgument(0);
   isStable = (bool) emberUnsignedCommandArgument(1);
-  emberGetStringArgument(2, prefix, 8, false);
-  domainId = (uint8_t) emberUnsignedCommandArgument(3);
-  preferredLifetime = (uint32_t) emberUnsignedCommandArgument(4);
-  validLifetime = (uint32_t) emberUnsignedCommandArgument(5);
+  emberGetStringArgument(2, prefix, 16, false);
+  prefixLengthInBits = (uint8_t) emberUnsignedCommandArgument(3);
+  domainId = (uint8_t) emberUnsignedCommandArgument(4);
+  preferredLifetime = (uint32_t) emberUnsignedCommandArgument(5);
+  validLifetime = (uint32_t) emberUnsignedCommandArgument(6);
   emberGetGlobalPrefixReturn(borderRouterFlags,
                              isStable,
                              prefix,
+                             prefixLengthInBits,
                              domainId,
                              preferredLifetime,
                              validLifetime);
@@ -1074,26 +1118,28 @@ static void resignGlobalAddressReturnCallback(void)
 
 static void slaacServerChangeHandlerCallback(void)
 {
-  uint8_t *prefix;
-  uint8_t prefixLength;
+  uint8_t prefix[16];
+  uint8_t prefixLengthInBits;
   bool available;
-  prefix = emberStringCommandArgument(0, &prefixLength);
-  available = (bool) emberUnsignedCommandArgument(1);
+  emberGetStringArgument(0, prefix, 16, false);
+  prefixLengthInBits = (uint8_t) emberUnsignedCommandArgument(1);
+  available = (bool) emberUnsignedCommandArgument(2);
   emberSlaacServerChangeHandler(prefix,
-                                prefixLength,
+                                prefixLengthInBits,
                                 available);
 }
 
 static void requestSlaacAddressReturnCallback(void)
 {
   EmberStatus status;
-  uint8_t *prefix;
-  uint8_t prefixLength;
+  uint8_t prefix[16];
+  uint8_t prefixLengthInBits;
   status = (EmberStatus) emberUnsignedCommandArgument(0);
-  prefix = emberStringCommandArgument(1, &prefixLength);
+  emberGetStringArgument(1, prefix, 16, false);
+  prefixLengthInBits = (uint8_t) emberUnsignedCommandArgument(2);
   emberRequestSlaacAddressReturn(status,
                                  prefix,
-                                 prefixLength);
+                                 prefixLengthInBits);
 }
 
 static void customNcpToHostMessageCallback(void)
@@ -1287,6 +1333,44 @@ static void setCtuneReturnCallback(void)
   EmberStatus status;
   status = (EmberStatus) emberUnsignedCommandArgument(0);
   emberSetCtuneReturn(status);
+}
+
+static void setRadioHoldOffReturnCallback(void)
+{
+  EmberStatus status;
+  status = (EmberStatus) emberUnsignedCommandArgument(0);
+  emberSetRadioHoldOffReturn(status);
+}
+
+static void getPtaEnableReturnCallback(void)
+{
+  bool enabled;
+  enabled = (bool) emberUnsignedCommandArgument(0);
+  emberGetPtaEnableReturn(enabled);
+}
+
+static void setPtaEnableReturnCallback(void)
+{
+  EmberStatus status;
+  status = (EmberStatus) emberUnsignedCommandArgument(0);
+  emberSetPtaEnableReturn(status);
+}
+
+static void getAntennaModeReturnCallback(void)
+{
+  EmberStatus status;
+  uint8_t mode;
+  status = (EmberStatus) emberUnsignedCommandArgument(0);
+  mode = (uint8_t) emberUnsignedCommandArgument(1);
+  emberGetAntennaModeReturn(status,
+                            mode);
+}
+
+static void setAntennaModeReturnCallback(void)
+{
+  EmberStatus status;
+  status = (EmberStatus) emberUnsignedCommandArgument(0);
+  emberSetAntennaModeReturn(status);
 }
 
 //------------------------------------------------------------------------------
@@ -1848,11 +1932,11 @@ const EmberCommandEntry managementCallbackCommandTable[] = {
                                 NULL),
   emberBinaryCommandEntryAction(CB_EXTERNAL_ROUTE_CHANGE_COMMAND_IDENTIFIER,
                                 externalRouteChangeHandlerCallback,
-                                "bu",
+                                "buu",
                                 NULL),
   emberBinaryCommandEntryAction(CB_DHCP_SERVER_CHANGE_COMMAND_IDENTIFIER,
                                 dhcpServerChangeHandlerCallback,
-                                "bu",
+                                "buu",
                                 NULL),
   emberBinaryCommandEntryAction(CB_ADDRESS_CONFIGURATION_CHANGE_COMMAND_IDENTIFIER,
                                 addressConfigurationChangeHandlerCallback,
@@ -1860,7 +1944,7 @@ const EmberCommandEntry managementCallbackCommandTable[] = {
                                 NULL),
   emberBinaryCommandEntryAction(CB_REQUEST_DHCP_ADDRESS_COMMAND_IDENTIFIER,
                                 requestDhcpAddressReturnCallback,
-                                "ub",
+                                "ubu",
                                 NULL),
   emberBinaryCommandEntryAction(CB_COMMISSION_NETWORK_COMMAND_IDENTIFIER,
                                 commissionNetworkReturnCallback,
@@ -1888,7 +1972,7 @@ const EmberCommandEntry managementCallbackCommandTable[] = {
                                 NULL),
   emberBinaryCommandEntryAction(CB_GET_GLOBAL_PREFIX_COMMAND_IDENTIFIER,
                                 getGlobalPrefixReturnCallback,
-                                "uubuww",
+                                "uubuuww",
                                 NULL),
   emberBinaryCommandEntryAction(CB_RESIGN_GLOBAL_ADDRESS_COMMAND_IDENTIFIER,
                                 resignGlobalAddressReturnCallback,
@@ -1896,11 +1980,11 @@ const EmberCommandEntry managementCallbackCommandTable[] = {
                                 NULL),
   emberBinaryCommandEntryAction(CB_SLAAC_SERVER_CHANGE_COMMAND_IDENTIFIER,
                                 slaacServerChangeHandlerCallback,
-                                "bu",
+                                "buu",
                                 NULL),
   emberBinaryCommandEntryAction(CB_REQUEST_SLAAC_ADDRESS_COMMAND_IDENTIFIER,
                                 requestSlaacAddressReturnCallback,
-                                "ub",
+                                "ubu",
                                 NULL),
   emberBinaryCommandEntryAction(CB_CUSTOM_NCP_TO_HOST_MESSAGE_COMMAND_IDENTIFIER,
                                 customNcpToHostMessageCallback,
@@ -1972,6 +2056,26 @@ const EmberCommandEntry managementCallbackCommandTable[] = {
                                 NULL),
   emberBinaryCommandEntryAction(CB_SET_CTUNE_COMMAND_IDENTIFIER,
                                 setCtuneReturnCallback,
+                                "u",
+                                NULL),
+  emberBinaryCommandEntryAction(CB_SET_RADIO_HOLD_OFF_COMMAND_IDENTIFIER,
+                                setRadioHoldOffReturnCallback,
+                                "u",
+                                NULL),
+  emberBinaryCommandEntryAction(CB_GET_PTA_ENABLE_COMMAND_IDENTIFIER,
+                                getPtaEnableReturnCallback,
+                                "u",
+                                NULL),
+  emberBinaryCommandEntryAction(CB_SET_PTA_ENABLE_COMMAND_IDENTIFIER,
+                                setPtaEnableReturnCallback,
+                                "u",
+                                NULL),
+  emberBinaryCommandEntryAction(CB_GET_ANTENNA_MODE_COMMAND_IDENTIFIER,
+                                getAntennaModeReturnCallback,
+                                "uu",
+                                NULL),
+  emberBinaryCommandEntryAction(CB_SET_ANTENNA_MODE_COMMAND_IDENTIFIER,
+                                setAntennaModeReturnCallback,
                                 "u",
                                 NULL),
 #ifdef MFGLIB
@@ -2081,5 +2185,5 @@ const EmberCommandEntry managementCallbackCommandTable[] = {
 #endif /* (defined (EMBER_TEST) || defined(QA_THREAD_TEST)) */
 #ifdef EMBER_APPLICATION_USES_SOFTWARE_FLOW_CONTROL
 #endif /* EMBER_APPLICATION_USES_SOFTWARE_FLOW_CONTROL */
-  { NULL }    // terminator
+  {{ NULL }}  // terminator
 };

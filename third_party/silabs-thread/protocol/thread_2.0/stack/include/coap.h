@@ -196,6 +196,13 @@ bool emberCoapRespond(EmberCoapCode responseCode,
                       uint16_t payloadLength);
 
 /**
+ * @brief Call this function to send a 204 Changed response.
+ */
+bool emberCoapRespondChanged(EmberCoapContentFormatType format,
+                             const uint8_t *payload,
+                             uint16_t payloadLength);
+
+/**
  * @brief Call this function to send a 205 Content response.
  */
 bool emberCoapRespondContent(EmberCoapContentFormatType format,

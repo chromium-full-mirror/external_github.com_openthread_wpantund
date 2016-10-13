@@ -134,8 +134,9 @@ uint16_t emMatchingPrefixBitLength(const uint8_t *x, uint16_t xLength,
  */
 void emBitCopy(uint8_t *to, const uint8_t *from, uint16_t count);
 
-// Utility function to reverse the input bits
-uint32_t emReverseBitsInt32u(uint32_t num);
+/** @brief Returns the number of set bits in \c num.
+ */
+uint8_t emBitCountInt32u(uint32_t num);
 
 /** @brief Returns the value of hex digit ch (0 - 15).
  * Returns a value > 15 if ch is not a hex digit.

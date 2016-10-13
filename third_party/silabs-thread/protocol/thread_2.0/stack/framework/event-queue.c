@@ -225,9 +225,11 @@ void emberMarkEventQueue(EventQueue *queue)
   Event **location = &queue->events;
   while (*location != LIST_END) {
     Event *event = *location;
-    emMarkBufferPointer((void **) location);
-    location = &event->next;
-    if (event->actions->marker != NULL) {
+    if (event->actions->marker == NULL) {
+      location = &event->next;
+    } else {
+      emMarkBufferPointer((void **) location);
+      location = &event->next;
       event->actions->marker(event);
     }
   }

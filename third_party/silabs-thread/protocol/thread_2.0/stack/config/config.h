@@ -5,7 +5,7 @@
 #define EMBER_SPECIAL_VERSION  2
 
 // 2 bytes
-#define EMBER_BUILD_NUMBER 81
+#define EMBER_BUILD_NUMBER 113
 
 #define EMBER_FULL_VERSION (((uint16_t)EMBER_MAJOR_VERSION << 12)      \
                             | ((uint16_t)EMBER_MINOR_VERSION << 8)     \
@@ -13,7 +13,7 @@
                             | ((uint16_t)EMBER_SPECIAL_VERSION))
 
 // 4 bytes
-#define EMBER_CHANGE_NUMBER 181188
+#define EMBER_CHANGE_NUMBER 181196
 
 // 1 byte
 #ifdef EMBER_WAKEUP_STACK

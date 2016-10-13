@@ -341,7 +341,7 @@ bool emberGetIpv6AddressArgument(uint8_t index, EmberIpv6Address *dst);
  */
 bool emberGetIpv6PrefixArgument(uint8_t index,
                                 EmberIpv6Address *dst,
-                                uint8_t *prefixBits);
+                                uint8_t *dstPrefixBits);
 
 /** A convenience macro for copying security key arguments to an
  * EmberKeyData pointer.

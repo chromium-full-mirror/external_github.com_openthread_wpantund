@@ -18,7 +18,7 @@ enum {
 #define COAP_ACK_TIMEOUT_MS    3000
 #define COAP_MAX_RETRANSMIT    4
 
-#define THREAD_COAP_PORT 19789
+#define THREAD_COAP_PORT 61631
 
 void emCoapMarkBuffers(void);
 void emCoapInitialize(void);

@@ -56,15 +56,19 @@ __BEGIN_DECLS
 #define USE_STUB_emCoapInitialize
 #define USE_STUB_emberGetCtuneReturn
 #define USE_STUB_emberSetCtuneReturn
-//#define USE_STUB_emberSetLegacyFilterMaxThresholdReturn
-//#define USE_STUB_emberSetLegacyFilterMinThresholdReturn
+#define USE_STUB_emberSetRadioHoldOffReturn
+#define USE_STUB_emberGetPtaEnableReturn
+#define USE_STUB_emberSetPtaEnableReturn
+#define USE_STUB_emberGetAntennaModeReturn
+#define USE_STUB_emberSetAntennaModeReturn
+#define USE_STUB_emberGetGlobalPrefixReturn
 #include "stack/ip/stubs.c"
 
 static EmberCommandState callbackCommandState = {0};
 EventQueue emApiAppEventQueue;
 
 EmberCommandEntry emberCommandTable[] = {
-  { NULL }
+  { }
 };
 
 
@@ -972,16 +976,6 @@ void emberGetNodeStatusReturn(EmberStatus status,
 	gNCPControlInterface->process_event(EVENT_EMBER_CB_GET_NODE_STATUS_RETURN, status, ripId, nodeId, parentRipId, parentId, networkFragmentIdentifier,networkFrameCounter);
 }
 
-void emberGetGlobalPrefixReturn(uint8_t borderRouterFlags,
-                                bool isStable,
-                                const uint8_t *prefix,
-                                uint8_t domainId,
-                                uint32_t preferredLifetime,
-                                uint32_t validLifetime)
-{
-	gNCPControlInterface->process_event(EVENT_EMBER_CB_GET_GLOBAL_PREFIX_RETURN, borderRouterFlags, prefix, domainId, preferredLifetime, validLifetime);
-}
-
 void emberGetGlobalAddressReturn(const EmberIpv6Address *address,
                                  uint32_t preferredLifetime,
                                  uint32_t validLifetime,
@@ -1001,24 +995,24 @@ void emberConfigUartReturn(void)
 }
 
 void emberExternalRouteChangeHandler(const uint8_t *prefix,
-                              uint8_t prefixLength,
+                              uint8_t prefixLengthInBits,
                               bool available)
 {
-	gNCPControlInterface->process_event(EVENT_EMBER_CB_EXTERNAL_ROUTE_CHANGE, prefix, prefixLength, available);
+	gNCPControlInterface->process_event(EVENT_EMBER_CB_EXTERNAL_ROUTE_CHANGE, prefix, prefixLengthInBits, available);
 }
 
 void emberDhcpServerChangeHandler(const uint8_t *prefix,
-                           uint8_t prefixLength,
+                           uint8_t prefixLengthInBits,
                            bool available)
 {
-	gNCPControlInterface->process_event(EVENT_EMBER_CB_DHCP_SERVER_CHANGE, prefix, prefixLength, available);
+	gNCPControlInterface->process_event(EVENT_EMBER_CB_DHCP_SERVER_CHANGE, prefix, prefixLengthInBits, available);
 }
 
 void emberSlaacServerChangeHandler(const uint8_t *prefix,
-                            uint8_t prefixLength,
+                            uint8_t prefixLengthInBits,
                             bool available)
 {
-	gNCPControlInterface->process_event(EVENT_EMBER_CB_SLAAC_SERVER_CHANGE, prefix, prefixLength, available);
+	gNCPControlInterface->process_event(EVENT_EMBER_CB_SLAAC_SERVER_CHANGE, prefix, prefixLengthInBits, available);
 }
 
 void emberAddressConfigurationChangeHandler(const EmberIpv6Address *address,

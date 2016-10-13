@@ -12,9 +12,7 @@
 #ifndef __SERIAL_H__
 #define __SERIAL_H__
 
-#ifndef __HAL_H__
-  #error hal/hal.h should be included first
-#endif
+#include "hal/hal.h"
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdarg.h>

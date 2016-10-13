@@ -63,6 +63,8 @@
   #undef emberForceAssert
   #undef emberFormNetwork
   #undef emberFormNetworkReturn
+  #undef emberGetAntennaMode
+  #undef emberGetAntennaModeReturn
   #undef emberGetCcaThreshold
   #undef emberGetCcaThresholdReturn
   #undef emberGetChannelCalDataTokenReturn
@@ -91,6 +93,8 @@
   #undef emberGetNodeStatus
   #undef emberGetNodeStatusReturn
   #undef emberGetPanId
+  #undef emberGetPtaEnable
+  #undef emberGetPtaEnableReturn
   #undef emberGetRadioPower
   #undef emberGetRadioPowerReturn
   #undef emberGetRipEntry
@@ -186,6 +190,8 @@
   #undef emberSetDriverAddressHandler
   #undef emberSetEui64
   #undef emberSendJoinerEntrust
+  #undef emberSetAntennaMode
+  #undef emberSetAntennaModeReturn
   #undef emberSetJoiningMode
   #undef emberSetJoinKey
   #undef emberSetLegacyFilterMaxThreshold
@@ -198,6 +204,10 @@
   #undef emberSetNextNetworkKey
   #undef emberSetNextNetworkKeyReturn
   #undef emberSetPassthroughPort
+  #undef emberSetPtaEnable
+  #undef emberSetPtaEnableReturn
+  #undef emberSetRadioHoldOff
+  #undef emberSetRadioHoldOffReturn
   #undef emberSetRadioPower
   #undef emberSetRadioPowerReturn
   #undef emberSetRandomizeMacExtendedId

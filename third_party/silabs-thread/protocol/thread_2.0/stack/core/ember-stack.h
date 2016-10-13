@@ -75,7 +75,11 @@ extern uint8_t emberReservedMobileChildEntries;
 #define EM_USE_LONG_ADDRESS          0xFFFE
 #define NO_SHORT_ID                  0xFFFE
 #define LEADER_ANYCAST_ADDRESS       0xFC00
-#define COMMISSIONER_ANYCAST_ADDRESS 0xFD00
+// The commissioner anycast address is actually of the form
+// 0xFC3x [0xFC30 to 0xFC37] where the index is the commissioner
+// session ID mod 8.
+// TODO: We support only one commissioner session ID.
+#define COMMISSIONER_ANYCAST_ADDRESS 0xFC30
 
 #define emIsValidNodeId(id) ((id) < EM_USE_LONG_ADDRESS)
 
@@ -146,6 +150,7 @@ typedef enum {
   ATTACH_REASON_ID_VERIFY_FAILED,
   ATTACH_REASON_SWITCH_TO_PENDING,
   ATTACH_REASON_PENDING_ATTACH_FAILED,
+  ATTACH_REASON_JOINED,
   ATTACH_REASON_LAST,
 } AttachReason;
 
@@ -370,6 +375,9 @@ void emSetNodeType(EmberNodeType type, bool preserveLurker);
    && ! emCheckStackConfig(STACK_CONFIG_FULL_ROUTER))
 
 #define emAmEndDevice() (emNodeTypeIsEndDevice() || emAmDarkRouter())
+
+// TODO Need something for end devices + minimal end devices
+// (example, they have similar aging behavior in child-aging.c)
 
 #ifdef EMBER_TEST
 // This function asserts that the length of the freelist equals

@@ -24,6 +24,7 @@ typedef struct {
   EmberBorderRouterTlvFlag borderRouterTlvFlags;
   bool isStable;
   uint8_t address[16];
+  uint8_t prefixLengthInBits;
   uint8_t domainId;
   // Keeping track of request failures might need to keep track of
   // multiple servers.  On the other hand, multiple servers and
@@ -83,14 +84,20 @@ bool emStoreIpSourceAddress(uint8_t *source, const uint8_t *destination);
 
 //----------------------------------------------------------------
 
-GlobalAddressEntry *emGetGatewayAddressEntry(const uint8_t *prefix);
+GlobalAddressEntry *emGetGatewayAddressEntry(const uint8_t *prefix,
+                                             uint8_t prefixLengthInBits,
+                                             bool match);
 GlobalAddressEntry *emGetPrefixAddressEntry(const uint8_t *prefix,
-                                            uint8_t prefixLengthBytes);
-void emDeleteGlobalAddressEntry(const uint8_t *prefix, uint8_t prefixLength);
-void emDeleteGatewayAddressEntry(const uint8_t *prefix, uint8_t prefixLength);
-bool emGatewayHasDefaultRoute(const uint8_t *prefix);
+                                            uint8_t prefixLengthInBits,
+                                            bool match);
+void emDeleteGlobalAddressEntry(const uint8_t *prefix, uint8_t prefixLengthInBits);
+void emDeleteGatewayAddressEntry(const uint8_t *prefix, uint8_t prefixLengthInBits);
+bool emGatewayHasDefaultRoute(const uint8_t *prefix,
+                              uint8_t prefixLengthInBits,
+                              bool match);
 
 GlobalAddressEntry *emAddGlobalAddress(uint8_t *address,
+                                       uint8_t prefixLengthInBits,
                                        uint8_t domainId,
                                        uint32_t preferredLifetime,
                                        uint32_t validLifetime,
@@ -119,9 +126,8 @@ bool emStoreDefaultIpAddress(uint8_t *target);
 bool emIsLocalIpAddress(const uint8_t *address);
 bool emIsGlobalIpAddress(const uint8_t *address);
 bool emIsUnicastForMe(const uint8_t *address);
-bool emIsOurExternalRoutePrefix(const uint8_t *prefix);
-bool emIsOurDhcpServerPrefix(const uint8_t *prefix);
-bool emIsOurSlaacServerPrefix(const uint8_t *prefix);
+bool emIsOurDhcpServerPrefix(const uint8_t *prefix, uint8_t prefixLengthInBits, bool match);
+bool emIsOurSlaacServerPrefix(const uint8_t *prefix, uint8_t prefixLengthInBits, bool match);
 
 // Link local addresses
 

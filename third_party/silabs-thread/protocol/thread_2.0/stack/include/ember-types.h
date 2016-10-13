@@ -404,10 +404,12 @@ enum
   /** An end device whose radio can be turned off to save power.
    *  The application must call ::emberPollForData() to receive messages. */
   EMBER_SLEEPY_END_DEVICE = 4,
+  /** An always-on end device like ::EMBER_END_DEVICE, but IP address discovery
+   * is performed by the parent on its behalf to help it conserve resources. */
+  EMBER_MINIMAL_END_DEVICE = 5,
   /** Authentication server for new Thread devices and the authorizer
    *  for providing the network credentials they require to join the
    *  network. */
-  EMBER_MINIMAL_END_DEVICE = 5,
   EMBER_COMMISSIONER = 7
 };
 /**

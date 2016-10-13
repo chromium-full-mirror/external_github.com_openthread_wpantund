@@ -405,10 +405,10 @@ bool emberGetIpv6AddressArgument(uint8_t index, EmberIpv6Address *dst)
 
 bool emberGetIpv6PrefixArgument(uint8_t index,
                                 EmberIpv6Address *dst,
-                                uint8_t *prefixBits)
+                                uint8_t *dstPrefixBits)
 {
   uint8_t *src = emberStringCommandArgument(index, NULL);
-  return emberIpv6StringToPrefix(src, dst, prefixBits);
+  return emberIpv6StringToPrefix(src, dst, dstPrefixBits);
 }
 
 //----------------------------------------------------------------

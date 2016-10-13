@@ -104,6 +104,11 @@ enum {
   EMBER_GET_CTUNE_COMMAND_IDENTIFIER                                   = 0x6982,
   EMBER_SET_CTUNE_COMMAND_IDENTIFIER                                   = 0x6983,
   EMBER_SET_BEACON_STEERING_DATA_COMMAND_IDENTIFIER                    = 0x6984,
+  EMBER_SET_RADIO_HOLD_OFF_COMMAND_IDENTIFIER                          = 0x6987,
+  EMBER_GET_PTA_ENABLE_COMMAND_IDENTIFIER                              = 0x6988,
+  EMBER_SET_PTA_ENABLE_COMMAND_IDENTIFIER                              = 0x6989,
+  EMBER_GET_ANTENNA_MODE_COMMAND_IDENTIFIER                            = 0x698A,
+  EMBER_SET_ANTENNA_MODE_COMMAND_IDENTIFIER                            = 0x698B,
   CB_RESET_MICRO_COMMAND_IDENTIFIER                                    = 0x6300,
   CB_STATE_COMMAND_IDENTIFIER                                          = 0x6301,
   CB_GET_VERSIONS_COMMAND_IDENTIFIER                                   = 0x6302,
@@ -175,6 +180,11 @@ enum {
   CB_HOST_STATE_COMMAND_IDENTIFIER                                     = 0x637A,
   CB_GET_CTUNE_COMMAND_IDENTIFIER                                      = 0x637B,
   CB_SET_CTUNE_COMMAND_IDENTIFIER                                      = 0x637C,
+  CB_SET_RADIO_HOLD_OFF_COMMAND_IDENTIFIER                             = 0x637F,
+  CB_GET_PTA_ENABLE_COMMAND_IDENTIFIER                                 = 0x6380,
+  CB_SET_PTA_ENABLE_COMMAND_IDENTIFIER                                 = 0x6381,
+  CB_GET_ANTENNA_MODE_COMMAND_IDENTIFIER                               = 0x6382,
+  CB_SET_ANTENNA_MODE_COMMAND_IDENTIFIER                               = 0x6383,
 
 // MFGLIB
 

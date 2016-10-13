@@ -66,7 +66,7 @@
  static EventActions barEventActions = {
    &emStackEventQueue,
    (void (*)(Event *)) barEventHandler,
-   (void (*)(Event *)) barEventMarker
+   (void (*)(Event *)) barEventMarker // required for all dynamic events
  };
 
  static void barEventHandler(BarEvent *event)
@@ -76,6 +76,9 @@
 
  static void barEventMarker(BarEvent *event)
  {
+   // The Buffer that holds BarEvent itself is not marked, but any Buffers
+   // within the BarEvent must be marked.  If BarEvent doesn't contain any
+   // Buffers, the marking function is still required, but will be empty.
    emMarkBuffer(&event->someBuffer);
  }
 

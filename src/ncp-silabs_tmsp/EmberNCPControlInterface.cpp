@@ -591,10 +591,7 @@ EmberNCPControlInterface::enable(CallbackWithStatus cb)
 void
 EmberNCPControlInterface::data_poll(CallbackWithStatus cb)
 {
-	if (!mNCPInstance->mEnabled) {
-		cb(kWPANTUNDStatus_InvalidWhenDisabled);
-		return;
-	}
+	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
 
 	BEGIN_TRY_FOR_CMD(cb);
 	start_send_command_task(
@@ -607,24 +604,26 @@ EmberNCPControlInterface::data_poll(CallbackWithStatus cb)
 			: EVENT_NULL
 	);
 	END_TRY_FOR_CMD(cb);
+
+bail:
+	return;
 }
 
 void
-EmberNCPControlInterface::config_gateway(bool defaultRoute, const uint8_t prefix[8], uint32_t preferredLifetime, uint32_t validLifetime, CallbackWithStatus cb)
-{
+EmberNCPControlInterface::add_on_mesh_prefix(
+	const struct in6_addr *prefix,
+	bool defaultRoute,
+	CallbackWithStatus cb
+) {
 	using namespace nl::wpantund::EmberCommands;
 	uint8_t flags(0);
-	struct in6_addr address;
+	struct in6_addr address = *prefix;
+	int prefix_len_in_bits = 64;
 
-	if (!prefix) {
-		cb(kWPANTUNDStatus_InvalidArgument);
-		return;
-	}
-
-	if (!mNCPInstance->mEnabled) {
-		cb(kWPANTUNDStatus_InvalidWhenDisabled);
-		return;
-	}
+	require_action(prefix != NULL, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(prefix_len_in_bits >= 0, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(prefix_len_in_bits <= IPV6_MAX_PREFIX_LENGTH, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
 
 	BEGIN_TRY_FOR_CMD(cb);
 
@@ -634,45 +633,80 @@ EmberNCPControlInterface::config_gateway(bool defaultRoute, const uint8_t prefix
 
 	flags |= EMBER_BORDER_ROUTER_PREFERRED_FLAG | EMBER_BORDER_ROUTER_SLAAC_FLAG;
 
-	address = make_slaac_addr_from_eui64(prefix, mNCPInstance->mMACAddress);
+	if (!buffer_is_nonzero(prefix->s6_addr+8, 8)) {
+		address = make_slaac_addr_from_eui64(prefix->s6_addr, mNCPInstance->mMACAddress);
+		prefix_len_in_bits = 128;
+	} else {
+		prefix_len_in_bits = 128;
+	}
 
-	config_gateway_address(flags, address, preferredLifetime, validLifetime, cb);
+	config_gateway_address(
+		flags,
+		address,
+		prefix_len_in_bits,
+		IPV6_MAX_LIFETIME,
+		IPV6_MAX_LIFETIME,
+		cb
+	);
 
 	END_TRY_FOR_CMD(cb);
+
+bail:
+	return;
 }
 
 void
-EmberNCPControlInterface::config_gateway_address(uint8_t flags, const struct in6_addr &address,
-	uint32_t preferredLifetime, uint32_t validLifetime, CallbackWithStatus cb)
-{
-	syslog(LOG_INFO, "Configure Gateway: addr:\"%s\" flags:%s(0x%02x) ptime:%d vtime:%d", in6_addr_to_string(address).c_str(),EmberGlue::configure_gateway_flags_to_string(flags).c_str(), flags, preferredLifetime, validLifetime);
+EmberNCPControlInterface::remove_on_mesh_prefix(
+	const struct in6_addr *prefix,
+	CallbackWithStatus cb
+) {
+	using namespace nl::wpantund::EmberCommands;
+	struct in6_addr address = *prefix;
+	int prefix_len_in_bits = 64;
 
-	// TODO: Consider making a new helper class for this command,
-	//       so that we avoid needing to preserve the value in a static.
-	static struct in6_addr address_static;
-	address_static = address;
+	require_action(prefix != NULL, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(prefix_len_in_bits >= 0, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(prefix_len_in_bits <= IPV6_MAX_PREFIX_LENGTH, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
 
-	start_send_command_task(
-		boost::bind(cb,_1),
-		boost::bind(
-			emberConfigureGateway,
-			flags,
-			true,
-			address_static.s6_addr,
-			sizeof(address),
-			0,
-			preferredLifetime,
-			validLifetime
-		),
-		EVENT_EMBER_CB_CONFIGURE_GATEWAY_RETURN
+	BEGIN_TRY_FOR_CMD(cb);
+
+	if (!buffer_is_nonzero(prefix->s6_addr+8, 8)) {
+		address = make_slaac_addr_from_eui64(prefix->s6_addr, mNCPInstance->mMACAddress);
+		prefix_len_in_bits = 128;
+	} else {
+		prefix_len_in_bits = 128;
+	}
+
+	config_gateway_address(
+		0,
+		address,
+		prefix_len_in_bits,
+		0,
+		0,
+		cb
 	);
+
+	END_TRY_FOR_CMD(cb);
+
+bail:
+	return;
 }
 
 void
-EmberNCPControlInterface::add_external_route(const uint8_t *route, int route_prefix_len, int domain_id,
-	ExternalRoutePriority priority, CallbackWithStatus cb)
-{
+EmberNCPControlInterface::add_external_route(
+	const struct in6_addr *prefix,
+	int prefix_len_in_bits,
+	int domain_id,
+	ExternalRoutePriority priority,
+	CallbackWithStatus cb
+) {
 	uint8_t flags = 0;
+
+	require_action(prefix != NULL, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(prefix_len_in_bits >= 0, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(prefix_len_in_bits <= IPV6_MAX_PREFIX_LENGTH, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
 
 	switch (priority) {
 		case ROUTE_HIGH_PREFERENCE:
@@ -687,56 +721,115 @@ EmberNCPControlInterface::add_external_route(const uint8_t *route, int route_pre
 			flags = 0;
 			break;
 	}
+
 	syslog(LOG_INFO, "Adding external route with priority \"%s\"", external_route_priority_to_string(priority).c_str());
-	config_external_route(flags, route, route_prefix_len, domain_id, cb);
+
+	config_external_route(flags, prefix->s6_addr, prefix_len_in_bits, domain_id, cb);
+
+bail:
+	return;
 }
 
 void
-EmberNCPControlInterface::remove_external_route(const uint8_t *route, int route_prefix_len, int domain_id, CallbackWithStatus cb)
-{
-	uint8_t flags = EMBER_BORDER_ROUTER_ON_MESH_FLAG;
+EmberNCPControlInterface::remove_external_route(
+	const struct in6_addr *prefix,
+	int prefix_len_in_bits,
+	int domain_id,
+	CallbackWithStatus cb
+) {
+	uint8_t flags = EMBER_EXTERNAL_ROUTE_TEMPORARY_FLAG;
+
+	require_action(prefix != NULL, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(prefix_len_in_bits >= 0, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(prefix_len_in_bits <= IPV6_MAX_PREFIX_LENGTH, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
+
 	syslog(LOG_INFO, "Removing external route");
-	config_external_route(flags, route, route_prefix_len, domain_id, cb);
+	config_external_route(flags, prefix->s6_addr, prefix_len_in_bits, domain_id, cb);
+bail:
+	return;
 }
 
 void
-EmberNCPControlInterface::config_external_route(uint8_t flags, const uint8_t *route_prefix, int prefix_len,
+EmberNCPControlInterface::config_gateway_address(
+	uint8_t flags,
+	const struct in6_addr &address,
+	int prefix_len_in_bits,
+	uint32_t preferredLifetime,
+	uint32_t validLifetime,
+	CallbackWithStatus cb
+) {
+	// TODO: Consider making a new helper class for this command,
+	//       so that we avoid needing to preserve the value in a static.
+	static struct in6_addr address_static;
+
+	require_action(prefix_len_in_bits >= 0, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(prefix_len_in_bits <= IPV6_MAX_PREFIX_LENGTH, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
+
+	syslog(LOG_INFO, "Configure Gateway: addr:\"%s\" flags:%s(0x%02x) ptime:%d vtime:%d", in6_addr_to_string(address).c_str(),EmberGlue::configure_gateway_flags_to_string(flags).c_str(), flags, preferredLifetime, validLifetime);
+
+	address_static = address;
+
+	prefix_len_in_bits=128;
+
+	start_send_command_task(
+		boost::bind(cb,_1),
+		boost::bind(
+			emberConfigureGateway,
+			flags,
+			true,
+			address_static.s6_addr,
+			prefix_len_in_bits,
+			0,
+			preferredLifetime,
+			validLifetime
+		),
+		EVENT_EMBER_CB_CONFIGURE_GATEWAY_RETURN
+	);
+
+bail:
+	return;
+}
+
+void
+EmberNCPControlInterface::config_external_route(uint8_t flags, const uint8_t *route_prefix, int prefix_len_in_bits,
 	uint8_t domain_id, CallbackWithStatus cb)
 {
 	char addr_cstr[INET6_ADDRSTRLEN] = "::";
 	static struct in6_addr addr;
 
-	if (!route_prefix) {
-		cb(-EINVAL);
-		return;
-	}
-
-	if ((prefix_len < 0) || (prefix_len > 16)) {
-		cb(-EINVAL);
-		return;
-	}
-
-	if (!mNCPInstance->mEnabled) {
-		cb(-ENETDOWN);
-		return;
-	}
+	require_action(route_prefix != NULL, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(prefix_len_in_bits >= 0, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(prefix_len_in_bits <= IPV6_MAX_PREFIX_LENGTH, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
 
 	memset(addr.s6_addr, 0, sizeof(struct in6_addr));
-	memcpy(addr.s6_addr, route_prefix, prefix_len);
+	memcpy(addr.s6_addr, route_prefix, IPV6_PREFIX_BITS_TO_BYTES(prefix_len_in_bits));
+
 	inet_ntop(AF_INET6, &addr, addr_cstr, sizeof(addr_cstr));
-	syslog(LOG_INFO, "Configure External Route: Route prefix: \"%s\", prefix len: %d, domain id: %d, flags: %s (0x%02x)",
-		addr_cstr, prefix_len, domain_id,
+	syslog(LOG_INFO, "Configure External Route: Prefix: \"%s/%d\", domain id: %d, flags: %s (0x%02x)",
+		addr_cstr, prefix_len_in_bits, domain_id,
 		EmberGlue::configure_gateway_flags_to_string(flags).c_str(), flags
 	);
 
 	BEGIN_TRY_FOR_CMD(cb);
 	start_send_command_task(
 		boost::bind(cb,_1),
-		boost::bind(emberConfigureExternalRoute, flags, addr.s6_addr, prefix_len, domain_id),
+		boost::bind(
+			emberConfigureExternalRoute,
+			flags,
+			addr.s6_addr,
+			prefix_len_in_bits,
+			domain_id
+		),
 		EVENT_EMBER_CB_CONFIGURE_EXTERNAL_ROUTE_RETURN
 	);
 
 	END_TRY_FOR_CMD(cb);
+
+bail:
+	return;
 }
 
 void
@@ -750,10 +843,7 @@ EmberNCPControlInterface::permit_join(
 {
 	int ret = kWPANTUNDStatus_Ok;
 
-	if (!mNCPInstance->mEnabled) {
-		ret = kWPANTUNDStatus_InvalidWhenDisabled;
-		goto bail;
-	}
+	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
 
 	syslog(LOG_NOTICE, "PermitJoin: seconds=%d type=%d port=%d, netwide=%d", seconds, traffic_type, ntohs(traffic_port), network_wide);
 
@@ -763,7 +853,7 @@ EmberNCPControlInterface::permit_join(
 
 	ret = mNCPInstance->set_commissioniner(seconds, traffic_type, mPassthruPort);
 
-	require_noerr(ret, bail);
+	require_noerr_action(ret, bail, cb(ret));
 
 	BEGIN_TRY_FOR_CMD(cb);
 
@@ -779,8 +869,7 @@ EmberNCPControlInterface::permit_join(
 	END_TRY_FOR_CMD(cb);
 
 bail:
-	if (ret)
-		cb(ret);
+	return;
 }
 
 void
@@ -1901,11 +1990,16 @@ EmberNCPControlInterface::handle_cb_set_address(va_list args)
 {
 	const EmberIpv6Address *mlAddress(va_arg(args, const EmberIpv6Address *));
 
+	// Prefix can't be zero!
+	require(buffer_is_nonzero(mlAddress->bytes, 8), bail);
+
 	memcpy(mNCPInstance->mNCPMeshLocalAddress.s6_addr, mlAddress->bytes, sizeof(struct in6_addr));
 
 	syslog(LOG_NOTICE, "[NCP->] Mesh-local Address is \"%s\"\n", in6_addr_to_string(mNCPInstance->mNCPMeshLocalAddress).c_str());
 
 	refresh_addresses();
+
+bail:
 	return;
 }
 
@@ -1919,21 +2013,21 @@ EmberNCPControlInterface::handle_cb_external_route_change(va_list args)
 	struct in6_addr border_router_prefix = {};
 	std::string prefix_string;
 
-	require_action(prefixLength <= 16, bail, mNCPInstance->change_ncp_state(FAULT));
+	require_action(prefixLength <= IPV6_MAX_PREFIX_LENGTH, bail, mNCPInstance->change_ncp_state(FAULT));
 
-	memcpy(border_router_prefix.s6_addr, prefix, prefixLength);
+	memcpy(border_router_prefix.s6_addr, prefix, sizeof(struct in6_addr));
+
+	in6_addr_apply_mask(border_router_prefix, prefixLength);
 
 	prefix_string = in6_addr_to_string(border_router_prefix);
 
-	prefixLength *= 8;	// Convert bytes to bits
-
 	if (available == true) {
-		syslog(LOG_NOTICE, "[NCP->] Available Border Router %s/%u\n",
+		syslog(LOG_NOTICE, "[NCP->] External route available: %s/%u\n",
 			prefix_string.c_str(),
 			prefixLength);
 		mNCPInstance->mPrimaryInterface->add_route(&border_router_prefix, prefixLength);
 	} else {
-		syslog(LOG_NOTICE, "[NCP->] Not Available Border Router %s/%u\n",
+		syslog(LOG_NOTICE, "[NCP->] External route no longer available: %s/%u\n",
 			prefix_string.c_str(),
 			prefixLength);
 		mNCPInstance->mPrimaryInterface->remove_route(&border_router_prefix, prefixLength);
@@ -1956,7 +2050,7 @@ EmberNCPControlInterface::handle_cb_address_configuration_change(va_list args)
 	address_string = in6_addr_to_string(address);
 
 
-	if (buffer_is_nonzero(address.s6_addr, 8)) {
+	if (buffer_is_nonzero(address.s6_addr, IPV6_NETWORK_PREFIX_LENGTH/8)) {
 		syslog(
 			LOG_NOTICE,
 			"[NCP->] Address Config Change: \"%s\" valid:%d preferred:%d flags:%s(0x%02X)\n",
@@ -1966,8 +2060,7 @@ EmberNCPControlInterface::handle_cb_address_configuration_change(va_list args)
 			address_flags_to_string(flags).c_str(),
 			flags
 		);
-
-		mNCPInstance->add_address(address, 64, valid_lifetime, preferred_lifetime);
+		mNCPInstance->add_address(address, IPV6_NETWORK_PREFIX_LENGTH, valid_lifetime, preferred_lifetime);
 	} else {
 		syslog(
 			LOG_ERR,
@@ -1986,22 +2079,22 @@ void
 EmberNCPControlInterface::handle_cb_dhcp_server_change(va_list args)
 {
 	const uint8_t *prefix = va_arg(args, const uint8_t*);
-	uint8_t prefix_len = va_arg_small(args, uint8_t);
+	uint8_t prefix_len_in_bits = va_arg_small(args, uint8_t);
 	bool available = va_arg_small(args, bool);
 	struct in6_addr address = {};
 
-	require_action(prefix_len <= 16, bail, mNCPInstance->change_ncp_state(FAULT));
+	require_action(prefix_len_in_bits <= IPV6_MAX_PREFIX_LENGTH, bail, mNCPInstance->change_ncp_state(FAULT));
 
-	memcpy(address.s6_addr, prefix, prefix_len);
+	memcpy(address.s6_addr, prefix, sizeof(struct in6_addr));
 
 	{
 		std::string prefix_string(in6_addr_to_string(address));
 
-		syslog(LOG_NOTICE, "[NCP->] DHCP Server for prefix \"%s/%u\" is %savailable", prefix_string.c_str(), prefix_len * 8, available?"":"NOT ");
+		syslog(LOG_NOTICE, "[NCP->] DHCP Server for prefix \"%s/%u\" is %savailable", prefix_string.c_str(), prefix_len_in_bits, available?"":"NOT ");
 	}
 
-	if (available && (prefix_len == 8)) {
-		request_address_from_ncp(address, prefix_len * 8, GA_DHCP);
+	if (available) {
+		request_address_from_ncp(address, prefix_len_in_bits, GA_DHCP);
 	}
 
 bail:
@@ -2013,7 +2106,7 @@ EmberNCPControlInterface::handle_cb_request_dhcp_address(va_list args)
 {
 	EmberStatus status = va_arg_small(args, EmberStatus);
 	const uint8_t *prefix = va_arg(args, const uint8_t*);
-	uint8_t prefix_len = va_arg_small(args, uint8_t);
+	uint8_t prefix_len_in_bits = va_arg_small(args, uint8_t);
 
 	if (status != EMBER_SUCCESS) {
 		syslog(LOG_NOTICE, "[NCP->] DHCP Address request error: 0x%02X (%d)\n", status, status);
@@ -2021,9 +2114,9 @@ EmberNCPControlInterface::handle_cb_request_dhcp_address(va_list args)
 		struct in6_addr address;
 		char address_string[INET6_ADDRSTRLEN] = "::";
 
-		require_action(prefix_len <= 16, bail, mNCPInstance->change_ncp_state(FAULT));
+		require_action(prefix_len_in_bits <= IPV6_MAX_PREFIX_LENGTH, bail, mNCPInstance->change_ncp_state(FAULT));
 
-		memcpy(address.s6_addr, prefix, prefix_len);
+		memcpy(address.s6_addr, prefix, sizeof(struct in6_addr));
 
 		inet_ntop(
 			AF_INET6,
@@ -2042,29 +2135,28 @@ void
 EmberNCPControlInterface::handle_cb_slaac_server_change(va_list args)
 {
 	const uint8_t *prefix = va_arg(args, const uint8_t*);
-	uint8_t prefix_len = va_arg_small(args, uint8_t);
+	uint8_t prefix_len_in_bits = va_arg_small(args, uint8_t);
 	bool available = va_arg_small(args, bool);
 	struct in6_addr address = {};
 	std::string address_string;
 
-	require_action(prefix_len <= 16, bail, mNCPInstance->change_ncp_state(FAULT));
+	require_action(prefix_len_in_bits <= IPV6_MAX_PREFIX_LENGTH, bail, mNCPInstance->change_ncp_state(FAULT));
 
-	memcpy(address.s6_addr, prefix, prefix_len);
+	memcpy(address.s6_addr, prefix, IPV6_PREFIX_BITS_TO_BYTES(prefix_len_in_bits));
 
 	address_string = in6_addr_to_string(address);
 
-	if (buffer_is_nonzero(prefix, prefix_len)) {
-		syslog(LOG_NOTICE, "[NCP->] SLAAC Server for prefix \"%s/%u\" is %savailable", address_string.c_str(), prefix_len * 8, available?"":"NOT ");
+	if (buffer_is_nonzero(prefix, IPV6_PREFIX_BITS_TO_BYTES(IPV6_NETWORK_PREFIX_LENGTH))) {
+		syslog(LOG_NOTICE, "[NCP->] SLAAC Server for prefix \"%s/%u\" is %savailable", address_string.c_str(), prefix_len_in_bits, available?"":"NOT ");
 
 		if (available
-			&& (prefix_len == 8)
-			&& !mNCPInstance->lookup_address_for_prefix(NULL, address, 64)
+			&& !mNCPInstance->lookup_address_for_prefix(NULL, address, prefix_len_in_bits)
 		) {
 			address = make_slaac_addr_from_eui64(prefix, mNCPInstance->mMACAddress);
-			request_address_from_ncp(address, 128, 0);
+			request_address_from_ncp(address, IPV6_MAX_PREFIX_LENGTH, 0);
 		}
 	} else {
-		syslog(LOG_ERR, "[NCP->] *INVALID* SLAAC Server prefix \"%s/%u\" is %savailable", address_string.c_str(), prefix_len * 8, available?"":"NOT ");
+		syslog(LOG_ERR, "[NCP->] *INVALID* SLAAC Server prefix \"%s/%u\" is %savailable", address_string.c_str(), prefix_len_in_bits, available?"":"NOT ");
 	}
 
 
@@ -2291,21 +2383,20 @@ EmberNCPControlInterface::reset_callbacks(int reason)
 }
 
 void
-EmberNCPControlInterface::request_address_from_ncp(const struct in6_addr& addr, int prefix_len, int flags)
+EmberNCPControlInterface::request_address_from_ncp(const struct in6_addr& addr, int prefix_len_in_bits, int flags)
 {
-	int len_in_bytes((prefix_len+7)/8);
 	std::string address_string(in6_addr_to_string(addr));
 
 	if ((flags & GA_DHCP) == GA_DHCP) {
-		syslog(LOG_NOTICE, "Requesting \"%s\" from NCP (DHCP)", address_string.c_str());
+		syslog(LOG_NOTICE, "Requesting \"%s/%d\" from NCP (DHCP)", address_string.c_str(), prefix_len_in_bits);
 
 		// Can't queue this in a helper because of the address would be out of scope
-		emberRequestDhcpAddress(addr.s6_addr, len_in_bytes);
+		emberRequestDhcpAddress(addr.s6_addr, static_cast<uint8_t>(prefix_len_in_bits));
 	} else {
-		syslog(LOG_NOTICE, "Requesting \"%s\" from NCP (SLAAC)", address_string.c_str());
+		syslog(LOG_NOTICE, "Requesting \"%s/%d\" from NCP (SLAAC)", address_string.c_str(), prefix_len_in_bits);
 
 		// Can't queue this in a helper because of the address would be out of scope
-		emberRequestSlaacAddress(addr.s6_addr, len_in_bytes);
+		emberRequestSlaacAddress(addr.s6_addr, static_cast<uint8_t>(prefix_len_in_bits));
 	}
 }
 
@@ -2314,13 +2405,12 @@ EmberNCPControlInterface::request_manual_address_from_ncp(const struct in6_addr&
 {
 	using namespace nl::wpantund::EmberCommands;
 	if (is_router()) {
-		const uint32_t kForeverLifetime = 0xFFFFFFFF;
 		// Router roles always register a prefix by configuring a gateway
 		config_gateway_address(EMBER_BORDER_ROUTER_PREFERRED_FLAG | EMBER_BORDER_ROUTER_SLAAC_FLAG,
-			addr, kForeverLifetime, kForeverLifetime, NilReturn());
+			addr, IPV6_NETWORK_PREFIX_LENGTH, IPV6_MAX_LIFETIME, IPV6_MAX_LIFETIME, NilReturn());
 	} else {
 		// non-Router roles do the usual thing
-		request_address_from_ncp(addr, 128, 0);
+		request_address_from_ncp(addr, IPV6_MAX_PREFIX_LENGTH, 0);
 	}
 }
 
