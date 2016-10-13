@@ -221,13 +221,23 @@ EmberNCPControlInterface::SetNetworkKeyTask::vprocess_event(int event, va_list a
 		}
 
 		// Wait for the response from the NCP.
-		EH_REQUIRE_WITHIN(
+		EH_WAIT_UNTIL_WITH_TIMEOUT(
 			NCP_JOIN_TIMEOUT,
-			event == EVENT_EMBER_CB_JOIN_NETWORK_RETURN,
-			on_error
+			event == EVENT_EMBER_CB_JOIN_NETWORK_RETURN
 		);
 
-		ret = EmberGlue::status_to_wpantund_status(va_arg(args, int));
+		if (eh_did_timeout) {
+			if (ncp_state_has_joined(mInterface->mNCPInstance->get_ncp_state())) {
+				ret = kWPANTUNDStatus_Ok;
+			} else {
+				ret = kWPANTUNDStatus_Timeout;
+			}
+		} else {
+			ret = EmberGlue::status_to_wpantund_status(va_arg(args, int));
+		}
+
+		require_noerr(ret, on_error);
+
 	} else {
 		syslog(LOG_ERR, "Not allowed to set NetworkKey in this state.");
 		ret = kWPANTUNDStatus_InvalidForCurrentState;
