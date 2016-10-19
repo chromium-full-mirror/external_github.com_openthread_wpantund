@@ -1778,6 +1778,17 @@ static void ncpUdpStormCompleteHandlerCallback(void)
 }
 #endif /* (defined (EMBER_TEST) || defined(QA_THREAD_TEST)) */
 
+static void setNetworkKeysCommand(void)
+{
+  uint8_t keySequence = emberUnsignedCommandArgument(0);
+  uint8_t keyLength;
+  EmberKeyData *key = ((EmberKeyData *)
+                       emberStringCommandArgument(1, &keyLength));
+  if (keyLength == EMBER_ENCRYPTION_KEY_SIZE) {
+    emberSetNetworkKeysHandler(keySequence, key->contents, 0, NULL);
+  }
+}
+
 //------------------------------------------------------------------------------
 // APP_USES_SOFTWARE_FLOW_CONTROL
 //------------------------------------------------------------------------------
@@ -2053,6 +2064,10 @@ const EmberCommandEntry managementCallbackCommandTable[] = {
   emberBinaryCommandEntryAction(CB_GET_CTUNE_COMMAND_IDENTIFIER,
                                 getCtuneReturnCallback,
                                 "vu",
+                                NULL),
+  emberBinaryCommandEntryAction(CB_SET_NETWORK_KEYS_COMMAND_IDENTIFIER,
+                                setNetworkKeysCommand,
+                                "wb",
                                 NULL),
   emberBinaryCommandEntryAction(CB_SET_CTUNE_COMMAND_IDENTIFIER,
                                 setCtuneReturnCallback,
