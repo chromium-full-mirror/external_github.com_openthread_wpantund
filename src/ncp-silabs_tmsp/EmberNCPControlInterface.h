@@ -119,9 +119,31 @@ public:
 	    CallbackWithStatus      cb);
 	void disable(CallbackWithStatus cb = NilReturn());
 	void enable(CallbackWithStatus cb = NilReturn());
-	virtual void config_gateway(bool defaultRoute, const uint8_t prefix[8], uint32_t preferredLifetime, uint32_t validLifetime, CallbackWithStatus cb = NilReturn());
-	virtual void add_external_route(const uint8_t route[], int route_prefix_len, int domain_id, ExternalRoutePriority priority, CallbackWithStatus);
-	virtual void remove_external_route(const uint8_t route[], int route_prefix_len, int domain_id, CallbackWithStatus cb);
+	virtual void add_on_mesh_prefix(
+		const struct in6_addr *prefix,
+		bool defaultRoute,
+		CallbackWithStatus cb = NilReturn()
+	);
+
+	virtual void remove_on_mesh_prefix(
+		const struct in6_addr *prefix,
+		CallbackWithStatus cb = NilReturn()
+	);
+
+	virtual void add_external_route(
+		const struct in6_addr *prefix,
+		int prefix_len_in_bits,
+		int domain_id,
+		ExternalRoutePriority priority,
+		CallbackWithStatus cb = NilReturn()
+	);
+
+	virtual void remove_external_route(
+		const struct in6_addr *prefix,
+		int prefix_len_in_bits,
+		int domain_id,
+		CallbackWithStatus cb = NilReturn()
+	);
 
 	virtual void data_poll(CallbackWithStatus cb = NilReturn());
 	virtual void host_did_wake(CallbackWithStatus cb = NilReturn());
@@ -194,7 +216,7 @@ protected:
 	void request_manual_address_from_ncp(const struct in6_addr& addr, int prefix_len);
 	void abandon_address_from_ncp(const struct in6_addr& addr, int prefix_len);
 
-	void config_gateway_address(uint8_t flags, const struct in6_addr& addr, uint32_t preferredLifetime, uint32_t validLifetime, CallbackWithStatus cb);
+	void config_gateway_address(uint8_t flags, const struct in6_addr& addr, int prefix_len, uint32_t preferredLifetime, uint32_t validLifetime, CallbackWithStatus cb);
 	void config_external_route(uint8_t flags, const uint8_t *route_prefix, int prefix_len, uint8_t domain_id, CallbackWithStatus cb);
 
 	void scan_start(ScanType scan_type, const ValueMap& options, CallbackWithStatus cb);

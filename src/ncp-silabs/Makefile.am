@@ -18,7 +18,6 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/third_party/pt \
 	-I$(top_srcdir)/third_party/assert-macros \
 	-I$(top_srcdir)/src/ncp-silabs/libsoot/src \
-	@CONNECTIP_CPPFLAGS@ \
 	$(NULL)
 
 EXTRA_DIST = \

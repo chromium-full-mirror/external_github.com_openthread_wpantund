@@ -72,6 +72,11 @@ AC_SUBST(PLUGIN_SUBDIRS)
 
 AM_INIT_AUTOMAKE()
 
+# Try to use BSD tar, if available, since it doesn't have the 99 character path limit.
+AC_CHECK_TOOLS(TAR,bsdtar tar gtar)
+am__tar='$(TAR) chof - "$$tardir"'
+am__untar='$(TAR) xf -'
+
 AM_MAINTAINER_MODE
 
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -154,7 +159,7 @@ AC_DEFINE_UNQUOTED([PKGLIBEXECDIR], ["`eval eval eval echo "$pkglibexecdir"`"], 
 
 AC_DEFINE_UNQUOTED([SOURCE_VERSION], ["`eval echo "$SOURCE_VERSION"`"], [Source version])
 
-AC_PROG_CC([],[AC_MSG_ERROR(["A working C compiler is required"])])
+AC_PROG_CC_STDC([],[AC_MSG_ERROR(["A working C compiler is required"])])
 AC_PROG_CXX([],[AC_MSG_ERROR(["A working C++ compiler is required"])])
 
 AC_HEADER_STDC

@@ -32,7 +32,7 @@ __BEGIN_DECLS
 #include "app/tmsp/tmsp-custom-enum.h"
 #include "app/util/serial/command-interpreter2.h"
 #include "stack/ip/zigbee/key-management.h"
-#include "stack/ip/wakeup-specific.h"
+#include "stack/ip/nest-specific.h"
 
 #define IS_EVENT_FROM_EMBER(x)               ((((x) >> 8) & 0xFF) == 'j')
 
@@ -153,11 +153,9 @@ __BEGIN_DECLS
 #define EVENT_EMBER_CB_SET_TRANSMIT_HOOK_ACTIVE_RETURN EMBER_EVENT_ID(111)
 #define EVENT_EMBER_CB_SET_NETWORK_KEYS_HANDLER EMBER_EVENT_ID(112)
 
-#if EMBER_BUILD_NUMBER >= 509
+#define EVENT_EMBER_CB_CONFIGURE_LEGACY_HOST_ADDRESS          EMBER_EVENT_ID(113)
+
 wpantund_status_t ember_join_failure_reason_to_wpantund_status(EmberJoinFailureReason reason);
-#elif EMBER_BUILD_NUMBER >= 426 && EMBER_BUILD_NUMBER < 509
-wpantund_status_t ember_network_status_reason_to_wpantund_status(EmberNetworkStatusReason reason);
-#endif
 
 
 extern const EmberCommandEntry managementCallbackCommandTable[];
