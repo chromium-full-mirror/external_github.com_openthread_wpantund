@@ -139,6 +139,7 @@ nl::wpantund::EmberNCPControlInterface::ScanTask::vprocess_event(int event, va_l
 			);
 			network.rssi = beaconData->rssi;
 			network.type = beaconData->protocolId;
+			network.version = beaconData->version;
 
 			memcpyrev(network.hwaddr, beaconData->longId, 8);
 
