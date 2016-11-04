@@ -561,9 +561,11 @@ get_network_from_iter(
 		goto bail;
 	}
 
+#if 0 // Workaround for DROP-11739 (allow zero xpanid).
 	if (network_info.xpanid == 0) {
 		goto bail;
 	}
+#endif
 
 	encode_data_into_b16_string(
 	    (const uint8_t*)network_info.network_name,
