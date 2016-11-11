@@ -89,7 +89,16 @@
 #define kWPANTUNDProperty_ThreadStableNetworkDataVersion "Thread:StableNetworkDataVersion"
 #define kWPANTUNDProperty_ThreadPreferredRouterID        "Thread:PreferredRouterID"
 
+#define kWPANTUNDProperty_OpenThreadMsgBufferCounters          "OpenThread:MsgBufferCounters"
+#define kWPANTUNDProperty_OpenThreadMsgBufferCountersAsString  "OpenThread:MsgBufferCounters:AsString"
+
 #define kWPANTUNDProperty_DebugIPv6GlobalIPAddressList         "Debug:IPv6:GlobalIPAddressList"
+
+#define kWPANTUNDProperty_JamDetectionStatus                   "JamDetection:Status"
+#define kWPANTUNDProperty_JamDetectionEnable                   "JamDetection:Enable"
+#define kWPANTUNDProperty_JamDetectionRssiThreshold            "JamDetection:RssiThreshold"
+#define kWPANTUNDProperty_JamDetectionWindow                   "JamDetection:Window"
+#define kWPANTUNDProperty_JamDetectionBusyPeriod               "JamDetection:BusyPeriod"
 
 // Ignore this line --- begin pe8qf1P4GCme
 #define kWPANTUNDProperty_SiLabs_NCPAssociationState           "com.silabs:NCP:AssociationState"
@@ -122,6 +131,7 @@
 #define kWPANTUNDProperty_NestLabs_NetworkWakeBlacklist        "com.nestlabs.internal:NetworkWake:Blacklist"
 #define kWPANTUNDProperty_NestLabs_HackUseDeepSleepOnLowPower  "com.nestlabs.internal:Hack:UseDeepSleepOnLowPower"
 #define kWPANTUNDProperty_NestLabs_HackAlwaysResetToWake       "com.nestlabs.internal:Hack:AlwaysResetToWake"
+
 
 #define kWPANTUNDProperty_Stat_Prefix                "Stat:"
 #define kWPANTUNDProperty_StatRX                     "Stat:RX"
