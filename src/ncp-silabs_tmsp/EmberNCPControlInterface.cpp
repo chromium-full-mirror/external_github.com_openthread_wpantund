@@ -1622,9 +1622,16 @@ EmberNCPControlInterface::handle_ncp_network_state_changed()
 		mNCPInstance->remove_address(mNCPInstance->mNCPMeshLocalAddress);
 
 		emberGetLocalIpAddress(0, reinterpret_cast<EmberIpv6Address *>(mNCPInstance->mNCPMeshLocalAddress.s6_addr));
-		memcpy(mNCPInstance->mNCPV6Prefix, networkParams.ulaPrefix.bytes, sizeof(mNCPInstance->mNCPV6Prefix));
 
-		mNCPInstance->add_address(mNCPInstance->mNCPMeshLocalAddress);
+		// Check to ensure the lower 8 bytes are non-zero
+		if (buffer_is_nonzero(mNCPInstance->mNCPMeshLocalAddress.s6_addr + 8, 8)) {
+
+			memcpy(mNCPInstance->mNCPV6Prefix, networkParams.ulaPrefix.bytes, sizeof(mNCPInstance->mNCPV6Prefix));
+
+			mNCPInstance->add_address(mNCPInstance->mNCPMeshLocalAddress);
+
+			mOnPropertyChanged(kWPANTUNDProperty_IPv6MeshLocalAddress, in6_addr_to_string(mNCPInstance->mNCPMeshLocalAddress));
+		}
 
 		syslog(
 			LOG_INFO,
@@ -1633,7 +1640,6 @@ EmberNCPControlInterface::handle_ncp_network_state_changed()
 			mNCPInstance->mNCPV6Prefix[4],mNCPInstance->mNCPV6Prefix[5],mNCPInstance->mNCPV6Prefix[6],mNCPInstance->mNCPV6Prefix[7]
 		);
 		mOnPropertyChanged(kWPANTUNDProperty_IPv6MeshLocalPrefix, Data(mNCPInstance->mNCPV6Prefix, sizeof(mNCPInstance->mNCPV6Prefix)));
-		mOnPropertyChanged(kWPANTUNDProperty_IPv6MeshLocalAddress, in6_addr_to_string(mNCPInstance->mNCPMeshLocalAddress));
 	}
 
 	mNCPInstance->mNodeTypeSupportsLegacy = EMBER_TYPE_SUPPORTS_LEGACY(networkParams.nodeType);
