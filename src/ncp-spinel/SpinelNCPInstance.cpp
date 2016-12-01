@@ -34,7 +34,7 @@
 #include "SpinelNCPTaskWake.h"
 #include "SpinelNCPTaskSendCommand.h"
 #include "SpinelNCPTaskJoin.h"
-#include "SpinelNCPTaskGetChildTable.h"
+#include "SpinelNCPTaskGetNetworkTopology.h"
 #include "SpinelNCPTaskGetMsgBufferCounters.h"
 #include "any-to.h"
 #include "spinel-extra.h"
@@ -167,6 +167,7 @@ SpinelNCPInstance::SpinelNCPInstance(const Settings& settings) :
 	mInboundHeader = 0;
 	mDefaultChannelMask = 0x07FFF800;
 	mIsPcapInProgress = false;
+	mSettings.clear();
 
 	if (!settings.empty()) {
 		int status;
@@ -224,10 +225,13 @@ SpinelNCPInstance::get_supported_property_keys()const
 		properties.insert(kWPANTUNDProperty_ThreadNetworkDataVersion);
 		properties.insert(kWPANTUNDProperty_ThreadStableNetworkDataVersion);
 		properties.insert(kWPANTUNDProperty_ThreadChildTable);
+		properties.insert(kWPANTUNDProperty_ThreadNeighborTable);
 	}
 
 	if (mCapabilities.count(SPINEL_CAP_COUNTERS)) {
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_TOTAL");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_UNICAST");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_BROADCAST");
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_ACK_REQ");
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_ACKED");
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_NO_ACK_REQ");
@@ -239,6 +243,8 @@ SpinelNCPInstance::get_supported_property_keys()const
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_RETRY");
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_ERR_CCA");
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_TOTAL");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_UNICAST");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_BROADCAST");
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_DATA");
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_DATA_POLL");
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_BEACON");
@@ -345,7 +351,7 @@ SpinelNCPInstance::get_property(
 		SIMPLE_SPINEL_GET(SPINEL_PROP_MAC_EXTENDED_ADDR, SPINEL_DATATYPE_EUI64_S);
 
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NetworkKeyIndex)) {
-		SIMPLE_SPINEL_GET(SPINEL_PROP_NET_KEY_SEQUENCE, SPINEL_DATATYPE_UINT32_S);
+		SIMPLE_SPINEL_GET(SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER, SPINEL_DATATYPE_UINT32_S);
 
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NCPRSSI)) {
 		SIMPLE_SPINEL_GET(SPINEL_PROP_PHY_RSSI, SPINEL_DATATYPE_INT8_S);
@@ -427,12 +433,24 @@ SpinelNCPInstance::get_property(
 
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadChildTable)) {
 		start_new_task(boost::shared_ptr<SpinelNCPTask>(
-			new SpinelNCPTaskGetChildTable(
+			new SpinelNCPTaskGetNetworkTopology(
 				this,
 				cb,
-				SpinelNCPTaskGetChildTable::kResultFormat_StringArray
+				SpinelNCPTaskGetNetworkTopology::kChildTable,
+				SpinelNCPTaskGetNetworkTopology::kResultFormat_StringArray
 			)
 		));
+
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadNeighborTable)) {
+		start_new_task(boost::shared_ptr<SpinelNCPTask>(
+			new SpinelNCPTaskGetNetworkTopology(
+				this,
+				cb,
+				SpinelNCPTaskGetNetworkTopology::kNeighborTable,
+				SpinelNCPTaskGetNetworkTopology::kResultFormat_StringArray
+			)
+		));
+
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_OpenThreadMsgBufferCounters)) {
 		start_new_task(boost::shared_ptr<SpinelNCPTask>(
 			new SpinelNCPTaskGetMsgBufferCounters(
@@ -441,6 +459,7 @@ SpinelNCPInstance::get_property(
 				SpinelNCPTaskGetMsgBufferCounters::kResultFormat_StringArray
 			)
 		));
+
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_OpenThreadMsgBufferCountersAsString)) {
 		start_new_task(boost::shared_ptr<SpinelNCPTask>(
 			new SpinelNCPTaskGetMsgBufferCounters(
@@ -449,6 +468,7 @@ SpinelNCPInstance::get_property(
 				SpinelNCPTaskGetMsgBufferCounters::kResultFormat_String
 			)
 		));
+
 	} else if (strncaseequal(key.c_str(), kWPANTUNDProperty_Spinel_CounterPrefix, sizeof(kWPANTUNDProperty_Spinel_CounterPrefix)-1)) {
 		int cntr_key = 0;
 
@@ -468,6 +488,8 @@ SpinelNCPInstance::get_property(
 		}
 
 		CNTR_KEY(TX_PKT_TOTAL)
+		CNTR_KEY(TX_PKT_UNICAST)
+		CNTR_KEY(TX_PKT_BROADCAST)
 		CNTR_KEY(TX_PKT_ACK_REQ)
 		CNTR_KEY(TX_PKT_ACKED)
 		CNTR_KEY(TX_PKT_NO_ACK_REQ)
@@ -479,6 +501,8 @@ SpinelNCPInstance::get_property(
 		CNTR_KEY(TX_PKT_RETRY)
 		CNTR_KEY(TX_ERR_CCA)
 		CNTR_KEY(RX_PKT_TOTAL)
+		CNTR_KEY(RX_PKT_UNICAST)
+		CNTR_KEY(RX_PKT_BROADCAST)
 		CNTR_KEY(RX_PKT_DATA)
 		CNTR_KEY(RX_PKT_DATA_POLL)
 		CNTR_KEY(RX_PKT_BEACON)
@@ -544,12 +568,13 @@ SpinelNCPInstance::set_property(
 
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NCPCCAThreshold)) {
 			int cca = any_to_int(value);
+			Data command = SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_INT8_S), SPINEL_PROP_PHY_CCA_THRESHOLD, cca);
+
+			mSettings[kWPANTUNDProperty_NCPCCAThreshold] = SettingsEntry(command);
 
 			start_new_task(SpinelNCPTaskSendCommand::Factory(this)
 				.set_callback(cb)
-				.add_command(
-					SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_INT8_S), SPINEL_PROP_PHY_CCA_THRESHOLD, cca)
-				)
+				.add_command(command)
 				.finish()
 			);
 
@@ -662,7 +687,7 @@ SpinelNCPInstance::set_property(
 			start_new_task(SpinelNCPTaskSendCommand::Factory(this)
 				.set_callback(cb)
 				.add_command(
-					SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_UINT32_S), SPINEL_PROP_NET_KEY_SEQUENCE, key_index)
+					SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_UINT32_S), SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER, key_index)
 				)
 				.finish()
 			);
@@ -689,6 +714,9 @@ SpinelNCPInstance::set_property(
 
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_JamDetectionEnable)) {
 			bool isEnabled = any_to_bool(value);
+			Data command = SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_BOOL_S), SPINEL_PROP_JAM_DETECT_ENABLE, isEnabled);
+
+			mSettings[kWPANTUNDProperty_JamDetectionEnable] = SettingsEntry(command, SPINEL_CAP_JAM_DETECT);
 
 			if (!mCapabilities.count(SPINEL_CAP_JAM_DETECT))
 			{
@@ -696,15 +724,16 @@ SpinelNCPInstance::set_property(
 			} else {
 				start_new_task(SpinelNCPTaskSendCommand::Factory(this)
 					.set_callback(cb)
-					.add_command(
-						SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_BOOL_S), SPINEL_PROP_JAM_DETECT_ENABLE, isEnabled)
-					)
+					.add_command(command)
 					.finish()
 				);
 			}
 
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_JamDetectionRssiThreshold)) {
 			int8_t rssiThreshold = static_cast<int8_t>(any_to_int(value));
+			Data command = SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_INT8_S), SPINEL_PROP_JAM_DETECT_RSSI_THRESHOLD, rssiThreshold);
+
+			mSettings[kWPANTUNDProperty_JamDetectionRssiThreshold] = SettingsEntry(command, SPINEL_CAP_JAM_DETECT);
 
 			if (!mCapabilities.count(SPINEL_CAP_JAM_DETECT))
 			{
@@ -712,15 +741,16 @@ SpinelNCPInstance::set_property(
 			} else {
 				start_new_task(SpinelNCPTaskSendCommand::Factory(this)
 					.set_callback(cb)
-					.add_command(
-						SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_INT8_S), SPINEL_PROP_JAM_DETECT_RSSI_THRESHOLD, rssiThreshold)
-					)
+					.add_command(command)
 					.finish()
 				);
 			}
 
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_JamDetectionWindow)) {
 			uint8_t window = static_cast<uint8_t>(any_to_int(value));
+			Data command = SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_UINT8_S), SPINEL_PROP_JAM_DETECT_WINDOW, window);
+
+			mSettings[kWPANTUNDProperty_JamDetectionWindow] = SettingsEntry(command, SPINEL_CAP_JAM_DETECT);
 
 			if (!mCapabilities.count(SPINEL_CAP_JAM_DETECT))
 			{
@@ -728,15 +758,16 @@ SpinelNCPInstance::set_property(
 			} else {
 				start_new_task(SpinelNCPTaskSendCommand::Factory(this)
 					.set_callback(cb)
-					.add_command(
-						SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_UINT8_S), SPINEL_PROP_JAM_DETECT_WINDOW, window)
-					)
+					.add_command(command)
 					.finish()
 				);
 			}
 
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_JamDetectionBusyPeriod)) {
 			uint8_t busyPeriod = static_cast<uint8_t>(any_to_int(value));
+			Data command = SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_UINT8_S), SPINEL_PROP_JAM_DETECT_BUSY, busyPeriod);
+
+			mSettings[kWPANTUNDProperty_JamDetectionBusyPeriod] = SettingsEntry(command, SPINEL_CAP_JAM_DETECT);
 
 			if (!mCapabilities.count(SPINEL_CAP_JAM_DETECT))
 			{
@@ -744,13 +775,10 @@ SpinelNCPInstance::set_property(
 			} else {
 				start_new_task(SpinelNCPTaskSendCommand::Factory(this)
 					.set_callback(cb)
-					.add_command(
-						SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_UINT8_S), SPINEL_PROP_JAM_DETECT_BUSY, busyPeriod)
-					)
+					.add_command(command)
 					.finish()
 				);
 			}
-
 
 		} else {
 			NCPInstanceBase::set_property(key, value, cb);
@@ -783,6 +811,9 @@ SpinelNCPInstance::reset_tasks(wpantund_status_t status)
 void
 SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8_t* value_data_ptr, spinel_size_t value_data_len)
 {
+	const uint8_t *original_value_data_ptr = value_data_ptr;
+	spinel_size_t original_value_data_len = value_data_len;
+
 	if (key == SPINEL_PROP_LAST_STATUS) {
 		spinel_status_t status = SPINEL_STATUS_OK;
 		spinel_datatype_unpack(value_data_ptr, value_data_len, "i", &status);
@@ -982,7 +1013,7 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 			}
 		}
 
-	} else if (key == SPINEL_PROP_NET_KEY_SEQUENCE) {
+	} else if (key == SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER) {
 		uint32_t network_key_index;
 		spinel_datatype_unpack(value_data_ptr, value_data_len, SPINEL_DATATYPE_UINT32_S, &network_key_index);
 		if (network_key_index != mNetworkKeyIndex) {
@@ -1209,10 +1240,10 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 			}
 		}
 	} else if (key == SPINEL_PROP_THREAD_CHILD_TABLE) {
-		SpinelNCPTaskGetChildTable::ChildTable child_table;
-		SpinelNCPTaskGetChildTable::ChildTable::iterator it;
+		SpinelNCPTaskGetNetworkTopology::Table child_table;
+		SpinelNCPTaskGetNetworkTopology::Table::iterator it;
 
-		SpinelNCPTaskGetChildTable::prase_child_table(value_data_ptr, value_data_len, child_table);
+		SpinelNCPTaskGetNetworkTopology::prase_child_table(value_data_ptr, value_data_len, child_table);
 
 		for (it = child_table.begin(); it != child_table.end(); it++)
 		{
@@ -1221,7 +1252,7 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 	}
 
 bail:
-	process_event(EVENT_NCP_PROP_VALUE_IS, key, value_data_ptr, value_data_len);
+	process_event(EVENT_NCP_PROP_VALUE_IS, key, original_value_data_ptr, original_value_data_len);
 }
 
 void
