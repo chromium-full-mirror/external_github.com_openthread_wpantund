@@ -100,6 +100,7 @@
 #define kWPANTUNDProperty_JamDetectionRssiThreshold            "JamDetection:RssiThreshold"
 #define kWPANTUNDProperty_JamDetectionWindow                   "JamDetection:Window"
 #define kWPANTUNDProperty_JamDetectionBusyPeriod               "JamDetection:BusyPeriod"
+#define kWPANTUNDProperty_JamDetectionDebugHistoryBitmap       "JamDetection:Debug:HistoryBitmap"
 
 // Ignore this line --- begin pe8qf1P4GCme
 #define kWPANTUNDProperty_SiLabs_NCPAssociationState           "com.silabs:NCP:AssociationState"
