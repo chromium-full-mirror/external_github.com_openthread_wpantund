@@ -1813,7 +1813,7 @@ EmberNCPControlInterface::handle_ncp_get_versions(const uint8_t *versionName,
 			management_version = 0;
 		}
 
-		if ( (management_version >> 8) != (EMBER_MANAGEMENT_VERSION >> 8)
+		if ( (management_version >> 8) < (EMBER_MANAGEMENT_VERSION >> 8)
 		  || (version_major != EMBER_MAJOR_VERSION) // Assume major version number changes are incompatible
 		) {
 			syslog(LOG_ERR, "NCP FIRMWARE VERSION IS UNSUPPORTED");
