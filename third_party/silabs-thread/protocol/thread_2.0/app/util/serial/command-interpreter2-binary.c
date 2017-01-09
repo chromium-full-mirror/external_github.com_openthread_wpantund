@@ -69,7 +69,11 @@ bool emberProcessBinaryCommand(const uint8_t *input, uint16_t inputSize)
     for (argumentFinger = (PGM_PU) commandEntry->argumentTypes, tokenCount = 0;
          *argumentFinger != 0;
          argumentFinger++, tokenCount++) {
-      assert(finger - input < inputSize);
+
+      if (finger - input >= inputSize) {
+        emCommandState.error = EMBER_CMD_ERR_ARGUMENT_SYNTAX_ERROR;
+        break;
+      }
 
       if (tokenCount == MAX_TOKEN_COUNT) {
         emCommandState.error = EMBER_CMD_ERR_WRONG_NUMBER_OF_ARGUMENTS;
