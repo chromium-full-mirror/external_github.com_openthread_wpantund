@@ -165,8 +165,11 @@ SpinelNCPInstance::SpinelNCPInstance(const Settings& settings) :
 {
 	mOutboundBufferLen = 0;
 	mInboundHeader = 0;
-	mDefaultChannelMask = 0x07FFF800;
+	mSupprotedChannels.clear();
+
 	mIsPcapInProgress = false;
+	mNoMemStatusCounter = 0;
+	mLastTimeNoMemStatus = 0;
 	mSettings.clear();
 
 	if (!settings.empty()) {
@@ -203,6 +206,21 @@ SpinelNCPInstance::get_control_interface()
 	return mControlInterface;
 }
 
+uint32_t
+SpinelNCPInstance::get_default_channel_mask(void)
+{
+	uint32_t channel_mask = 0;
+	uint16_t i;
+
+	for (i = 0; i < 32; i++) {
+		if (mSupprotedChannels.find(i) != mSupprotedChannels.end()) {
+			channel_mask |= (1 << i);
+		}
+	}
+
+	return channel_mask;
+}
+
 std::set<std::string>
 SpinelNCPInstance::get_supported_property_keys()const
 {
@@ -210,6 +228,7 @@ SpinelNCPInstance::get_supported_property_keys()const
 
 	properties.insert(kWPANTUNDProperty_ConfigNCPDriverName);
 	properties.insert(kWPANTUNDProperty_NCPChannel);
+	properties.insert(kWPANTUNDProperty_NCPChannelMask);
 	properties.insert(kWPANTUNDProperty_NCPFrequency);
 	properties.insert(kWPANTUNDProperty_NCPRSSI);
 	properties.insert(kWPANTUNDProperty_NCPExtendedAddress);
@@ -363,6 +382,9 @@ SpinelNCPInstance::get_property(
 	if (strcaseequal(key.c_str(), kWPANTUNDProperty_ConfigNCPDriverName)) {
 		cb(0, boost::any(std::string("spinel")));
 
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NCPChannelMask)) {
+		cb(0, boost::any(get_default_channel_mask()));
+
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NCPCCAThreshold)) {
 		SIMPLE_SPINEL_GET(SPINEL_PROP_PHY_CCA_THRESHOLD, SPINEL_DATATYPE_INT8_S);
 
@@ -479,7 +501,16 @@ SpinelNCPInstance::get_property(
 				SpinelNCPTaskGetNetworkTopology::kResultFormat_StringArray
 			)
 		));
-
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadChildTableAsValMap)) {
+		start_new_task(boost::shared_ptr<SpinelNCPTask>(
+			new SpinelNCPTaskGetNetworkTopology(
+				this,
+				cb,
+				SpinelNCPTaskGetNetworkTopology::kChildTable,
+				SpinelNCPTaskGetNetworkTopology::kResultFormat_ValueMapArray
+			)
+		));
+		
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadNeighborTable)) {
 		start_new_task(boost::shared_ptr<SpinelNCPTask>(
 			new SpinelNCPTaskGetNetworkTopology(
@@ -490,6 +521,16 @@ SpinelNCPInstance::get_property(
 			)
 		));
 
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadNeighborTableAsValMap)) {
+		start_new_task(boost::shared_ptr<SpinelNCPTask>(
+			new SpinelNCPTaskGetNetworkTopology(
+				this,
+				cb,
+				SpinelNCPTaskGetNetworkTopology::kNeighborTable,
+				SpinelNCPTaskGetNetworkTopology::kResultFormat_ValueMapArray
+			)
+		));
+		
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_OpenThreadMsgBufferCounters)) {
 		start_new_task(boost::shared_ptr<SpinelNCPTask>(
 			new SpinelNCPTaskGetMsgBufferCounters(
@@ -877,6 +918,21 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 				reset_tasks(wstatus);
 			}
 			return;
+		} else if (status == SPINEL_STATUS_NOMEM) {
+			cms_t now = time_ms();
+			if (now - mLastTimeNoMemStatus > kMaxTimeBetweenNoMemStatus) {
+				mNoMemStatusCounter = 0;
+			}
+			mLastTimeNoMemStatus = now;
+			mNoMemStatusCounter++;
+
+			if (mNoMemStatusCounter == kMaxNonMemCountToReset)
+			{
+				mNoMemStatusCounter = 0;
+				syslog(LOG_WARNING, "NCP is out of memory for too long...Resetting the NCP!");
+				ncp_is_misbehaving();
+				return;
+			}
 		} else if (status == SPINEL_STATUS_INVALID_COMMAND) {
 			syslog(LOG_NOTICE, "[-NCP-]: COMMAND NOT RECOGNIZED");
 		}
@@ -1072,6 +1128,22 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 			signal_property_changed(kWPANTUNDProperty_NCPChannel, mCurrentNetworkInstance.channel);
 		}
 
+	} else if (key == SPINEL_PROP_PHY_CHAN_SUPPORTED) {
+
+		uint8_t channel;
+		spinel_ssize_t len = 0;
+
+		mSupprotedChannels.clear();
+
+		while (value_data_len > 0)
+		{
+			len = spinel_datatype_unpack(value_data_ptr, value_data_len, SPINEL_DATATYPE_UINT8_S, &channel);
+			mSupprotedChannels.insert(channel);
+
+			value_data_ptr += len;
+			value_data_len -= len;
+		}
+
 	} else if (key == SPINEL_PROP_PHY_TX_POWER) {
 		int8_t value;
 		spinel_datatype_unpack(value_data_ptr, value_data_len, SPINEL_DATATYPE_INT8_S, &value);
@@ -1086,6 +1158,7 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 	} else if (key == SPINEL_PROP_NET_ROLE) {
 		uint8_t value;
 		spinel_datatype_unpack(value_data_ptr, value_data_len, SPINEL_DATATYPE_UINT8_S, &value);
+		syslog(LOG_INFO,"[-NCP-]: Net Role \"%s\" (%d)", spinel_net_role_to_cstr(value), value);
 
 		if ( ncp_state_is_joining(get_ncp_state())
 		  && (value != SPINEL_NET_ROLE_DETACHED)
@@ -1109,6 +1182,11 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 			if (mNodeType != LEADER) {
 				mNodeType = LEADER;
 				signal_property_changed(kWPANTUNDProperty_NetworkNodeType, node_type_to_string(mNodeType));
+			}
+
+		} else if (value == SPINEL_NET_ROLE_DETACHED) {
+			if (ncp_state_is_associated(get_ncp_state())) {
+				change_ncp_state(ISOLATED);
 			}
 		}
 

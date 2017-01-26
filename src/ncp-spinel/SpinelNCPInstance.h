@@ -142,6 +142,8 @@ protected:
 	virtual void address_was_added(const struct in6_addr& addr, int prefix_len);
 	virtual void address_was_removed(const struct in6_addr& addr, int prefix_len);
 
+	uint32_t get_default_channel_mask(void);
+
 private:
 
 	void refresh_on_mesh_prefix(struct in6_addr *addr, uint8_t prefix_len, bool stable, uint8_t flags);
@@ -246,6 +248,15 @@ private:
 
 	// Task management
 	std::list<boost::shared_ptr<SpinelNCPTask> > mTaskQueue;
+
+	enum
+	{
+		kMaxTimeBetweenNoMemStatus = 60000, // (in ms) time between NOMEM status to consider it back-to-back.
+		kMaxNonMemCountToReset = 15,        // Number of back-to-back NOMEM status to reset
+	};
+
+	cms_t mLastTimeNoMemStatus;
+	uint16_t mNoMemStatusCounter;
 
 }; // class SpinelNCPInstance
 
