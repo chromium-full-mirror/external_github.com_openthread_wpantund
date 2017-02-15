@@ -762,6 +762,18 @@ typedef enum
      */
     SPINEL_PROP_THREAD_CHILD_COUNT_MAX = SPINEL_PROP_THREAD_EXT__BEGIN + 12,
 
+    /// Leader network data
+    /** Format: `D` - Read only
+     */
+    SPINEL_PROP_THREAD_LEADER_NETWORK_DATA
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 13,
+
+    /// Stable leader network data
+    /** Format: `D` - Read only
+     */
+    SPINEL_PROP_THREAD_STABLE_LEADER_NETWORK_DATA
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 14,
+
     SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,
@@ -902,6 +914,10 @@ typedef enum
     /// The number of broadcast packets transmitted.
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_TX_PKT_BROADCAST  = SPINEL_PROP_CNTR__BEGIN + 13,
+
+    /// The number of frame transmission failures due to abort error.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_ERR_ABORT      = SPINEL_PROP_CNTR__BEGIN + 14,
 
     /// The total number of received packets.
     /** Format: `L` (Read-only) */
