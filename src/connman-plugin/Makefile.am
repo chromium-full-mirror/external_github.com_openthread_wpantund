@@ -46,8 +46,6 @@ wpan_tunnel_plugin_la_LDFLAGS = \
 	$(CONNMAN_LIBS) \
 	-shared \
 	-module \
-	-avoid-version \
-	-Wl,--allow-shlib-undefined \
 	$(NULL)
 
 endif
