@@ -79,12 +79,12 @@ SpinelNCPTask::vprocess_send_command(int event, va_list args)
 			  ),
 			on_error
 		);
-		mInstance->mResetIsExpected = false;
+		mNextCommandRet = kWPANTUNDStatus_Ok;
+
 	} else {
 		CONTROL_REQUIRE_COMMAND_RESPONSE_WITHIN(mNextCommandTimeout, on_error);
+		mNextCommandRet = peek_ncp_callback_status(event, args);
 	}
-
-	mNextCommandRet = peek_ncp_callback_status(event, args);
 
 	if (mNextCommandRet) {
 		mNextCommandRet = spinel_status_to_wpantund_status(mNextCommandRet);
@@ -111,14 +111,14 @@ nl::wpantund::SpinelPackData(const char* pack_format, ...)
 
 		if (packed_size < 0) {
 			ret.clear();
-			break;
 		} else if (packed_size > ret.size()) {
 			ret.resize(packed_size);
 			continue;
 		} else {
 			ret.resize(packed_size);
 		}
-	} while(false);
+		break;
+	} while(true);
 
 	va_end(args);
 	return ret;

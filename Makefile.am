@@ -72,7 +72,7 @@ HASH_VERSION = $(shell                                                   \
 
 EXTRA_VERSION = $(shell                                                  \
 	git describe --all --contains ee4e2d65c553 1> /dev/null 2> /dev/null \
-		&& (test `git describe | sed 's:^full/::'` = $(VERSION) || echo -g$(HASH_VERSION))  \
+		&& (test "`git describe 2> /dev/null | sed 's:^full/::'`" = $(VERSION) || echo -g$(HASH_VERSION))  \
 )
 
 distdir = $(PACKAGE)-$(VERSION)$(EXTRA_VERSION)

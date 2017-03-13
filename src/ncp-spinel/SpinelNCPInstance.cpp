@@ -124,6 +124,7 @@ nl::wpantund::spinel_status_to_wpantund_status(int spinel_status)
 	case SPINEL_STATUS_INVALID_STATE:
 		ret = kWPANTUNDStatus_InvalidForCurrentState;
 		break;
+
 	default:
 		ret = WPANTUND_NCPERROR_TO_STATUS(spinel_status);
 		break;
@@ -165,8 +166,11 @@ SpinelNCPInstance::SpinelNCPInstance(const Settings& settings) :
 {
 	mOutboundBufferLen = 0;
 	mInboundHeader = 0;
-	mDefaultChannelMask = 0x07FFF800;
+	mSupprotedChannels.clear();
+
 	mIsPcapInProgress = false;
+	mNoMemStatusCounter = 0;
+	mLastTimeNoMemStatus = 0;
 	mSettings.clear();
 
 	if (!settings.empty()) {
@@ -203,6 +207,21 @@ SpinelNCPInstance::get_control_interface()
 	return mControlInterface;
 }
 
+uint32_t
+SpinelNCPInstance::get_default_channel_mask(void)
+{
+	uint32_t channel_mask = 0;
+	uint16_t i;
+
+	for (i = 0; i < 32; i++) {
+		if (mSupprotedChannels.find(i) != mSupprotedChannels.end()) {
+			channel_mask |= (1 << i);
+		}
+	}
+
+	return channel_mask;
+}
+
 std::set<std::string>
 SpinelNCPInstance::get_supported_property_keys()const
 {
@@ -210,6 +229,7 @@ SpinelNCPInstance::get_supported_property_keys()const
 
 	properties.insert(kWPANTUNDProperty_ConfigNCPDriverName);
 	properties.insert(kWPANTUNDProperty_NCPChannel);
+	properties.insert(kWPANTUNDProperty_NCPChannelMask);
 	properties.insert(kWPANTUNDProperty_NCPFrequency);
 	properties.insert(kWPANTUNDProperty_NCPRSSI);
 	properties.insert(kWPANTUNDProperty_NCPExtendedAddress);
@@ -223,7 +243,10 @@ SpinelNCPInstance::get_supported_property_keys()const
 		properties.insert(kWPANTUNDProperty_ThreadLeaderLocalWeight);
 		properties.insert(kWPANTUNDProperty_ThreadNetworkData);
 		properties.insert(kWPANTUNDProperty_ThreadNetworkDataVersion);
+		properties.insert(kWPANTUNDProperty_ThreadStableNetworkData);
 		properties.insert(kWPANTUNDProperty_ThreadStableNetworkDataVersion);
+		properties.insert(kWPANTUNDProperty_ThreadLeaderNetworkData);
+		properties.insert(kWPANTUNDProperty_ThreadStableLeaderNetworkData);
 		properties.insert(kWPANTUNDProperty_ThreadChildTable);
 		properties.insert(kWPANTUNDProperty_ThreadNeighborTable);
 	}
@@ -242,6 +265,7 @@ SpinelNCPInstance::get_supported_property_keys()const
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_OTHER");
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_PKT_RETRY");
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_ERR_CCA");
+		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "TX_ERR_ABORT");
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_TOTAL");
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_UNICAST");
 		properties.insert(kWPANTUNDProperty_Spinel_CounterPrefix "RX_PKT_BROADCAST");
@@ -276,6 +300,11 @@ SpinelNCPInstance::get_supported_property_keys()const
 		properties.insert(kWPANTUNDProperty_JamDetectionWindow);
 		properties.insert(kWPANTUNDProperty_JamDetectionBusyPeriod);
 		properties.insert(kWPANTUNDProperty_JamDetectionDebugHistoryBitmap);
+	}
+
+	if (mCapabilities.count(SPINEL_CAP_NEST_LEGACY_INTERFACE))
+	{
+		properties.insert(kWPANTUNDProperty_NestLabs_LegacyMeshLocalPrefix);
 	}
 
 	return properties;
@@ -363,6 +392,9 @@ SpinelNCPInstance::get_property(
 	if (strcaseequal(key.c_str(), kWPANTUNDProperty_ConfigNCPDriverName)) {
 		cb(0, boost::any(std::string("spinel")));
 
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NCPChannelMask)) {
+		cb(0, boost::any(get_default_channel_mask()));
+
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NCPCCAThreshold)) {
 		SIMPLE_SPINEL_GET(SPINEL_PROP_PHY_CCA_THRESHOLD, SPINEL_DATATYPE_INT8_S);
 
@@ -377,6 +409,9 @@ SpinelNCPInstance::get_property(
 
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NetworkKeyIndex)) {
 		SIMPLE_SPINEL_GET(SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER, SPINEL_DATATYPE_UINT32_S);
+
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NetworkIsCommissioned)) {
+		SIMPLE_SPINEL_GET(SPINEL_PROP_NET_SAVED, SPINEL_DATATYPE_BOOL_S);
 
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NCPRSSI)) {
 		SIMPLE_SPINEL_GET(SPINEL_PROP_PHY_RSSI, SPINEL_DATATYPE_INT8_S);
@@ -408,6 +443,12 @@ SpinelNCPInstance::get_property(
 
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadStableNetworkData)) {
 		SIMPLE_SPINEL_GET(SPINEL_PROP_THREAD_STABLE_NETWORK_DATA, SPINEL_DATATYPE_DATA_S);
+
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadLeaderNetworkData)) {
+		SIMPLE_SPINEL_GET(SPINEL_PROP_THREAD_LEADER_NETWORK_DATA, SPINEL_DATATYPE_DATA_S);
+
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadStableLeaderNetworkData)) {
+		SIMPLE_SPINEL_GET(SPINEL_PROP_THREAD_STABLE_LEADER_NETWORK_DATA, SPINEL_DATATYPE_DATA_S);
 
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadStableNetworkDataVersion)) {
 		SIMPLE_SPINEL_GET(SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION, SPINEL_DATATYPE_UINT8_S);
@@ -470,6 +511,13 @@ SpinelNCPInstance::get_property(
 			);
 		}
 
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NestLabs_LegacyMeshLocalPrefix)) {
+		if (!mCapabilities.count(SPINEL_CAP_NEST_LEGACY_INTERFACE)) {
+			cb(kWPANTUNDStatus_FeatureNotSupported, boost::any(std::string("Legacy Capability Not Supported by NCP")));
+		} else {
+			SIMPLE_SPINEL_GET(SPINEL_PROP_NEST_LEGACY_ULA_PREFIX, SPINEL_DATATYPE_DATA_S);
+		}
+
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadChildTable)) {
 		start_new_task(boost::shared_ptr<SpinelNCPTask>(
 			new SpinelNCPTaskGetNetworkTopology(
@@ -477,6 +525,15 @@ SpinelNCPInstance::get_property(
 				cb,
 				SpinelNCPTaskGetNetworkTopology::kChildTable,
 				SpinelNCPTaskGetNetworkTopology::kResultFormat_StringArray
+			)
+		));
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadChildTableAsValMap)) {
+		start_new_task(boost::shared_ptr<SpinelNCPTask>(
+			new SpinelNCPTaskGetNetworkTopology(
+				this,
+				cb,
+				SpinelNCPTaskGetNetworkTopology::kChildTable,
+				SpinelNCPTaskGetNetworkTopology::kResultFormat_ValueMapArray
 			)
 		));
 
@@ -487,6 +544,16 @@ SpinelNCPInstance::get_property(
 				cb,
 				SpinelNCPTaskGetNetworkTopology::kNeighborTable,
 				SpinelNCPTaskGetNetworkTopology::kResultFormat_StringArray
+			)
+		));
+
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadNeighborTableAsValMap)) {
+		start_new_task(boost::shared_ptr<SpinelNCPTask>(
+			new SpinelNCPTaskGetNetworkTopology(
+				this,
+				cb,
+				SpinelNCPTaskGetNetworkTopology::kNeighborTable,
+				SpinelNCPTaskGetNetworkTopology::kResultFormat_ValueMapArray
 			)
 		));
 
@@ -539,6 +606,7 @@ SpinelNCPInstance::get_property(
 		CNTR_KEY(TX_PKT_OTHER)
 		CNTR_KEY(TX_PKT_RETRY)
 		CNTR_KEY(TX_ERR_CCA)
+		CNTR_KEY(TX_ERR_ABORT)
 		CNTR_KEY(RX_PKT_TOTAL)
 		CNTR_KEY(RX_PKT_UNICAST)
 		CNTR_KEY(RX_PKT_BROADCAST)
@@ -819,6 +887,29 @@ SpinelNCPInstance::set_property(
 				);
 			}
 
+		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NestLabs_LegacyMeshLocalPrefix)) {
+			Data legacy_prefix = any_to_data(value);
+			Data command =
+				SpinelPackData(
+					SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_DATA_S),
+					SPINEL_PROP_NEST_LEGACY_ULA_PREFIX,
+					legacy_prefix.data(),
+					legacy_prefix.size()
+				);
+
+			mSettings[kWPANTUNDProperty_NestLabs_LegacyMeshLocalPrefix] = SettingsEntry(command, SPINEL_CAP_NEST_LEGACY_INTERFACE);
+
+			if (!mCapabilities.count(SPINEL_CAP_NEST_LEGACY_INTERFACE))
+			{
+				cb(kWPANTUNDStatus_FeatureNotSupported);
+			} else {
+				start_new_task(SpinelNCPTaskSendCommand::Factory(this)
+					.set_callback(cb)
+					.add_command(command)
+					.finish()
+				);
+			}
+
 		} else {
 			NCPInstanceBase::set_property(key, value, cb);
 		}
@@ -873,10 +964,30 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 				default:
 					break;
 				}
-				reinitialize_ncp();
 				reset_tasks(wstatus);
 			}
+
+			if (mDriverState == NORMAL_OPERATION) {
+				reinitialize_ncp();
+			}
+			mResetIsExpected = false;
 			return;
+
+		} else if (status == SPINEL_STATUS_NOMEM) {
+			cms_t now = time_ms();
+			if (now - mLastTimeNoMemStatus > kMaxTimeBetweenNoMemStatus) {
+				mNoMemStatusCounter = 0;
+			}
+			mLastTimeNoMemStatus = now;
+			mNoMemStatusCounter++;
+
+			if (mNoMemStatusCounter == kMaxNonMemCountToReset)
+			{
+				mNoMemStatusCounter = 0;
+				syslog(LOG_WARNING, "NCP is out of memory for too long...Resetting the NCP!");
+				ncp_is_misbehaving();
+				return;
+			}
 		} else if (status == SPINEL_STATUS_INVALID_COMMAND) {
 			syslog(LOG_NOTICE, "[-NCP-]: COMMAND NOT RECOGNIZED");
 		}
@@ -951,7 +1062,7 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 				remove_address(mNCPLinkLocalAddress);
 			}
 
-			memcpy(mNCPLinkLocalAddress.s6_addr, addr->s6_addr, sizeof(mNCPLinkLocalAddress));
+			memcpy((void*)mNCPLinkLocalAddress.s6_addr, (void*)addr->s6_addr, sizeof(mNCPLinkLocalAddress));
 
 			if (IN6_IS_ADDR_LINKLOCAL(&mNCPLinkLocalAddress)) {
 				add_address(mNCPLinkLocalAddress);
@@ -970,7 +1081,7 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 			if (buffer_is_nonzero(mNCPMeshLocalAddress.s6_addr, sizeof(mNCPMeshLocalAddress))) {
 				remove_address(mNCPMeshLocalAddress);
 			}
-			memcpy(mNCPMeshLocalAddress.s6_addr, addr->s6_addr, sizeof(mNCPMeshLocalAddress));
+			memcpy((void*)mNCPMeshLocalAddress.s6_addr, (void*)addr->s6_addr, sizeof(mNCPMeshLocalAddress));
 			signal_property_changed(kWPANTUNDProperty_IPv6MeshLocalAddress, in6_addr_to_string(*addr));
 			add_address(mNCPMeshLocalAddress);
 		}
@@ -985,7 +1096,7 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 			if (buffer_is_nonzero(mNCPMeshLocalAddress.s6_addr, sizeof(mNCPMeshLocalAddress))) {
 				remove_address(mNCPMeshLocalAddress);
 			}
-			memcpy(mNCPV6Prefix, addr, sizeof(mNCPV6Prefix));
+			memcpy((void*)mNCPV6Prefix, (void*)addr, sizeof(mNCPV6Prefix));
 			struct in6_addr prefix_addr (mNCPMeshLocalAddress);
 			// Zero out the lower 64 bits.
 			memset(prefix_addr.s6_addr+8, 0, 8);
@@ -1072,6 +1183,22 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 			signal_property_changed(kWPANTUNDProperty_NCPChannel, mCurrentNetworkInstance.channel);
 		}
 
+	} else if (key == SPINEL_PROP_PHY_CHAN_SUPPORTED) {
+
+		uint8_t channel;
+		spinel_ssize_t len = 0;
+
+		mSupprotedChannels.clear();
+
+		while (value_data_len > 0)
+		{
+			len = spinel_datatype_unpack(value_data_ptr, value_data_len, SPINEL_DATATYPE_UINT8_S, &channel);
+			mSupprotedChannels.insert(channel);
+
+			value_data_ptr += len;
+			value_data_len -= len;
+		}
+
 	} else if (key == SPINEL_PROP_PHY_TX_POWER) {
 		int8_t value;
 		spinel_datatype_unpack(value_data_ptr, value_data_len, SPINEL_DATATYPE_INT8_S, &value);
@@ -1086,6 +1213,7 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 	} else if (key == SPINEL_PROP_NET_ROLE) {
 		uint8_t value;
 		spinel_datatype_unpack(value_data_ptr, value_data_len, SPINEL_DATATYPE_UINT8_S, &value);
+		syslog(LOG_INFO,"[-NCP-]: Net Role \"%s\" (%d)", spinel_net_role_to_cstr(value), value);
 
 		if ( ncp_state_is_joining(get_ncp_state())
 		  && (value != SPINEL_NET_ROLE_DETACHED)
@@ -1109,6 +1237,11 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 			if (mNodeType != LEADER) {
 				mNodeType = LEADER;
 				signal_property_changed(kWPANTUNDProperty_NetworkNodeType, node_type_to_string(mNodeType));
+			}
+
+		} else if (value == SPINEL_NET_ROLE_DETACHED) {
+			if (ncp_state_is_associated(get_ncp_state())) {
+				change_ncp_state(ISOLATED);
 			}
 		}
 
@@ -1292,6 +1425,10 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 		{
 			syslog(LOG_INFO, "[-NCP-] Child: %s", it->get_as_string().c_str());
 		}
+	} else if (key == SPINEL_PROP_THREAD_LEADER_NETWORK_DATA) {
+		char net_data_cstr_buf[540];
+		encode_data_into_string(value_data_ptr, value_data_len, net_data_cstr_buf, sizeof(net_data_cstr_buf), 0);
+		syslog(LOG_INFO, "[-NCP-] Leader network data: %s", net_data_cstr_buf);
 	}
 
 bail:
@@ -1511,11 +1648,14 @@ SpinelNCPInstance::address_was_added(const struct in6_addr& addr, int prefix_len
 		uint8_t flags = SPINEL_NET_FLAG_SLAAC
 					  | SPINEL_NET_FLAG_ON_MESH
 					  | SPINEL_NET_FLAG_PREFERRED;
-		std::list<Data> commands;
+		CallbackWithStatus callback;
 
 		NCPInstanceBase::address_was_added(addr, prefix_len);
 
 		factory.set_lock_property(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE);
+
+		callback = boost::bind(&SpinelNCPInstance::check_operation_status, this, "address_was_added()", _1);
+		factory.set_callback(callback);
 
 		factory.add_command(
 			SpinelPackData(
@@ -1577,6 +1717,16 @@ SpinelNCPInstance::address_was_removed(const struct in6_addr& addr, int prefix_l
 	}
 
 	NCPInstanceBase::address_was_removed(addr, prefix_len);
+}
+
+void
+SpinelNCPInstance::check_operation_status(std::string operation, int status)
+{
+	if (status == kWPANTUNDStatus_Timeout)
+	{
+		syslog(LOG_ERR, "Timed out while performing \"%s\" - Resetting NCP.", operation.c_str());
+		ncp_is_misbehaving();
+	}
 }
 
 bool
