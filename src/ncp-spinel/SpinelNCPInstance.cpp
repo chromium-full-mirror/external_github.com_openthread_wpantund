@@ -462,6 +462,9 @@ SpinelNCPInstance::get_property(
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_IPv6LinkLocalAddress) && !IN6_IS_ADDR_LINKLOCAL(&mNCPLinkLocalAddress)) {
 		SIMPLE_SPINEL_GET(SPINEL_PROP_IPV6_LL_ADDR, SPINEL_DATATYPE_IPv6ADDR_S);
 
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_OpenThreadDebugTestAssert)) {
+		SIMPLE_SPINEL_GET(SPINEL_PROP_DEBUG_TEST_ASSERT, SPINEL_DATATYPE_BOOL_S);
+
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_JamDetectionStatus)) {
 		if (!mCapabilities.count(SPINEL_CAP_JAM_DETECT)) {
 			cb(kWPANTUNDStatus_FeatureNotSupported, boost::any(std::string("Jam Detection Feature Not Supported")));
@@ -574,6 +577,9 @@ SpinelNCPInstance::get_property(
 				SpinelNCPTaskGetMsgBufferCounters::kResultFormat_String
 			)
 		));
+
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_OpenThreadLogLevel)) {
+		SIMPLE_SPINEL_GET(SPINEL_PROP_DEBUG_NCP_LOG_LEVEL, SPINEL_DATATYPE_UINT8_S);
 
 	} else if (strncaseequal(key.c_str(), kWPANTUNDProperty_Spinel_CounterPrefix, sizeof(kWPANTUNDProperty_Spinel_CounterPrefix)-1)) {
 		int cntr_key = 0;
@@ -909,6 +915,18 @@ SpinelNCPInstance::set_property(
 					.finish()
 				);
 			}
+
+		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_OpenThreadLogLevel)) {
+			uint8_t logLevel = static_cast<uint8_t>(any_to_int(value));
+			Data command = SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_UINT8_S), SPINEL_PROP_DEBUG_NCP_LOG_LEVEL, logLevel);
+
+			mSettings[kWPANTUNDProperty_OpenThreadLogLevel] = SettingsEntry(command);
+
+			start_new_task(SpinelNCPTaskSendCommand::Factory(this)
+				.set_callback(cb)
+				.add_command(command)
+				.finish()
+			);
 
 		} else {
 			NCPInstanceBase::set_property(key, value, cb);

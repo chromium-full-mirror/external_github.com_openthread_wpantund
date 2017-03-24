@@ -1244,6 +1244,14 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_GPIO_STATE_CLEAR";
         break;
 
+    case SPINEL_PROP_DEBUG_TEST_ASSERT:
+        ret = "SPINEL_PROP_DEBUG_TEST_ASSERT";
+        break;
+
+    case SPINEL_PROP_DEBUG_NCP_LOG_LEVEL:
+        ret = "SPINEL_PROP_DEBUG_NCP_LOG_LEVEL";
+        break;
+
     default:
         break;
     }

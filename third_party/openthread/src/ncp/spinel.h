@@ -226,6 +226,18 @@ enum
     SPINEL_MAC_PROMISCUOUS_MODE_FULL     = 2, ///< All decoded MAC packets are passed up the stack.
 };
 
+enum
+{
+    SPINEL_NCP_LOG_LEVEL_EMERG  = 0,
+    SPINEL_NCP_LOG_LEVEL_ALERT  = 1,
+    SPINEL_NCP_LOG_LEVEL_CRIT   = 2,
+    SPINEL_NCP_LOG_LEVEL_ERR    = 3,
+    SPINEL_NCP_LOG_LEVEL_WARN   = 4,
+    SPINEL_NCP_LOG_LEVEL_NOTICE = 5,
+    SPINEL_NCP_LOG_LEVEL_INFO   = 6,
+    SPINEL_NCP_LOG_LEVEL_DEBUG  = 7,
+};
+
 typedef struct
 {
     uint8_t bytes[8];
@@ -1067,6 +1079,23 @@ typedef enum
 
     SPINEL_PROP_VENDOR__BEGIN       = 15360,
     SPINEL_PROP_VENDOR__END         = 16384,
+
+    SPINEL_PROP_DEBUG__BEGIN        = 16384,
+
+    /// Reading this property will cause an assert on the NCP.
+    /// This is intended for testing the assert functionality of
+    /// underlying platform/NCP. Assert should ideally cause the
+    /// NCP to reset, but if this is not supported a `false` boolean
+    /// is returned in response.
+    /** Format: 'b' (read-only) */
+    SPINEL_PROP_DEBUG_TEST_ASSERT
+                                    = SPINEL_PROP_DEBUG__BEGIN + 0,
+
+    /// The NCP log level.
+    /** Format: `C` */
+    SPINEL_PROP_DEBUG_NCP_LOG_LEVEL  = SPINEL_PROP_DEBUG__BEGIN + 1,
+
+    SPINEL_PROP_DEBUG__END          = 17408,
 
     SPINEL_PROP_EXPERIMENTAL__BEGIN = 2000000,
     SPINEL_PROP_EXPERIMENTAL__END   = 2097152,
