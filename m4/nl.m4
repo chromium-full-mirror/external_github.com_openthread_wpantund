@@ -40,6 +40,17 @@ AC_DEFUN([NL_DEBUG], [
 	AM_CONDITIONAL([VERBOSE_DEBUG],[test "x$enable_debug" = "xverbose"])
 ])
 
+AC_DEFUN([CHECK_MISSING_FUNC], [
+    AC_CHECK_FUNC($1, [], [
+        nl_cv_missing_$1=yes
+        MISSING_CPPFLAGS="${MISSING_CPPFLAGS} "'-include $(top_srcdir)/src/missing/$1/$1.h'
+        MISSING_LIBADD="${MISSING_LIBADD} "'$(top_builddir)/src/missing/$1/lib$1.la'
+    ])
+    AM_CONDITIONAL(m4_toupper(MISSING_$1), [test "${nl_cv_missing_$1}" = "yes"])
+])
+AC_SUBST(MISSING_CPPFLAGS)
+AC_SUBST(MISSING_LIBADD)
+
 AC_DEFUN([NL_EXPORT_DYNAMIC], [
 	prev_LDFLAGS="${LDFLAGS}"
 	LDFLAGS="-Wl,--export-dynamic"
@@ -271,15 +282,24 @@ AC_DEFUN([NL_CHECK_CONNMAN], [
 		[connman],
 		[AC_HELP_STRING([--without-connman], [Don't build connman plugin])],
 		[
-			if test "x${with_connman}" '=' "xyes"
+			if test "x${with_connman}" '=' "xyes" -o "x${with_connman}" '=' "xforce"
 			then require_connman=yes
 			fi
 		]
 	)
 
-	if test "x${with_connman}" '!=' "xno"
+	if test "x${with_connman}" '==' "xforce"
 	then
-		if test "x${CONNMAN_CFLAGS}" '==' "x"
+		with_connman=yes
+		if test "x${CONNMAN_LIBS}" == "x"
+		then CONNMAN_LIBS="-module -avoid-version -export-symbols-regex connman_plugin_desc"
+		fi
+	elif test "x${with_connman}" '!=' "xno"
+	then
+		if test "x${with_connman}" '==' "xforce"
+		then
+			true
+		elif test "x${CONNMAN_CFLAGS}" '==' "x"
 		then
 			PKG_CHECK_MODULES(
 				[CONNMAN],
@@ -301,26 +321,25 @@ AC_DEFUN([NL_CHECK_CONNMAN], [
 		fi
 	fi
 
+	if test "x${with_connman}" == "xyes" -a "x${GLIB_CFLAGS}" '==' "x"
+	then PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.28, [],[AC_MSG_ERROR(["Found ConnMan headers but couldn't find GLIB"])])
+	fi
+
 	AC_SUBST(CONNMAN_CFLAGS)
 	AC_SUBST(CONNMAN_LIBS)
+	AC_SUBST(GLIB_CFLAGS)
+	AC_SUBST(GLIB_LIBS)
 
-	if test "x${with_connman}" = "xyes"
+	if test "x${with_connman}" != "xno"
 	then {
+		GLIB_CFLAGS="${GLIB_CFLAGS} -DGLIB_VERSION_MAX_ALLOWED=138240 -DGLIB_VERSION_MIN_REQUIRED=138240"
+
 		$1
 	}
 	elif test "x$require_connman" = "xyes"
-	then false; AC_MSG_ERROR(["ConnMan plugin was explicitly requested, but can't find ConnMan headers"])
+	then false; AC_MSG_ERROR(["ConnMan plugin was explicitly requested but cannot find ConnMan headers"])
 	else false; $2
 	fi
-])
-
-AC_DEFUN([NL_CHECK_GLIB], [
-	PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.28, [$1], [$2])
-
-	GLIB_CFLAGS="${GLIB_CFLAGS} -DGLIB_VERSION_MAX_ALLOWED=138240 -DGLIB_VERSION_MIN_REQUIRED=138240"
-
-	AC_SUBST(GLIB_CFLAGS)
-	AC_SUBST(GLIB_LIBS)
 ])
 
 dnl Unix Pseudoterminal Support
