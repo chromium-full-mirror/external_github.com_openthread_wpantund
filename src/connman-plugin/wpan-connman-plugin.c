@@ -2212,7 +2212,7 @@ lowpan_device_scan(enum connman_service_type type,
 	struct lowpan_device_s *device_info =
 	    (struct lowpan_device_s *)connman_device_get_data(device);
 
-	DBG("%p ssid=%s, id=%s, passphrate=%s", device, ssid, identity, passphrase);
+	DBG("%p ssid=%s", device, ssid);
 
 	require_action(
 		connman_device_get_scanning(device) == FALSE,
