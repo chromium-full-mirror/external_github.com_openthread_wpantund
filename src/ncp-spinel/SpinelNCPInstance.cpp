@@ -169,8 +169,6 @@ SpinelNCPInstance::SpinelNCPInstance(const Settings& settings) :
 	mSupprotedChannels.clear();
 
 	mIsPcapInProgress = false;
-	mNoMemStatusCounter = 0;
-	mLastTimeNoMemStatus = 0;
 	mSettings.clear();
 
 	if (!settings.empty()) {
@@ -751,6 +749,40 @@ SpinelNCPInstance::set_property(
 				cb(kWPANTUNDStatus_InvalidArgument);
 			}
 
+		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_InterfaceUp)) {
+			bool isup = any_to_bool(value);
+			if (isup) {
+				start_new_task(SpinelNCPTaskSendCommand::Factory(this)
+					.set_callback(cb)
+					.add_command(SpinelPackData(
+						SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_BOOL_S),
+						SPINEL_PROP_NET_IF_UP,
+						true
+					))
+					.add_command(SpinelPackData(
+						SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_BOOL_S),
+						SPINEL_PROP_NET_STACK_UP,
+						true
+					))
+					.finish()
+				);
+			} else {
+				start_new_task(SpinelNCPTaskSendCommand::Factory(this)
+					.set_callback(cb)
+					.add_command(SpinelPackData(
+						SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_BOOL_S),
+						SPINEL_PROP_NET_STACK_UP,
+						false
+					))
+					.add_command(SpinelPackData(
+						SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_BOOL_S),
+						SPINEL_PROP_NET_IF_UP,
+						false
+					))
+					.finish()
+				);
+			}
+
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NCPExtendedAddress)) {
 			Data eui64_value = any_to_data(value);
 
@@ -989,22 +1021,6 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 			}
 			mResetIsExpected = false;
 			return;
-
-		} else if (status == SPINEL_STATUS_NOMEM) {
-			cms_t now = time_ms();
-			if (now - mLastTimeNoMemStatus > kMaxTimeBetweenNoMemStatus) {
-				mNoMemStatusCounter = 0;
-			}
-			mLastTimeNoMemStatus = now;
-			mNoMemStatusCounter++;
-
-			if (mNoMemStatusCounter == kMaxNonMemCountToReset)
-			{
-				mNoMemStatusCounter = 0;
-				syslog(LOG_WARNING, "NCP is out of memory for too long...Resetting the NCP!");
-				ncp_is_misbehaving();
-				return;
-			}
 		} else if (status == SPINEL_STATUS_INVALID_COMMAND) {
 			syslog(LOG_NOTICE, "[-NCP-]: COMMAND NOT RECOGNIZED");
 		}
