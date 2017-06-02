@@ -56,3 +56,8 @@ wpantund.xcodeproj/project.xcworkspace/xcshareddata/wpantund.xccheckout
 src/wpantund/.libs/wpantund
 Android.mk
 /etc/android
+
+# Ignore this line --- begin pe8qf1P4GCme
+/src/ncp-silabs/Makefile
+/src/ncp-silabs_tmsp/Makefile
+# Ignore this line --- end pe8qf1P4GCme

@@ -137,8 +137,6 @@ on_error:
 
 	syslog(LOG_ERR, "Leave failed: %d", ret);
 
-	mInstance->reinitialize_ncp();
-
 	finish(ret);
 
 	EH_END();

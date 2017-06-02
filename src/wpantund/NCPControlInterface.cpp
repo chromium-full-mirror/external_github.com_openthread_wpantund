@@ -193,6 +193,12 @@ struct SetPropertyHelper {
 #define kWPANTUNDPropertyMfgFirstPacketRSSI        "MfgFirstPacketRSSI"
 #define kWPANTUNDPropertyMfgFirstPacketLQI         "MfgFirstPacketLQI"
 
+// Ignore this line --- begin pe8qf1P4GCme
+// SiLabs-Specific Properties
+#define kWPANTUNDPropertyRipEntries                "RIPEntries"
+#define kWPANTUNDPropertyTXPowerMode               "TXPowerMode"
+#define kWPANTUNDPropertyEmberUseASH               "EmberUseASH"
+// Ignore this line --- end pe8qf1P4GCme
 
 // Nest-Specific Properties
 #define kWPANTUNDPropertyPassthruPort              "PassthruPort"
@@ -367,6 +373,43 @@ NCPControlInterface::translate_deprecated_property(std::string& key, boost::any&
 	} else if (strcaseequal(key.c_str(),  kWPANTUNDPropertySyslogMask )) {
 		key =  kWPANTUNDProperty_DaemonSyslogMask ;
 		ret = true;
+// Ignore this line --- begin pe8qf1P4GCme
+	} else if (strcaseequal(key.c_str(), kWPANTUNDPropertyEmberUseASH)) {
+		key = kWPANTUNDProperty_ConfigNCPReliabilityLayer;
+
+		if (!value.empty()) {
+			if (any_to_bool(value)) {
+				value = std::string("libsoot");
+			} else {
+				value = std::string("none");
+			}
+		}
+		ret = true;
+	} else if (strcaseequal(key.c_str(),  kWPANTUNDPropertyMfgTestMode )) {
+		key =  kWPANTUNDProperty_SiLabs_MfgTestMode ;
+		ret = true;
+	} else if (strcaseequal(key.c_str(),  kWPANTUNDPropertyMfgSYNOffset )) {
+		key =  kWPANTUNDProperty_SiLabs_MfgSYNOffset ;
+		ret = true;
+	} else if (strcaseequal(key.c_str(),  kWPANTUNDPropertyMfgRepeatRandomTXInterval )) {
+		key =  kWPANTUNDProperty_SiLabs_MfgRepeatRandomTXInterval ;
+		ret = true;
+	} else if (strcaseequal(key.c_str(),  kWPANTUNDPropertyMfgRepeatRandomTXLen )) {
+		key =  kWPANTUNDProperty_SiLabs_MfgRepeatRandomTXLen ;
+		ret = true;
+	} else if (strcaseequal(key.c_str(),  kWPANTUNDPropertyMfgFirstPacketRSSI )) {
+		key =  kWPANTUNDProperty_SiLabs_MfgFirstPacketRSSI ;
+		ret = true;
+	} else if (strcaseequal(key.c_str(),  kWPANTUNDPropertyMfgFirstPacketLQI )) {
+		key =  kWPANTUNDProperty_SiLabs_MfgFirstPacketLQI ;
+		ret = true;
+	} else if (strcaseequal(key.c_str(),  kWPANTUNDPropertyRipEntries )) {
+		key =  kWPANTUNDProperty_SiLabs_IPv6RIPEntries ;
+		ret = true;
+	} else if (strcaseequal(key.c_str(),  kWPANTUNDPropertyTXPowerMode )) {
+		key =  kWPANTUNDProperty_SiLabs_NCPTXPowerMode ;
+		ret = true;
+// Ignore this line --- end pe8qf1P4GCme
 	} else if (strcaseequal(key.c_str(),  kWPANTUNDPropertyPassthruPort )) {
 		key =  kWPANTUNDProperty_NestLabs_NetworkPassthruPort ;
 		ret = true;

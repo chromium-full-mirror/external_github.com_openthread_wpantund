@@ -69,6 +69,29 @@ nl::Data any_to_data(const boost::any& value)
 	return ret;
 }
 
+float any_to_float(const boost::any& value)
+{
+	return static_cast<float>(any_to_double(value));
+}
+
+double any_to_double(const boost::any& value)
+{
+	double ret = 0.0;
+
+	if (value.type() == typeid(std::string)) {
+		std::string key_string = boost::any_cast<std::string>(value);
+		ret = strtod(key_string.c_str(), NULL);
+	} else if (value.type() == typeid(double)) {
+		ret = boost::any_cast<double>(value);
+	} else if (value.type() == typeid(float)) {
+		ret = boost::any_cast<float>(value);
+	} else {
+		ret = static_cast<double>(any_to_int(value));
+	}
+
+	return ret;
+}
+
 int any_to_int(const boost::any& value)
 {
 	int32_t ret = 0;

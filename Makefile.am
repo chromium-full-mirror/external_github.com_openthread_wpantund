@@ -59,13 +59,20 @@ EXTRA_DIST =                           \
 	$(NULL)
 
 
+# Ignore this line --- begin pe8qf1P4GCme
+# Xcode Project Files
+EXTRA_DIST +=                                                       \
+	wpantund.xcodeproj/project.pbxproj                              \
+	wpantund.xcodeproj/project.xcworkspace/contents.xcworkspacedata \
+	$(NULL)
+# Ignore this line --- end pe8qf1P4GCme
 
 HASH_VERSION = $(shell                                                   \
 	git describe --dirty --match __poison__ --always 2> /dev/null        \
 )
 
 EXTRA_VERSION = $(shell                                                  \
-	git describe --all --contains 54e116add1f093663e047f88dac18b4851589483 1> /dev/null 2> /dev/null \
+	git describe --all --contains ee4e2d65c553 1> /dev/null 2> /dev/null \
 		&& (test "`git describe 2> /dev/null | sed 's:^full/::'`" = $(VERSION) || echo -g$(HASH_VERSION))  \
 )
 

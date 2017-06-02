@@ -1655,6 +1655,12 @@ StatCollector::update_link_stat_timer(Timer::Interval interval)
 void
 StatCollector::link_stat_timer_did_fire(void)
 {
+// Ignore this line --- begin pe8qf1P4GCme
+	if (mControlInterface != NULL) {
+		mControlInterface->get_property(kWPANTUNDProperty_SiLabs_IPv6RIPEntriesValueMap,
+			boost::bind(&StatCollector::did_get_rip_entry_value_map, this, _1, _2));
+	}
+// Ignore this line --- end pe8qf1P4GCme
 }
 
 void
@@ -1684,6 +1690,46 @@ StatCollector::record_rip_entry(const ValueMap& rip_entry)
 	uint8_t out_lqi = 0;
 	NodeType node_type = UNKNOWN;
 
+// Ignore this line --- begin pe8qf1P4GCme
+
+	// Get the EUI64.
+	it = rip_entry.find(kWPANTUNDValueMapKey_Silabs_RIPEntry_EUI64);
+	if (it == rip_entry.end()) {
+		return kWPANTUNDStatus_InvalidArgument;
+	}
+	eui64 = any_to_data(it->second);
+	if (eui64.size() < 8) {
+		return kWPANTUNDStatus_InvalidArgument;
+	}
+
+	// Get the RSSI.
+	it = rip_entry.find(kWPANTUNDValueMapKey_Silabs_RIPEntry_RSSI);
+	if (it == rip_entry.end()) {
+		return kWPANTUNDStatus_InvalidArgument;
+	}
+	rssi = static_cast<int8_t>(any_to_int(it->second));
+
+	// Get the incoming link quality.
+	it = rip_entry.find(kWPANTUNDValueMapKey_Silabs_RIPEntry_IncomingLinkQuality);
+	if (it == rip_entry.end()) {
+		return kWPANTUNDStatus_InvalidArgument;
+	}
+	in_lqi = static_cast<uint8_t>(any_to_int(it->second));
+
+	// Get the outgoing link quality.
+	it = rip_entry.find(kWPANTUNDValueMapKey_Silabs_RIPEntry_OutgoingLinkQuality);
+	if (it == rip_entry.end()) {
+		return kWPANTUNDStatus_InvalidArgument;
+	}
+	out_lqi = static_cast<uint8_t>(any_to_int(it->second));
+
+	it = rip_entry.find(kWPANTUNDValueMapKey_Silabs_RIPEntry_NodeType);
+	if (it == rip_entry.end()) {
+		return kWPANTUNDStatus_InvalidArgument;
+	}
+	node_type = string_to_node_type(any_to_string(it->second));
+
+// Ignore this line --- end pe8qf1P4GCme
 
 	mLinkStat.update(eui64.data(), rssi, in_lqi, out_lqi, node_type);
 
