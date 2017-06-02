@@ -43,6 +43,7 @@
 
 #include "DBUSHelpers.h"
 #include "any-to.h"
+#include "commissioner-utils.h"
 
 using namespace DBUSHelpers;
 using namespace nl;
@@ -78,6 +79,8 @@ DBusIPCAPI_v1::init_callback_tables()
 	INTERFACE_CALLBACK_CONNECT(WPANTUND_IF_CMD_ROUTE_ADD, interface_route_add_handler);
 	INTERFACE_CALLBACK_CONNECT(WPANTUND_IF_CMD_ROUTE_REMOVE, interface_route_remove_handler);
 
+	INTERFACE_CALLBACK_CONNECT(WPANTUND_IF_CMD_JOINER_ADD, interface_joiner_add_handler);
+
 	INTERFACE_CALLBACK_CONNECT(WPANTUND_IF_CMD_DATA_POLL, interface_data_poll_handler);
 	INTERFACE_CALLBACK_CONNECT(WPANTUND_IF_CMD_CONFIG_GATEWAY, interface_config_gateway_handler);
 
@@ -85,6 +88,8 @@ DBusIPCAPI_v1::init_callback_tables()
 	INTERFACE_CALLBACK_CONNECT(WPANTUND_IF_CMD_HOST_DID_WAKE, interface_host_did_wake_handler);
 	INTERFACE_CALLBACK_CONNECT(WPANTUND_IF_CMD_NET_SCAN_STOP, interface_net_scan_stop_handler);
 	INTERFACE_CALLBACK_CONNECT(WPANTUND_IF_CMD_NET_SCAN_START, interface_net_scan_start_handler);
+	INTERFACE_CALLBACK_CONNECT(WPANTUND_IF_CMD_DISCOVER_SCAN_STOP, interface_discover_scan_stop_handler);
+	INTERFACE_CALLBACK_CONNECT(WPANTUND_IF_CMD_DISCOVER_SCAN_START, interface_discover_scan_start_handler);
 	INTERFACE_CALLBACK_CONNECT(WPANTUND_IF_CMD_ENERGY_SCAN_STOP, interface_energy_scan_stop_handler);
 	INTERFACE_CALLBACK_CONNECT(WPANTUND_IF_CMD_ENERGY_SCAN_START, interface_energy_scan_start_handler);
 
@@ -742,6 +747,22 @@ DBusIPCAPI_v1::interface_net_scan_stop_handler(
 }
 
 DBusHandlerResult
+DBusIPCAPI_v1::interface_discover_scan_stop_handler(
+	NCPControlInterface* interface,
+	DBusMessage *        message
+) {
+	DBusHandlerResult ret = DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
+	dbus_message_ref(message);
+
+	interface->netscan_stop(boost::bind(&DBusIPCAPI_v1::CallbackWithStatus_Helper,
+									 this, _1, message));
+	ret = DBUS_HANDLER_RESULT_HANDLED;
+
+	return ret;
+}
+
+DBusHandlerResult
 DBusIPCAPI_v1::interface_energy_scan_stop_handler(
 	NCPControlInterface* interface,
 	DBusMessage *        message
@@ -896,8 +917,55 @@ DBusIPCAPI_v1::interface_net_scan_start_handler(
 	);
 
 	if (channel_mask) {
-		options[kWPANTUNDProperty_NCPChannelMask] = channel_mask;
+		options[kWPANTUNDValueMapKey_Scan_ChannelMask] = channel_mask;
 	}
+
+	interface->netscan_start(
+		options,
+		boost::bind(
+			&DBusIPCAPI_v1::CallbackWithStatus_Helper,
+			this,
+			_1,
+			message
+		)
+	);
+	ret = DBUS_HANDLER_RESULT_HANDLED;
+
+	return ret;
+}
+
+DBusHandlerResult
+DBusIPCAPI_v1::interface_discover_scan_start_handler(
+	NCPControlInterface* interface,
+	DBusMessage *        message
+) {
+	DBusHandlerResult ret = DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+	ValueMap options;
+	NCPControlInterface::ChannelMask channel_mask = 0;
+	dbus_bool_t joiner_flag = FALSE;
+	dbus_bool_t enable_filtering = FALSE;
+	uint16_t pan_id_filter = 0xffff;
+
+	dbus_message_ref(message);
+
+	dbus_message_get_args(
+		message, NULL,
+		DBUS_TYPE_UINT32, &channel_mask,
+		DBUS_TYPE_BOOLEAN, &joiner_flag,
+		DBUS_TYPE_BOOLEAN, &enable_filtering,
+		DBUS_TYPE_UINT16, &pan_id_filter,
+		DBUS_TYPE_INVALID
+	);
+
+	options[kWPANTUNDValueMapKey_Scan_Discover] = true;
+
+	if (channel_mask) {
+		options[kWPANTUNDValueMapKey_Scan_ChannelMask] = channel_mask;
+	}
+
+	options[kWPANTUNDValueMapKey_Scan_JoinerFalg] = joiner_flag ? true : false;
+	options[kWPANTUNDValueMapKey_Scan_EnableFiltering] = enable_filtering ? true : false;
+	options[kWPANTUNDValueMapKey_Scan_PANIDFilter] = pan_id_filter;
 
 	interface->netscan_start(
 		options,
@@ -1192,6 +1260,57 @@ bail:
 	return ret;
 }
 
+DBusHandlerResult
+DBusIPCAPI_v1::interface_joiner_add_handler(
+   NCPControlInterface* interface,
+   DBusMessage *        message
+) {
+	DBusHandlerResult ret = DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
+	dbus_message_ref(message);
+
+	const uint8_t* ext_addr = NULL;
+	int ext_addr_len = 0;
+	const char* psk = NULL;
+	int psk_len = 0;
+	uint32_t joiner_timeout = 0;
+	bool did_succeed = false;
+
+	did_succeed = dbus_message_get_args(
+		message, NULL,
+		DBUS_TYPE_STRING, &psk,
+		DBUS_TYPE_UINT32, &joiner_timeout,
+		DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE, &ext_addr, &ext_addr_len,
+		DBUS_TYPE_INVALID
+	);
+
+	if (!did_succeed) {
+		// No extended address specified
+		did_succeed = dbus_message_get_args(
+			message, NULL,
+			DBUS_TYPE_STRING, &psk,
+			DBUS_TYPE_UINT32, &joiner_timeout,
+			DBUS_TYPE_INVALID
+		);
+	}
+
+	require(did_succeed, bail);
+	require(psk != NULL, bail);
+
+	dbus_message_ref(message);
+	interface->joiner_add(
+		psk,
+		joiner_timeout,
+		ext_addr,
+		boost::bind(&DBusIPCAPI_v1::CallbackWithStatus_Helper, this, _1, message)
+	);
+
+	ret = DBUS_HANDLER_RESULT_HANDLED;
+
+bail:
+
+	return ret;
+}
 
 DBusHandlerResult
 DBusIPCAPI_v1::message_handler(
