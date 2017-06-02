@@ -32,6 +32,7 @@
 #include "string-utils.h"
 #include "any-to.h"
 #include "time-utils.h"
+#include "commissioner-utils.h"
 
 #include <cstring>
 #include <algorithm>
@@ -294,7 +295,7 @@ SpinelNCPControlInterface::add_external_route(
 				SPINEL_DATATYPE_BOOL_S
 				SPINEL_DATATYPE_UINT8_S
 			),
-			SPINEL_PROP_THREAD_LOCAL_ROUTES,
+			SPINEL_PROP_THREAD_OFF_MESH_ROUTES,
 			prefix,
 			prefix_len_in_bits,
 			true,
@@ -303,6 +304,56 @@ SpinelNCPControlInterface::add_external_route(
 		.set_lock_property(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE)
 		.finish()
 	);
+
+bail:
+	return;
+}
+
+void
+SpinelNCPControlInterface::joiner_add(
+		const char *psk,
+		uint32_t joiner_timeout,
+		const uint8_t *addr,
+		CallbackWithStatus cb
+) {
+
+	require_action(psk != NULL, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
+
+	if (addr) {
+		mNCPInstance->start_new_task(SpinelNCPTaskSendCommand::Factory(mNCPInstance)
+			.set_callback(cb)
+			.add_command(SpinelPackData(
+				SPINEL_FRAME_PACK_CMD_PROP_VALUE_INSERT(
+					SPINEL_DATATYPE_UTF8_S
+					SPINEL_DATATYPE_UINT32_S
+					SPINEL_DATATYPE_EUI64_S
+				),
+				SPINEL_PROP_THREAD_JOINERS,
+				psk,
+				joiner_timeout,
+				addr
+			))
+			.set_lock_property(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE)
+			.finish()
+		);
+	}
+	else {
+		mNCPInstance->start_new_task(SpinelNCPTaskSendCommand::Factory(mNCPInstance)
+			.set_callback(cb)
+			.add_command(SpinelPackData(
+				SPINEL_FRAME_PACK_CMD_PROP_VALUE_INSERT(
+					SPINEL_DATATYPE_UTF8_S
+					SPINEL_DATATYPE_UINT32_S
+				),
+				SPINEL_PROP_THREAD_JOINERS,
+				psk,
+				joiner_timeout
+			))
+			.set_lock_property(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE)
+			.finish()
+		);
+	}
 
 bail:
 	return;
@@ -329,7 +380,7 @@ SpinelNCPControlInterface::remove_external_route(
 				SPINEL_DATATYPE_BOOL_S
 				SPINEL_DATATYPE_UINT8_S
 			),
-			SPINEL_PROP_THREAD_LOCAL_ROUTES,
+			SPINEL_PROP_THREAD_OFF_MESH_ROUTES,
 			prefix,
 			prefix_len_in_bits,
 			true,
@@ -353,11 +404,20 @@ SpinelNCPControlInterface::permit_join(
     )
 {
 	SpinelNCPTaskSendCommand::Factory factory(mNCPInstance);
+	bool should_update_steering_data = false;
+	uint8_t steering_data_addr[sizeof(mNCPInstance->mSteeringDataAddress)];
+
 	int ret = kWPANTUNDStatus_Ok;
 
 	if (!mNCPInstance->mEnabled) {
 		ret = kWPANTUNDStatus_InvalidWhenDisabled;
 		goto bail;
+	}
+
+	if (mNCPInstance->mCapabilities.count(SPINEL_CAP_OOB_STEERING_DATA)
+		&& mNCPInstance->mSetSteeringDataWhenJoinable
+	) {
+		should_update_steering_data = true;
 	}
 
 	if (traffic_port == 0) {
@@ -378,11 +438,25 @@ SpinelNCPControlInterface::permit_join(
 			SPINEL_PROP_THREAD_ASSISTING_PORTS,
 			ntohs(traffic_port)
 		));
+
+		memcpy(steering_data_addr, mNCPInstance->mSteeringDataAddress, sizeof(steering_data_addr));
+
 	} else {
+
 		factory.add_command(SpinelPackData(
 			SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_NULL_S),
 			SPINEL_PROP_THREAD_ASSISTING_PORTS
 		));
+
+		memset(steering_data_addr, 0, sizeof(steering_data_addr));
+	}
+
+	if (should_update_steering_data) {
+			factory.add_command(SpinelPackData(
+				SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_EUI64_S),
+				SPINEL_PROP_THREAD_STEERING_DATA,
+				steering_data_addr
+			));
 	}
 
 	mNCPInstance->start_new_task(factory.finish());
@@ -391,7 +465,19 @@ bail:
 	if (ret) {
 		cb(ret);
 	} else {
-		syslog(LOG_NOTICE, "PermitJoin: seconds=%d type=%d port=%d", seconds, traffic_type, ntohs(traffic_port));
+		if (!should_update_steering_data) {
+			syslog(LOG_NOTICE, "PermitJoin: seconds=%d type=%d port=%d", seconds, traffic_type, ntohs(traffic_port));
+		} else {
+			syslog(
+				LOG_NOTICE,
+				"PermitJoin: seconds=%d type=%d port=%d, steering_data_addr=%02X%02X%02X%02X%02X%02X%02X%02X",
+				seconds,
+				traffic_type,
+				ntohs(traffic_port),
+				steering_data_addr[0], steering_data_addr[1], steering_data_addr[2], steering_data_addr[3],
+				steering_data_addr[4], steering_data_addr[5], steering_data_addr[6], steering_data_addr[7]
+			);
+		}
 	}
 }
 
@@ -401,16 +487,56 @@ SpinelNCPControlInterface::netscan_start(
     CallbackWithStatus cb
 ) {
 	ChannelMask channel_mask(mNCPInstance->get_default_channel_mask());
+	SpinelNCPTaskScan::ScanType scan_type;
+	int scan_period = 0; 			   // per channel in ms
+	bool joiner_flag = false;          // Scan for joiner only devices (used in discover scan).
+	bool enable_filtering = false;     // Enable scan result filtering (used in discover scan).
+	uint16_t pan_id_filter = 0xffff;   // PANID used for filtering, 0xFFFF to disable (used in discover scan.)
 
-	if (options.count(kWPANTUNDProperty_NCPChannelMask)) {
-		channel_mask = any_to_int(options.at(kWPANTUNDProperty_NCPChannelMask));
+	// Channel mask
+	if (options.count(kWPANTUNDValueMapKey_Scan_ChannelMask)) {
+		channel_mask = any_to_int(options.at(kWPANTUNDValueMapKey_Scan_ChannelMask));
+	}
+
+	// Scan type
+	if (options.count(kWPANTUNDValueMapKey_Scan_Discover)) {
+		scan_type = SpinelNCPTaskScan::kScanTypeDiscover;
+
+		if (options.count(kWPANTUNDValueMapKey_Scan_JoinerFalg)) {
+			joiner_flag = any_to_bool(options.at(kWPANTUNDValueMapKey_Scan_JoinerFalg));
+		}
+
+		if (options.count(kWPANTUNDValueMapKey_Scan_EnableFiltering)) {
+			enable_filtering = any_to_bool(options.at(kWPANTUNDValueMapKey_Scan_EnableFiltering));
+		}
+
+		if (options.count(kWPANTUNDValueMapKey_Scan_PANIDFilter)) {
+			pan_id_filter = static_cast<uint16_t>(any_to_int(options.at(kWPANTUNDValueMapKey_Scan_PANIDFilter)));
+		}
+
+	} else {
+		scan_type = SpinelNCPTaskScan::kScanTypeNet;
+	}
+
+	// Scan period
+	if (options.count(kWPANTUNDValueMapKey_Scan_Period)) {
+		scan_period = any_to_int(options.at(kWPANTUNDValueMapKey_Scan_Period));
+	}
+
+	if (scan_period <= 0) {
+		scan_period = SpinelNCPTaskScan::kDefaultScanPeriod;
 	}
 
 	mNCPInstance->start_new_task(boost::shared_ptr<SpinelNCPTask>(
 		new SpinelNCPTaskScan(
 			mNCPInstance,
 			boost::bind(cb,_1),
-			channel_mask
+			channel_mask,
+			scan_period,
+			scan_type,
+			joiner_flag,
+			enable_filtering,
+			pan_id_filter
 		)
 	));
 }

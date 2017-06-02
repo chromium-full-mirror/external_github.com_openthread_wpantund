@@ -77,7 +77,7 @@ private:
 
 	// ------------------------------------------------------------------------
 
-	void property_changed(NCPControlInterface* interface,const std::string& key, const boost::any& value);
+	void property_changed(NCPControlInterface* interface, const std::string& key, const boost::any& value);
 	void received_beacon(NCPControlInterface* interface, const WPAN::NetworkInstance& network);
 	void received_energy_scan_result(NCPControlInterface* interface, const EnergyScanResultEntry& energy_scan_result);
 
@@ -163,6 +163,16 @@ private:
 		DBusMessage *        message
 	);
 
+	DBusHandlerResult interface_discover_scan_start_handler(
+		NCPControlInterface* interface,
+		DBusMessage *        message
+	);
+
+	DBusHandlerResult interface_discover_scan_stop_handler(
+		NCPControlInterface* interface,
+		DBusMessage *        message
+	);
+
 	DBusHandlerResult interface_energy_scan_start_handler(
 		NCPControlInterface* interface,
 		DBusMessage *        message
@@ -184,6 +194,11 @@ private:
 	);
 
 	DBusHandlerResult interface_mfg_handler(
+		NCPControlInterface* interface,
+		DBusMessage *        message
+	);
+
+	DBusHandlerResult interface_joiner_add_handler(
 		NCPControlInterface* interface,
 		DBusMessage *        message
 	);
