@@ -713,6 +713,16 @@ bail:
 }
 
 void
+EmberNCPControlInterface::joiner_add(
+	const char *psk,
+	uint32_t joiner_timeout,
+	const uint8_t *addr,
+	CallbackWithStatus cb
+) {
+	cb(kWPANTUNDStatus_FeatureNotImplemented);
+}
+
+void
 EmberNCPControlInterface::config_gateway_address(uint8_t flags, const struct in6_addr &address,
 	uint32_t preferredLifetime, uint32_t validLifetime, CallbackWithStatus cb)
 {
