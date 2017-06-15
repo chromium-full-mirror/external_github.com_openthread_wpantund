@@ -1438,7 +1438,7 @@ StatCollector::get_stat_property(const std::string& key, StringList& output) con
 }
 
 void
-StatCollector::get_property(const std::string& key, CallbackWithStatusArg1 cb)
+StatCollector::property_get_value(const std::string& key, CallbackWithStatusArg1 cb)
 {
 	// First check for AutoLog properties.
 	if (strcaseequal(key.c_str(), kWPANTUNDProperty_StatAutoLog)) {
@@ -1513,7 +1513,7 @@ StatCollector::get_property(const std::string& key, CallbackWithStatusArg1 cb)
 }
 
 void
-StatCollector::set_property(const std::string& key, const boost::any& value, CallbackWithStatus cb)
+StatCollector::property_set_value(const std::string& key, const boost::any& value, CallbackWithStatus cb)
 {
 	int status = kWPANTUNDStatus_Ok;
 
@@ -1657,7 +1657,7 @@ StatCollector::link_stat_timer_did_fire(void)
 {
 // Ignore this line --- begin pe8qf1P4GCme
 	if (mControlInterface != NULL) {
-		mControlInterface->get_property(kWPANTUNDProperty_SiLabs_IPv6RIPEntriesValueMap,
+		mControlInterface->property_get_value(kWPANTUNDProperty_SiLabs_IPv6RIPEntriesValueMap,
 			boost::bind(&StatCollector::did_get_rip_entry_value_map, this, _1, _2));
 	}
 // Ignore this line --- end pe8qf1P4GCme

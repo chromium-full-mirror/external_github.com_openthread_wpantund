@@ -1052,14 +1052,14 @@ EmberNCPControlInterface::get_supported_property_keys()const
 }
 
 void
-EmberNCPControlInterface::get_property(
+EmberNCPControlInterface::property_get_value(
     const std::string& in_key, CallbackWithStatusArg1 cb
     )
 {
 	std::string key = in_key;
 
 	if (!mNCPInstance->is_initializing_ncp()) {
-		syslog(LOG_INFO, "get_property: key: \"%s\"", in_key.c_str());
+		syslog(LOG_INFO, "property_get_value: key: \"%s\"", in_key.c_str());
 	}
 
 	BEGIN_TRY_FOR_CMD(boost::bind(cb,_1,boost::any()));
@@ -1223,19 +1223,19 @@ EmberNCPControlInterface::get_property(
 			cb(kWPANTUNDStatus_PropertyNotFound, std::string("Property not found"));
 		}
 	} else {
-		mNCPInstance->NCPInstanceBase::get_property(in_key, cb);
+		mNCPInstance->NCPInstanceBase::property_get_value(in_key, cb);
 	}
 	END_TRY_FOR_CMD(boost::bind(cb,_1,boost::any()));
 }
 
 void
-EmberNCPControlInterface::set_property(
+EmberNCPControlInterface::property_set_value(
     const std::string&                      key,
     const boost::any&                       value,
     CallbackWithStatus      cb
     )
 {
-	syslog(LOG_INFO, "set_property: key: \"%s\"", key.c_str());
+	syslog(LOG_INFO, "property_set_value: key: \"%s\"", key.c_str());
 	// If we are disabled, then the only property we
 	// are allowed to set is kWPANTUNDProperty_DaemonEnabled.
 	if (!mNCPInstance->mEnabled && !strcaseequal(key.c_str(), kWPANTUNDProperty_DaemonEnabled)) {
@@ -1559,19 +1559,37 @@ EmberNCPControlInterface::set_property(
 				}
 			}
 		} else {
-			mNCPInstance->NCPInstanceBase::set_property(key, value, cb);
+			mNCPInstance->NCPInstanceBase::property_set_value(key, value, cb);
 		}
 	} catch (const boost::bad_any_cast &x) {
 		// We will get a bad_any_cast exception if the property is of
 		// the wrong type.
-		syslog(LOG_ERR,"set_property: Bad type for property \"%s\" (%s)", key.c_str(), x.what());
+		syslog(LOG_ERR,"property_set_value: Bad type for property \"%s\" (%s)", key.c_str(), x.what());
 		cb(kWPANTUNDStatus_InvalidArgument);
 	} catch (const std::invalid_argument &x) {
 		// We will get a bad_any_cast exception if the property is of
 		// the wrong type.
-		syslog(LOG_ERR,"set_property: Invalid argument for property \"%s\" (%s)", key.c_str(), x.what());
+		syslog(LOG_ERR,"property_set_value: Invalid argument for property \"%s\" (%s)", key.c_str(), x.what());
 		cb(kWPANTUNDStatus_InvalidArgument);
 	}
+}
+
+void
+EmberNCPControlInterface::property_insert_value(
+	const std::string& key,
+	const boost::any& value,
+	CallbackWithStatus cb
+) {
+	cb(kWPANTUNDStatus_FeatureNotImplemented);
+}
+
+void
+EmberNCPControlInterface::property_remove_value(
+	const std::string& key,
+	const boost::any& value,
+	CallbackWithStatus cb
+) {
+	cb(kWPANTUNDStatus_FeatureNotImplemented);
 }
 
 // ----------------------------------------------------------------------------
