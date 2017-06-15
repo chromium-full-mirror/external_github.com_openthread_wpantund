@@ -111,12 +111,24 @@ public:
 
 	std::set<std::string> get_supported_property_keys()const;
 
-	virtual void get_property(
+	virtual void property_get_value(
 	    const std::string& key, CallbackWithStatusArg1 cb);
-	virtual void set_property(
+	virtual void property_set_value(
 	    const std::string&                      key,
 	    const boost::any&                       value,
 	    CallbackWithStatus      cb);
+	virtual void property_insert_value(
+		const std::string& key,
+		const boost::any& value,
+		CallbackWithStatus cb
+	);
+
+	virtual void property_remove_value(
+		const std::string& key,
+		const boost::any& value,
+		CallbackWithStatus cb
+	);
+
 	void disable(CallbackWithStatus cb = NilReturn());
 	void enable(CallbackWithStatus cb = NilReturn());
 	virtual void add_on_mesh_prefix(
@@ -124,6 +136,7 @@ public:
 		bool defaultRoute,
 		CallbackWithStatus cb = NilReturn()
 	);
+
 
 	virtual void remove_on_mesh_prefix(
 		const struct in6_addr *prefix,

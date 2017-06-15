@@ -70,7 +70,7 @@ SpinelNCPControlInterface::SpinelNCPControlInterface(SpinelNCPInstance* instance
 void
 SpinelNCPControlInterface::join(
 	const ValueMap& options,
-    CallbackWithStatus cb
+	CallbackWithStatus cb
 ) {
 	mNCPInstance->start_new_task(boost::shared_ptr<SpinelNCPTask>(
 		new SpinelNCPTaskJoin(
@@ -84,7 +84,7 @@ SpinelNCPControlInterface::join(
 void
 SpinelNCPControlInterface::form(
 	const ValueMap& options,
-    CallbackWithStatus cb
+	CallbackWithStatus cb
 ) {
 	mNCPInstance->start_new_task(boost::shared_ptr<SpinelNCPTask>(
 		new SpinelNCPTaskForm(
@@ -264,27 +264,10 @@ SpinelNCPControlInterface::add_external_route(
 	ExternalRoutePriority priority,
 	CallbackWithStatus cb
 ) {
-    const static int kPreferenceOffset = 6;
-	uint8_t flags = 0;
-
 	require_action(prefix != NULL, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(prefix_len_in_bits >= 0, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(prefix_len_in_bits <= IPV6_MAX_PREFIX_LENGTH, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
-
-	switch (priority) {
-	case ROUTE_HIGH_PREFERENCE:
-		flags = (1 << kPreferenceOffset);
-		break;
-
-	case ROUTE_MEDIUM_PREFERENCE:
-		flags = 0;
-		break;
-
-	case ROUTE_LOW_PREFRENCE:
-		flags = (3 << kPreferenceOffset);
-		break;
-	}
 
 	mNCPInstance->start_new_task(SpinelNCPTaskSendCommand::Factory(mNCPInstance)
 		.set_callback(cb)
@@ -299,7 +282,7 @@ SpinelNCPControlInterface::add_external_route(
 			prefix,
 			prefix_len_in_bits,
 			true,
-			flags
+			convert_external_route_priority_to_flags(priority)
 		))
 		.set_lock_property(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE)
 		.finish()
@@ -396,12 +379,12 @@ bail:
 
 void
 SpinelNCPControlInterface::permit_join(
-    int seconds,
-    uint8_t traffic_type,
-    in_port_t traffic_port,
-    bool network_wide,
-    CallbackWithStatus cb
-    )
+	int seconds,
+	uint8_t traffic_type,
+	in_port_t traffic_port,
+	bool network_wide,
+	CallbackWithStatus cb
+	)
 {
 	SpinelNCPTaskSendCommand::Factory factory(mNCPInstance);
 	bool should_update_steering_data = false;
@@ -483,8 +466,8 @@ bail:
 
 void
 SpinelNCPControlInterface::netscan_start(
-    const ValueMap& options,
-    CallbackWithStatus cb
+	const ValueMap& options,
+	CallbackWithStatus cb
 ) {
 	ChannelMask channel_mask(mNCPInstance->get_default_channel_mask());
 	SpinelNCPTaskScan::ScanType scan_type;
@@ -549,8 +532,8 @@ SpinelNCPControlInterface::netscan_stop(CallbackWithStatus cb)
 
 void
 SpinelNCPControlInterface::energyscan_start(
-    const ValueMap& options,
-    CallbackWithStatus cb
+	const ValueMap& options,
+	CallbackWithStatus cb
 ) {
 	ChannelMask channel_mask(mNCPInstance->get_default_channel_mask());
 
@@ -582,8 +565,8 @@ SpinelNCPControlInterface::get_name() {
 
 void
 SpinelNCPControlInterface::mfg(
-    const std::string& mfg_command,
-    CallbackWithStatusArg1 cb
+	const std::string& mfg_command,
+	CallbackWithStatusArg1 cb
 ) {
 	mNCPInstance->start_new_task(
 		SpinelNCPTaskSendCommand::Factory(mNCPInstance)
@@ -633,29 +616,87 @@ SpinelNCPControlInterface::pcap_terminate(CallbackWithStatus cb)
 	cb(kWPANTUNDStatus_Ok);
 }
 
-
-
 // ----------------------------------------------------------------------------
 // MARK: -
 
 void
-SpinelNCPControlInterface::get_property(
-    const std::string& in_key, CallbackWithStatusArg1 cb
-    )
-{
-	if (!mNCPInstance->is_initializing_ncp()) {
-		syslog(LOG_INFO, "get_property: key: \"%s\"", in_key.c_str());
-	}
-	mNCPInstance->get_property(in_key, cb);
+SpinelNCPControlInterface::property_get_value(
+	const std::string& in_key,
+	CallbackWithStatusArg1 cb
+) {
+	mNCPInstance->property_get_value(in_key, cb);
 }
 
 void
-SpinelNCPControlInterface::set_property(
-    const std::string&                      key,
-    const boost::any&                       value,
-    CallbackWithStatus      cb
-    )
+SpinelNCPControlInterface::property_set_value(
+	const std::string& key,
+	const boost::any& value,
+	CallbackWithStatus cb
+) {
+	mNCPInstance->property_set_value(key, value, cb);
+}
+
+void
+SpinelNCPControlInterface::property_insert_value(
+	const std::string& key,
+	const boost::any& value,
+	CallbackWithStatus cb
+) {
+	mNCPInstance->property_insert_value(key, value, cb);
+}
+
+void
+SpinelNCPControlInterface::property_remove_value(
+	const std::string& key,
+	const boost::any& value,
+	CallbackWithStatus cb
+) {
+	mNCPInstance->property_remove_value(key, value, cb);
+}
+
+// ----------------------------------------------------------------------------
+// MARK: -
+
+SpinelNCPControlInterface::ExternalRoutePriority
+SpinelNCPControlInterface::convert_flags_to_external_route_priority(uint8_t flags)
 {
-	syslog(LOG_INFO, "set_property: key: \"%s\"", key.c_str());
-	mNCPInstance->set_property(key, value, cb);
+	ExternalRoutePriority priority = ROUTE_MEDIUM_PREFERENCE;
+
+	switch ((flags & SPINEL_NET_FLAG_PREFERENCE_MASK) >> SPINEL_NET_FLAG_PREFERENCE_OFFSET) {
+		case 1:
+			priority = ROUTE_HIGH_PREFERENCE;
+			break;
+
+		case 3:
+			priority = ROUTE_LOW_PREFRENCE;
+			break;
+
+		case 0:
+			priority = ROUTE_MEDIUM_PREFERENCE;
+			break;
+	}
+
+	return priority;
+}
+
+uint8_t
+SpinelNCPControlInterface::convert_external_route_priority_to_flags(ExternalRoutePriority priority)
+{
+	uint8_t flags;
+
+	switch (priority) {
+	case ROUTE_HIGH_PREFERENCE:
+		flags = (1 << SPINEL_NET_FLAG_PREFERENCE_OFFSET);
+		break;
+
+	case ROUTE_MEDIUM_PREFERENCE:
+		flags = (0 << SPINEL_NET_FLAG_PREFERENCE_OFFSET);
+		break;
+
+	case ROUTE_LOW_PREFRENCE:
+		flags = (3 << SPINEL_NET_FLAG_PREFERENCE_OFFSET);
+		break;
+	}
+
+	return flags;
 }

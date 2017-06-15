@@ -105,7 +105,7 @@ EmberNCPInstance::EmberNCPInstance(const Settings& settings) :
 				}
 			} else if (!NCPInstanceBase::setup_property_supported_by_class(iter->first)) {
 				status = static_cast<NCPControlInterface&>(get_control_interface())
-					.set_property(iter->first, iter->second);
+					.property_set_value(iter->first, iter->second);
 
 				if (status != 0) {
 					syslog(LOG_WARNING, "Attempt to set property \"%s\" failed with err %d", iter->first.c_str(), status);
