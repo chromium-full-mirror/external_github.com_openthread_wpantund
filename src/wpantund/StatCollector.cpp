@@ -1657,7 +1657,7 @@ StatCollector::link_stat_timer_did_fire(void)
 {
 // Ignore this line --- begin pe8qf1P4GCme
 	if (mControlInterface != NULL) {
-		mControlInterface->get_property(kWPANTUNDProperty_SiLabs_IPv6RIPEntriesValueMap,
+		mControlInterface->property_get_value(kWPANTUNDProperty_SiLabs_IPv6RIPEntriesValueMap,
 			boost::bind(&StatCollector::did_get_rip_entry_value_map, this, _1, _2));
 	}
 // Ignore this line --- end pe8qf1P4GCme

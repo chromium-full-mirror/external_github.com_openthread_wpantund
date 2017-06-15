@@ -128,7 +128,7 @@ EmberNCPControlInterface::SetNetworkKeyTask::vprocess_event(int event, va_list a
 			mInterface->mResetIsExpected = false;
 		}
 
-		syslog(LOG_NOTICE, "set_property: Setting network key using \"SetSecurityParams\"");
+		syslog(LOG_NOTICE, "property_set_value: Setting network key using \"SetSecurityParams\"");
 
 		{
 			EmberSecurityParameters parameters = {};

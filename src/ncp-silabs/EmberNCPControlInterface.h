@@ -110,12 +110,22 @@ public:
 
 	virtual const WPAN::NetworkInstance& get_current_network_instance()const;
 
-	virtual void get_property(
+	virtual void property_get_value(
 	    const std::string& key, CallbackWithStatusArg1 cb);
-	virtual void set_property(
+	virtual void property_set_value(
 	    const std::string&                      key,
 	    const boost::any&                       value,
 	    CallbackWithStatus      cb);
+	virtual void property_insert_value(
+		const std::string& key,
+		const boost::any& value,
+		CallbackWithStatus cb
+	);
+	virtual void property_remove_value(
+		const std::string& key,
+		const boost::any& value,
+		CallbackWithStatus cb
+	);
 	void disable(CallbackWithStatus cb = NilReturn());
 	void enable(CallbackWithStatus cb = NilReturn());
 	virtual void add_on_mesh_prefix(
