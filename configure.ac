@@ -169,6 +169,8 @@ fi
 AC_PROG_CC_STDC([],AC_MSG_ERROR(["A working C compiler is required"]))
 AC_PROG_CXX([],AC_MSG_ERROR(["A working C++ compiler is required"]))
 
+NL_FUZZ_TARGETS
+
 AC_HEADER_STDC
 AC_HEADER_TIME
 
@@ -301,6 +303,7 @@ echo "Boost .......................... ${with_boost-???}"
 echo "NCP plugins to build ........... ${building_ncp_plugins-none}"
 echo "Default NCP Plugin ............. ${default_ncp_plugin}"
 echo "Static link NCP plugin ......... ${enable_static_link_ncp_plugin-no}"
+echo "Fuzzing Targets ................ ${enable_fuzz_targets-no}"
 echo ""
 
 if test "x${with_readline}" != "xyes"
