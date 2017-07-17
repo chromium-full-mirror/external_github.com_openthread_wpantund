@@ -2200,6 +2200,7 @@ SpinelNCPInstance::address_was_added(const struct in6_addr& addr, int prefix_len
 		SpinelNCPTaskSendCommand::Factory factory(this);
 		uint8_t flags = SPINEL_NET_FLAG_SLAAC
 					  | SPINEL_NET_FLAG_ON_MESH
+					  | SPINEL_NET_FLAG_DEFAULT_ROUTE     // WORK-AROUND FOR PIN-3698
 					  | SPINEL_NET_FLAG_PREFERRED;
 		CallbackWithStatus callback;
 
