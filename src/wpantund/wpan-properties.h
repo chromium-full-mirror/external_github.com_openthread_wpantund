@@ -101,6 +101,7 @@
 #define kWPANTUNDProperty_ThreadCommissionerEnabled             "Thread:Commissioner:Enabled"
 #define kWPANTUNDProperty_ThreadDeviceMode                      "Thread:DeviceMode"
 #define kWPANTUNDProperty_ThreadOffMeshRoutes                   "Thread:OffMeshRoutes"
+#define kWPANTUNDProperty_ThreadOnMeshPrefixes                  "Thread:OnMeshPrefixes"
 
 #define kWPANTUNDProperty_OpenThreadLogLevel                    "OpenThread:LogLevel"
 #define kWPANTUNDProperty_OpenThreadSteeringDataAddress         "OpenThread:SteeringData:Address"
@@ -115,6 +116,10 @@
 #define kWPANTUNDProperty_MACWhitelistEntries                   "MAC:Whitelist:Entries"
 #define kWPANTUNDProperty_MACWhitelistEntriesAsValMap           "MAC:Whitelist:Entries:AsValMap"
 
+#define kWPANTUNDProperty_MACBlacklistEnabled                   "MAC:Blacklist:Enabled"
+#define kWPANTUNDProperty_MACBlacklistEntries                   "MAC:Blacklist:Entries"
+#define kWPANTUNDProperty_MACBlacklistEntriesAsValMap           "MAC:Blacklist:Entries:AsValMap"
+
 #define kWPANTUNDProperty_JamDetectionStatus                    "JamDetection:Status"
 #define kWPANTUNDProperty_JamDetectionEnable                    "JamDetection:Enable"
 #define kWPANTUNDProperty_JamDetectionRssiThreshold             "JamDetection:RssiThreshold"
@@ -122,8 +127,8 @@
 #define kWPANTUNDProperty_JamDetectionBusyPeriod                "JamDetection:BusyPeriod"
 #define kWPANTUNDProperty_JamDetectionDebugHistoryBitmap        "JamDetection:Debug:HistoryBitmap"
 
-#define kWPANTUNDProperty_BorderAgentProxyEnabled               "BorderAgentProxy:Enabled"
-#define kWPANTUNDProperty_BorderAgentProxyStream                "BorderAgentProxy:Stream"
+#define kWPANTUNDProperty_TmfProxyEnabled                       "TmfProxy:Enabled"
+#define kWPANTUNDProperty_TmfProxyStream                        "TmfProxy:Stream"
 
 // Ignore this line --- begin pe8qf1P4GCme
 #define kWPANTUNDProperty_SiLabs_NCPAssociationState           "com.silabs:NCP:AssociationState"

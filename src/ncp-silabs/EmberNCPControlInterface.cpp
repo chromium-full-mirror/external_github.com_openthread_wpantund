@@ -582,13 +582,26 @@ EmberNCPControlInterface::data_poll(CallbackWithStatus cb)
 	END_TRY_FOR_CMD(cb);
 }
 
+void
+EmberNCPControlInterface::peek(uint32_t address, uint16_t count, CallbackWithStatusArg1 cb)
+{
+	cb(kWPANTUNDStatus_FeatureNotSupported, std::string("Feature not supported"));
+}
 
-
+void
+EmberNCPControlInterface::poke(uint32_t address, Data bytes, CallbackWithStatus cb)
+{
+	cb(kWPANTUNDStatus_FeatureNotSupported);
+}
 
 void
 EmberNCPControlInterface::add_on_mesh_prefix(
 	const struct in6_addr *prefix,
 	bool defaultRoute,
+	bool preferred,
+	bool slaac,
+	bool onMesh,
+	OnMeshPrefixPriority priority,
 	CallbackWithStatus cb
 ) {
 	using namespace nl::wpantund::EmberCommands;
