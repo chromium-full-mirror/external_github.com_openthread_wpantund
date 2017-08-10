@@ -128,9 +128,14 @@ public:
 	);
 	void disable(CallbackWithStatus cb = NilReturn());
 	void enable(CallbackWithStatus cb = NilReturn());
+
 	virtual void add_on_mesh_prefix(
 		const struct in6_addr *prefix,
 		bool defaultRoute,
+		bool preferred,
+		bool slaac,
+		bool onMesh,
+		OnMeshPrefixPriority priority,
 		CallbackWithStatus cb = NilReturn()
 	);
 
@@ -163,6 +168,9 @@ public:
 
 	virtual void data_poll(CallbackWithStatus cb = NilReturn());
 	virtual void host_did_wake(CallbackWithStatus cb = NilReturn());
+
+	virtual void peek(uint32_t address, uint16_t count, CallbackWithStatusArg1 cb = NilReturn());
+	virtual void poke(uint32_t address, Data bytes, CallbackWithStatus cb = NilReturn());
 
 	std::set<std::string> get_supported_property_keys()const;
 
