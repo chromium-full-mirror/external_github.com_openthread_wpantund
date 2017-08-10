@@ -51,6 +51,7 @@
 #include "SpinelNCPTaskForm.h"
 #include "SpinelNCPTaskLeave.h"
 #include "SpinelNCPTaskScan.h"
+#include "SpinelNCPTaskPeek.h"
 #include "SpinelNCPTaskSendCommand.h"
 
 using namespace nl;
@@ -185,19 +186,48 @@ void
 SpinelNCPControlInterface::add_on_mesh_prefix(
 	const struct in6_addr *prefix,
 	bool defaultRoute,
+	bool preferred,
+	bool slaac,
+	bool onMesh,
+	OnMeshPrefixPriority priority,
 	CallbackWithStatus cb
 ) {
+	const static int kPreferenceOffset = 6;
 	uint8_t flags = 0;
 	SpinelNCPTaskSendCommand::Factory factory(mNCPInstance);
 
 	require_action(prefix != NULL, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
 
+	switch (priority) {
+	case ROUTE_HIGH_PREFERENCE:
+		flags = (1 << kPreferenceOffset);
+		break;
+
+	case ROUTE_MEDIUM_PREFERENCE:
+		flags = 0;
+		break;
+
+	case ROUTE_LOW_PREFRENCE:
+		flags = (3 << kPreferenceOffset);
+		break;
+	}
+
 	if (defaultRoute) {
 		flags |= SPINEL_NET_FLAG_DEFAULT_ROUTE;
 	}
 
-	flags |= SPINEL_NET_FLAG_PREFERRED | SPINEL_NET_FLAG_SLAAC | SPINEL_NET_FLAG_ON_MESH;
+	if (preferred) {
+		flags |= SPINEL_NET_FLAG_PREFERRED;
+	}
+
+	if (slaac) {
+		flags |= SPINEL_NET_FLAG_SLAAC;
+	}
+
+	if (onMesh) {
+		flags |= SPINEL_NET_FLAG_ON_MESH;
+	}
 
 	factory.set_callback(cb);
 	factory.set_lock_property(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE);
@@ -378,6 +408,13 @@ bail:
 }
 
 void
+SpinelNCPControlInterface::handle_permit_join_timeout(Timer *timer, int seconds)
+{
+	syslog(LOG_NOTICE, "PermitJoin: Timeout interval of %d seconds expired", seconds);
+	permit_join(0);
+}
+
+void
 SpinelNCPControlInterface::permit_join(
 	int seconds,
 	uint8_t traffic_type,
@@ -424,6 +461,9 @@ SpinelNCPControlInterface::permit_join(
 
 		memcpy(steering_data_addr, mNCPInstance->mSteeringDataAddress, sizeof(steering_data_addr));
 
+		mPermitJoinTimer.schedule(Timer::kOneSecond * seconds,
+				boost::bind(&SpinelNCPControlInterface::handle_permit_join_timeout, this, _1, seconds));
+
 	} else {
 
 		factory.add_command(SpinelPackData(
@@ -432,6 +472,8 @@ SpinelNCPControlInterface::permit_join(
 		));
 
 		memset(steering_data_addr, 0, sizeof(steering_data_addr));
+
+		mPermitJoinTimer.cancel();
 	}
 
 	if (should_update_steering_data) {
@@ -446,20 +488,25 @@ SpinelNCPControlInterface::permit_join(
 
 bail:
 	if (ret) {
+		syslog(LOG_ERR, "PermitJoin: failed with error %d", ret);
 		cb(ret);
 	} else {
-		if (!should_update_steering_data) {
-			syslog(LOG_NOTICE, "PermitJoin: seconds=%d type=%d port=%d", seconds, traffic_type, ntohs(traffic_port));
+		if (seconds > 0) {
+			if (!should_update_steering_data) {
+				syslog(LOG_NOTICE, "PermitJoin: seconds=%d type=%d port=%d", seconds, traffic_type, ntohs(traffic_port));
+			} else {
+				syslog(
+					LOG_NOTICE,
+					"PermitJoin: seconds=%d type=%d port=%d, steering_data_addr=%02X%02X%02X%02X%02X%02X%02X%02X",
+					seconds,
+					traffic_type,
+					ntohs(traffic_port),
+					steering_data_addr[0], steering_data_addr[1], steering_data_addr[2], steering_data_addr[3],
+					steering_data_addr[4], steering_data_addr[5], steering_data_addr[6], steering_data_addr[7]
+				);
+			}
 		} else {
-			syslog(
-				LOG_NOTICE,
-				"PermitJoin: seconds=%d type=%d port=%d, steering_data_addr=%02X%02X%02X%02X%02X%02X%02X%02X",
-				seconds,
-				traffic_type,
-				ntohs(traffic_port),
-				steering_data_addr[0], steering_data_addr[1], steering_data_addr[2], steering_data_addr[3],
-				steering_data_addr[4], steering_data_addr[5], steering_data_addr[6], steering_data_addr[7]
-			);
+			syslog(LOG_NOTICE, "PermitJoin: Becoming non-joinable");
 		}
 	}
 }
@@ -700,3 +747,51 @@ SpinelNCPControlInterface::convert_external_route_priority_to_flags(ExternalRout
 
 	return flags;
 }
+
+// ----------------------------------------------------------------------------
+// MARK: -
+
+void
+SpinelNCPControlInterface::peek(uint32_t address, uint16_t count, CallbackWithStatusArg1 cb)
+{
+	if (mNCPInstance->mCapabilities.count(SPINEL_CAP_PEEK_POKE)) {
+		mNCPInstance->start_new_task(boost::shared_ptr<SpinelNCPTask>(
+			new SpinelNCPTaskPeek(
+				mNCPInstance,
+				cb,
+				address,
+				count
+			)
+		));
+
+	} else {
+		cb(kWPANTUNDStatus_FeatureNotSupported, std::string("Feature not supported by NCP. No peeking!"));
+	}
+}
+
+void
+SpinelNCPControlInterface::poke(uint32_t address, Data bytes, CallbackWithStatus cb)
+{
+	if (mNCPInstance->mCapabilities.count(SPINEL_CAP_PEEK_POKE)) {
+		mNCPInstance->start_new_task(
+			SpinelNCPTaskSendCommand::Factory(mNCPInstance)
+				.set_callback(cb)
+				.add_command(SpinelPackData(
+					SPINEL_FRAME_PACK_CMD(
+						SPINEL_DATATYPE_UINT32_S   // Address
+						SPINEL_DATATYPE_UINT16_S   // Count
+						SPINEL_DATATYPE_DATA_S     // Bytes
+					),
+					SPINEL_CMD_POKE,
+					address,
+					bytes.size(),
+					bytes.data(),
+					bytes.size()
+				))
+				.finish()
+		);
+	} else {
+		cb(kWPANTUNDStatus_FeatureNotImplemented);
+	}
+}
+

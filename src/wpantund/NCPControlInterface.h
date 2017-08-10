@@ -73,6 +73,12 @@ public:
 		ROUTE_HIGH_PREFERENCE = 1,
 	};
 
+	enum OnMeshPrefixPriority {
+		PREFIX_LOW_PREFRENCE = -1,
+		PREFIX_MEDIUM_PREFERENCE = 0,
+		PREFIX_HIGH_PREFERENCE = 1,
+	};
+
 public:
 	// ========================================================================
 	// Static Functions
@@ -143,6 +149,10 @@ public:
 	virtual void add_on_mesh_prefix(
 		const struct in6_addr *prefix,
 		bool defaultRoute,
+		bool preferred,
+		bool slaac,
+		bool onMesh,
+		OnMeshPrefixPriority priority,
 		CallbackWithStatus cb = NilReturn()
 	) = 0;
 
@@ -228,6 +238,21 @@ public:
 		CallbackWithStatus cb = NilReturn()
 	) = 0;
 
+public:
+	// ========================================================================
+	// Debug-related Member Functions
+
+	virtual void peek(
+		uint32_t address,
+		uint16_t count,
+		CallbackWithStatusArg1 cb = NilReturn()
+	) = 0;
+
+	virtual void poke(
+		uint32_t address,
+		Data bytes,
+		CallbackWithStatus cb = NilReturn()
+	) = 0;
 
 public:
 	// ========================================================================

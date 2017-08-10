@@ -102,6 +102,9 @@ DBusIPCAPI_v1::init_callback_tables()
 
 	INTERFACE_CALLBACK_CONNECT(WPANTUND_IF_CMD_PCAP_TO_FD, interface_pcap_to_fd_handler);
 	INTERFACE_CALLBACK_CONNECT(WPANTUND_IF_CMD_PCAP_TERMINATE, interface_pcap_terminate_handler);
+
+	INTERFACE_CALLBACK_CONNECT(WPANTUND_IF_CMD_PEEK, interface_peek_handler);
+	INTERFACE_CALLBACK_CONNECT(WPANTUND_IF_CMD_POKE, interface_poke_handler);
 }
 
 static void
@@ -1183,12 +1186,17 @@ DBusIPCAPI_v1::interface_config_gateway_handler(
 ) {
 	DBusHandlerResult ret = DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 	dbus_bool_t default_route = FALSE;
+	dbus_bool_t preferred = TRUE;
+	dbus_bool_t slaac = TRUE;
+	dbus_bool_t on_mesh = TRUE;
 	uint32_t preferred_lifetime = 0;
 	uint32_t valid_lifetime = 0;
 	uint8_t *prefix(NULL);
 	int prefix_len_in_bytes(0);
 	struct in6_addr address = {};
 	bool did_succeed(false);
+	int16_t priority_raw(0);
+	NCPControlInterface::OnMeshPrefixPriority priority(NCPControlInterface::PREFIX_MEDIUM_PREFERENCE);
 
 	did_succeed = dbus_message_get_args(
 		message, NULL,
@@ -1196,8 +1204,30 @@ DBusIPCAPI_v1::interface_config_gateway_handler(
 		DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE, &prefix, &prefix_len_in_bytes,
 		DBUS_TYPE_UINT32, &preferred_lifetime,
 		DBUS_TYPE_UINT32, &valid_lifetime,
+		DBUS_TYPE_BOOLEAN, &preferred,
+		DBUS_TYPE_BOOLEAN, &slaac,
+		DBUS_TYPE_BOOLEAN, &on_mesh,
+		DBUS_TYPE_INT16, &priority_raw,
 		DBUS_TYPE_INVALID
 	);
+
+	if (!did_succeed)
+	{
+		did_succeed = dbus_message_get_args(
+			message, NULL,
+			DBUS_TYPE_BOOLEAN, &default_route,
+			DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE, &prefix, &prefix_len_in_bytes,
+			DBUS_TYPE_UINT32, &preferred_lifetime,
+			DBUS_TYPE_UINT32, &valid_lifetime,
+			DBUS_TYPE_INVALID
+		);
+	} else {
+		if (priority_raw > 0) {
+			priority = NCPControlInterface::PREFIX_HIGH_PREFERENCE;
+		} else if (priority_raw < 0) {
+			priority = NCPControlInterface::PREFIX_LOW_PREFRENCE;
+		}
+	}
 
 	require(did_succeed, bail);
 	require(prefix_len_in_bytes <= sizeof(address), bail);
@@ -1216,6 +1246,10 @@ DBusIPCAPI_v1::interface_config_gateway_handler(
 		interface->add_on_mesh_prefix(
 			&address,
 			default_route,
+			preferred,
+			slaac,
+			on_mesh,
+			priority,
 			boost::bind(&DBusIPCAPI_v1::CallbackWithStatus_Helper,this, _1, message)
 		);
 	}
@@ -1399,6 +1433,90 @@ DBusIPCAPI_v1::interface_joiner_add_handler(
 
 bail:
 
+	return ret;
+}
+
+DBusHandlerResult
+DBusIPCAPI_v1::interface_peek_handler(
+   NCPControlInterface* interface,
+   DBusMessage *        message
+) {
+	DBusHandlerResult ret = DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
+	dbus_message_ref(message);
+
+	uint32_t address;
+	uint16_t count;
+	bool did_succeed = false;
+
+	did_succeed = dbus_message_get_args(
+		message, NULL,
+		DBUS_TYPE_UINT32, &address,
+		DBUS_TYPE_UINT16, &count,
+		DBUS_TYPE_INVALID
+	);
+
+	require(did_succeed, bail);
+
+	dbus_message_ref(message);
+
+	interface->peek(
+		address,
+		count,
+		boost::bind(
+			&DBusIPCAPI_v1::CallbackWithStatusArg1_Helper,
+			this,
+			_1,
+			_2,
+			message
+		)
+	);
+
+	ret = DBUS_HANDLER_RESULT_HANDLED;
+
+bail:
+	return ret;
+}
+
+DBusHandlerResult
+DBusIPCAPI_v1::interface_poke_handler(
+   NCPControlInterface* interface,
+   DBusMessage *        message
+) {
+	DBusHandlerResult ret = DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
+	dbus_message_ref(message);
+
+	uint32_t address;
+	int count = 0;
+	uint8_t *bytes = NULL;
+	bool did_succeed = false;
+
+	did_succeed = dbus_message_get_args(
+		message, NULL,
+		DBUS_TYPE_UINT32, &address,
+		DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE, &bytes, &count,
+		DBUS_TYPE_INVALID
+	);
+
+	require(did_succeed, bail);
+
+	dbus_message_ref(message);
+
+	interface->poke(
+		address,
+		Data(bytes, count),
+		boost::bind(
+			&DBusIPCAPI_v1::CallbackWithStatus_Helper,
+			this,
+			_1,
+			message
+		)
+	);
+
+	ret = DBUS_HANDLER_RESULT_HANDLED;
+
+bail:
 	return ret;
 }
 

@@ -26,6 +26,7 @@
 #include "nlpt.h"
 #include "Callbacks.h"
 #include "EventHandler.h"
+#include "Timer.h"
 
 #include <queue>
 #include <set>
@@ -134,6 +135,10 @@ public:
 	virtual void add_on_mesh_prefix(
 		const struct in6_addr *prefix,
 		bool defaultRoute,
+		bool preferred,
+		bool slaac,
+		bool onMesh,
+		OnMeshPrefixPriority priority,
 		CallbackWithStatus cb = NilReturn()
 	);
 
@@ -172,6 +177,9 @@ public:
 		CallbackWithStatus cb = NilReturn()
 	);
 
+	virtual void peek(uint32_t address, uint16_t count, CallbackWithStatusArg1 cb = NilReturn());
+	virtual void poke(uint32_t address, Data bytes, CallbackWithStatus cb = NilReturn());
+
 	virtual std::string get_name(void);
 
 	virtual NCPInstance& get_ncp_instance(void);
@@ -194,8 +202,10 @@ public:
 	static uint8_t convert_external_route_priority_to_flags(ExternalRoutePriority priority);
 
 private:
+	void handle_permit_join_timeout(Timer *timer, int seconds);
 
 	SpinelNCPInstance *mNCPInstance;
+	Timer mPermitJoinTimer;
 
 };
 

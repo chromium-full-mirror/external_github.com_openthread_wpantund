@@ -95,6 +95,7 @@ class SpinelNCPInstance : public NCPInstanceBase {
 	friend class SpinelNCPTaskForm;
 	friend class SpinelNCPTaskScan;
 	friend class SpinelNCPTaskLeave;
+	friend class SpinelNCPTaskPeek;
 	friend class SpinelNCPTaskSendCommand;
 	friend class SpinelNCPTaskGetNetworkTopology;
 	friend class SpinelNCPTaskGetMsgBufferCounters;
@@ -148,7 +149,12 @@ protected:
 
 private:
 
-	void refresh_on_mesh_prefix(struct in6_addr *addr, uint8_t prefix_len, bool stable, uint8_t flags);
+	void refresh_on_mesh_prefix(struct in6_addr *addr, uint8_t prefix_len, bool stable, uint8_t flags, bool isLocal);
+
+	void update_node_type(NodeType node_type);
+	void update_link_local_address(struct in6_addr *addr);
+	void update_mesh_local_address(struct in6_addr *addr);
+	void update_mesh_local_prefix(struct in6_addr *addr);
 
 public:
 	static bool setup_property_supported_by_class(const std::string& prop_name);
@@ -165,6 +171,11 @@ public:
 	virtual void reset_tasks(wpantund_status_t status = kWPANTUNDStatus_Canceled);
 
 	static void handle_ncp_log(const uint8_t* data_ptr, int data_len);
+
+	static std::string thread_mode_to_string(uint8_t mode);
+	static std::string on_mesh_prefix_flags_to_string(uint8_t flags);
+
+	uint8_t get_thread_mode(void);
 
 	virtual void process(void);
 
@@ -220,6 +231,8 @@ private:
 	boost::function<void(int)> mOutboundCallback;
 
 	int mTXPower;
+	uint8_t mThreadMode;
+	bool mIsCommissioned;
 
 	std::set<unsigned int> mCapabilities;
 	uint32_t mDefaultChannelMask;
