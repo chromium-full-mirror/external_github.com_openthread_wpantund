@@ -1212,17 +1212,7 @@ EmberNCPControlInterface::property_get_value(
 		}
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_IPv6AllAddresses))  {
 		StartNewTask(boost::shared_ptr<HelperTask>(new GetGlobalAddressesTask(this, cb)));
-	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_DebugIPv6GlobalIPAddressList))  {
-		std::list<std::string> result;
-		std::map<struct in6_addr, GlobalAddressEntry>::const_iterator it;
-		char address_string[INET6_ADDRSTRLEN];
-		for ( it = mNCPInstance->mGlobalAddresses.begin();
-			  it != mNCPInstance->mGlobalAddresses.end();
-			  it++ ) {
-			inet_ntop(AF_INET6,	&it->first,	address_string, sizeof(address_string));
-			result.push_back(std::string(address_string)+ "  " + it->second.get_description());
-		}
-		cb(0, boost::any(result));
+
 	} else if (strncaseequal(key.c_str(), kWPANTUNDProperty_SiLabs_CounterPrefix, sizeof(kWPANTUNDProperty_SiLabs_CounterPrefix)-1)) {
 
 		int type = mFirmwareInterface->StringToCounterIndex(std::string(key.begin()+sizeof(kWPANTUNDProperty_SiLabs_CounterPrefix)-1, key.end()));
@@ -1956,7 +1946,7 @@ EmberNCPControlInterface::handle_cb_address_configuration_change(const Data& dat
 		bail
 	);
 
-	mNCPInstance->add_address(address, 64, valid_lifetime, preferred_lifetime);
+	mNCPInstance->unicast_address_was_added(EmberNCPInstance::kOriginThreadNCP, address, 64, valid_lifetime, preferred_lifetime);
 
 	inet_ntop(
 		AF_INET6,
@@ -2000,7 +1990,7 @@ EmberNCPControlInterface::handle_cb_get_global_address(const Data& data)
 		preferred_lifetime = 0xFFFFFFFF;
 	}
 
-	mNCPInstance->add_address(address, 64, valid_lifetime, preferred_lifetime);
+	mNCPInstance->unicast_address_was_added(EmberNCPInstance::kOriginThreadNCP, address, 64, valid_lifetime, preferred_lifetime);
 
 bail:
 	return;
@@ -2153,14 +2143,14 @@ EmberNCPControlInterface::refresh_addresses(void)
 		// to one of the network interfaces.
 		if (mNCPInstance->is_legacy_interface_enabled() && mUseLegacyChannel) {
 			mNCPInstance->mLegacyInterface->add_address(&legacy_addr);
-			mNCPInstance->remove_address(mNCPInstance->mNCPMeshLocalAddress);
+			mNCPInstance->unicast_address_was_removed(EmberNCPInstance::kOriginThreadNCP, mNCPInstance->mNCPMeshLocalAddress);
 			memset(mNCPInstance->mNCPMeshLocalAddress.s6_addr, 0, sizeof(mNCPInstance->mNCPMeshLocalAddress));
 		} else {
 			if (static_cast<bool>(mNCPInstance->mLegacyInterface)) {
 				mNCPInstance->mLegacyInterface->remove_address(&legacy_addr);
 			}
 			if (buffer_is_nonzero(&mNCPInstance->mNCPMeshLocalAddress.s6_addr[8], 8)) {
-				mNCPInstance->add_address(mNCPInstance->mNCPMeshLocalAddress);
+				mNCPInstance->unicast_address_was_added(EmberNCPInstance::kOriginThreadNCP, mNCPInstance->mNCPMeshLocalAddress);
 			}
 			memset(mNCPInstance->mNCPV6LegacyPrefix, 0, sizeof(mNCPInstance->mNCPV6LegacyPrefix));
 		}
@@ -2170,7 +2160,7 @@ EmberNCPControlInterface::refresh_addresses(void)
 		}
 
 		if (buffer_is_nonzero(&mNCPInstance->mNCPMeshLocalAddress.s6_addr[8], 8)) {
-			mNCPInstance->add_address(mNCPInstance->mNCPMeshLocalAddress);
+			mNCPInstance->unicast_address_was_added(EmberNCPInstance::kOriginThreadNCP, mNCPInstance->mNCPMeshLocalAddress);
 		}
 	}
 }
@@ -2275,9 +2265,9 @@ EmberNCPControlInterface::handle_cb_state(const Data& data)
 	new_ll_addr = make_slaac_addr_from_eui64(link_local_prefix, mac_address);
 
 	if (new_ll_addr != mNCPInstance->mNCPLinkLocalAddress) {
-		mNCPInstance->remove_address(mNCPInstance->mNCPLinkLocalAddress);
+		mNCPInstance->unicast_address_was_removed(EmberNCPInstance::kOriginThreadNCP, mNCPInstance->mNCPLinkLocalAddress);
 		mNCPInstance->mNCPLinkLocalAddress = new_ll_addr;
-		mNCPInstance->add_address(mNCPInstance->mNCPLinkLocalAddress);
+		mNCPInstance->unicast_address_was_added(EmberNCPInstance::kOriginThreadNCP, mNCPInstance->mNCPLinkLocalAddress);
 	}
 
 	// determine whether to carry over the old joinable state over or not
@@ -3292,7 +3282,7 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 
 	mNCPInstance->set_ncp_power(true);
 
-	mNCPInstance->clear_nonpermanent_global_addresses();
+	mNCPInstance->remove_all_address_prefix_entries();
 
 	mNCPInstance->mNCPVersionString = "";
 	mFirmwareInterface = EmberCommands::FirmwareInterface::GetFirmwareInterfaceForVersion();

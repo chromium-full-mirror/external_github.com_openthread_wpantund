@@ -62,6 +62,7 @@
 __BEGIN_DECLS
 #include PLATFORM_HEADER
 #include "stack/config/config.h"
+#include "stack/ip/ip-address.h"
 #include "stack/ip/host/host-address-table.h"
 __END_DECLS
 
@@ -1655,15 +1656,15 @@ EmberNCPControlInterface::handle_ncp_network_state_changed()
 		struct in6_addr new_ll_addr = make_slaac_addr_from_eui64(link_local_prefix, mac_address);
 
 		if (new_ll_addr != mNCPInstance->mNCPLinkLocalAddress) {
-			mNCPInstance->remove_address(mNCPInstance->mNCPLinkLocalAddress);
+			mNCPInstance->unicast_address_was_removed(EmberNCPInstance::kOriginThreadNCP, mNCPInstance->mNCPLinkLocalAddress);
 			mNCPInstance->mNCPLinkLocalAddress = new_ll_addr;
-			mNCPInstance->add_address(mNCPInstance->mNCPLinkLocalAddress);
+			mNCPInstance->unicast_address_was_added(EmberNCPInstance::kOriginThreadNCP, mNCPInstance->mNCPLinkLocalAddress);
 		}
 	}
 
 	if (0 != memcmp(mNCPInstance->mNCPV6Prefix, networkParams.ulaPrefix.bytes, sizeof(mNCPInstance->mNCPV6Prefix))) {
 		// mNCPInstance->mNCPV6Prefix is a union with mNCPMeshLocalAddress.
-		mNCPInstance->remove_address(mNCPInstance->mNCPMeshLocalAddress);
+		mNCPInstance->unicast_address_was_removed(EmberNCPInstance::kOriginThreadNCP, mNCPInstance->mNCPMeshLocalAddress);
 
 		emberGetLocalIpAddress(0, reinterpret_cast<EmberIpv6Address *>(mNCPInstance->mNCPMeshLocalAddress.s6_addr));
 
@@ -1672,7 +1673,7 @@ EmberNCPControlInterface::handle_ncp_network_state_changed()
 
 			memcpy(mNCPInstance->mNCPV6Prefix, networkParams.ulaPrefix.bytes, sizeof(mNCPInstance->mNCPV6Prefix));
 
-			mNCPInstance->add_address(mNCPInstance->mNCPMeshLocalAddress);
+			mNCPInstance->unicast_address_was_added(EmberNCPInstance::kOriginThreadNCP, mNCPInstance->mNCPMeshLocalAddress);
 
 			mOnPropertyChanged(kWPANTUNDProperty_IPv6MeshLocalAddress, in6_addr_to_string(mNCPInstance->mNCPMeshLocalAddress));
 		}
@@ -2110,7 +2111,7 @@ EmberNCPControlInterface::handle_cb_address_configuration_change(va_list args)
 			address_flags_to_string(flags).c_str(),
 			flags
 		);
-		mNCPInstance->add_address(address, IPV6_NETWORK_PREFIX_LENGTH, valid_lifetime, preferred_lifetime);
+		mNCPInstance->unicast_address_was_added(EmberNCPInstance::kOriginThreadNCP, address, IPV6_NETWORK_PREFIX_LENGTH, valid_lifetime, preferred_lifetime);
 	} else {
 		syslog(
 			LOG_ERR,
@@ -2399,7 +2400,7 @@ EmberNCPControlInterface::refresh_addresses(void)
 	}
 
 	if (buffer_is_nonzero(&mNCPInstance->mNCPMeshLocalAddress.s6_addr[8], 8)) {
-		mNCPInstance->add_address(mNCPInstance->mNCPMeshLocalAddress);
+		mNCPInstance->unicast_address_was_added(EmberNCPInstance::kOriginThreadNCP, mNCPInstance->mNCPMeshLocalAddress);
 	}
 }
 
@@ -3010,7 +3011,7 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 
 	mNCPInstance->set_ncp_power(true);
 
-	mNCPInstance->clear_nonpermanent_global_addresses();
+	mNCPInstance->remove_all_address_prefix_entries();
 
 	mNCPInstance->mNCPVersionString = "";
 	mIsGoingIntoDeepSleep = false;

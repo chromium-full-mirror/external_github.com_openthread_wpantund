@@ -105,8 +105,21 @@ protected:
 
 	virtual void handle_ncp_state_change(NCPState new_ncp_state, NCPState old_ncp_state);
 
-	virtual void address_was_added(const struct in6_addr& addr, int prefix_len);
-	virtual void address_was_removed(const struct in6_addr& addr, int prefix_len);
+	virtual void add_unicast_address_on_ncp(const struct in6_addr &addr, uint8_t prefix_len,
+					CallbackWithStatus cb = NilReturn());
+
+	virtual void remove_unicast_address_on_ncp(const struct in6_addr &addr, uint8_t prefix_len,
+					CallbackWithStatus cb = NilReturn());
+
+	virtual void add_multicast_address_on_ncp(const struct in6_addr &addr, CallbackWithStatus cb = NilReturn());
+
+	virtual void remove_multicast_address_on_ncp(const struct in6_addr &addr, CallbackWithStatus cb = NilReturn());
+
+	virtual void add_on_mesh_prefix_on_ncp(const struct in6_addr &addr, uint8_t prefix_len, uint8_t flags, bool stable,
+					CallbackWithStatus cb = NilReturn());
+
+	virtual void remove_on_mesh_prefix_on_ncp(const struct in6_addr &addr, uint8_t prefix_len, uint8_t flags,
+					bool stable, CallbackWithStatus cb = NilReturn());
 
 	virtual void reset_tasks(wpantund_status_t status = kWPANTUNDStatus_Canceled);
 

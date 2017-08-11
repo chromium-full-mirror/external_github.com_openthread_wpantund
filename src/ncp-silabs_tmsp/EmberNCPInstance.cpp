@@ -148,21 +148,45 @@ EmberNCPInstance::get_control_interface()
 }
 
 void
-EmberNCPInstance::address_was_added(const struct in6_addr& addr, int prefix_len)
+EmberNCPInstance::add_unicast_address_on_ncp(const struct in6_addr &addr, uint8_t prefix_len, CallbackWithStatus cb)
 {
-	if (!is_address_known(addr) && !IN6_IS_ADDR_LINKLOCAL(&addr)) {
-		NCPInstanceBase::address_was_added(addr, prefix_len);
+	if (!IN6_IS_ADDR_LINKLOCAL(&addr)) {
 		mControlInterface.request_manual_address_from_ncp(addr, prefix_len);
 	}
+	cb(kWPANTUNDStatus_Ok);
 }
 
 void
-EmberNCPInstance::address_was_removed(const struct in6_addr& addr, int prefix_len)
+EmberNCPInstance::remove_unicast_address_on_ncp(const struct in6_addr &addr, uint8_t prefix_len, CallbackWithStatus cb)
 {
-	if (is_address_known(addr)) {
-		NCPInstanceBase::address_was_removed(addr, prefix_len);
-		mControlInterface.abandon_address_from_ncp(addr, prefix_len);
-	}
+	mControlInterface.abandon_address_from_ncp(addr, prefix_len);
+	cb(kWPANTUNDStatus_Ok);
+}
+
+void
+EmberNCPInstance::add_multicast_address_on_ncp(const struct in6_addr &addr, CallbackWithStatus cb)
+{
+	cb(kWPANTUNDStatus_Ok);
+}
+
+void
+EmberNCPInstance::remove_multicast_address_on_ncp(const struct in6_addr &addr, CallbackWithStatus cb)
+{
+	cb(kWPANTUNDStatus_Ok);
+}
+
+void
+EmberNCPInstance::add_on_mesh_prefix_on_ncp(const struct in6_addr &addr, uint8_t prefix_len, uint8_t flags, bool stable,
+					CallbackWithStatus cb)
+{
+	cb(kWPANTUNDStatus_Ok);
+}
+
+void
+EmberNCPInstance::remove_on_mesh_prefix_on_ncp(const struct in6_addr &addr, uint8_t prefix_len, uint8_t flags,
+					bool stable, CallbackWithStatus cb)
+{
+	cb(kWPANTUNDStatus_Ok);
 }
 
 int
