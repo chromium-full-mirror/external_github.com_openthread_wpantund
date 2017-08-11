@@ -104,8 +104,21 @@ protected:
 	virtual std::set<std::string> get_supported_property_keys()const;
 
 private:
-	virtual void address_was_added(const struct in6_addr& addr, int prefix_len);
-	virtual void address_was_removed(const struct in6_addr& addr, int prefix_len);
+	virtual void add_unicast_address_on_ncp(const struct in6_addr &addr, uint8_t prefix_len,
+					CallbackWithStatus cb = NilReturn());
+
+	virtual void remove_unicast_address_on_ncp(const struct in6_addr &addr, uint8_t prefix_len,
+					CallbackWithStatus cb = NilReturn());
+
+	virtual void add_multicast_address_on_ncp(const struct in6_addr &addr, CallbackWithStatus cb = NilReturn());
+
+	virtual void remove_multicast_address_on_ncp(const struct in6_addr &addr, CallbackWithStatus cb = NilReturn());
+
+	virtual void add_on_mesh_prefix_on_ncp(const struct in6_addr &addr, uint8_t prefix_len, uint8_t flags, bool stable,
+					CallbackWithStatus cb = NilReturn());
+
+	virtual void remove_on_mesh_prefix_on_ncp(const struct in6_addr &addr, uint8_t prefix_len, uint8_t flags,
+					bool stable, CallbackWithStatus cb = NilReturn());
 
 	int send_management_command(const Data& data, const boost::function<void(int)>& cb=NilReturn());
 	void flush_queued_commands(int error=kWPANTUNDStatus_Canceled);
