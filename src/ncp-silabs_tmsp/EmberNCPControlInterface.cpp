@@ -2076,12 +2076,12 @@ EmberNCPControlInterface::handle_cb_external_route_change(va_list args)
 		syslog(LOG_NOTICE, "[NCP->] External route available: %s/%u\n",
 			prefix_string.c_str(),
 			prefixLength);
-		mNCPInstance->mPrimaryInterface->add_route(&border_router_prefix, prefixLength);
+		mNCPInstance->mPrimaryInterface->add_route(&border_router_prefix, prefixLength, 256);
 	} else {
 		syslog(LOG_NOTICE, "[NCP->] External route no longer available: %s/%u\n",
 			prefix_string.c_str(),
 			prefixLength);
-		mNCPInstance->mPrimaryInterface->remove_route(&border_router_prefix, prefixLength);
+		mNCPInstance->mPrimaryInterface->remove_route(&border_router_prefix, prefixLength, 256);
 	}
 
 bail:
@@ -3011,7 +3011,7 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 
 	mNCPInstance->set_ncp_power(true);
 
-	mNCPInstance->remove_all_address_prefix_entries();
+	mNCPInstance->remove_all_address_prefix_route_entries();
 
 	mNCPInstance->mNCPVersionString = "";
 	mIsGoingIntoDeepSleep = false;

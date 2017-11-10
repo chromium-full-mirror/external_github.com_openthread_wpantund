@@ -1798,12 +1798,12 @@ EmberNCPControlInterface::handle_cb_external_route_change(const Data& data)
 		syslog(LOG_NOTICE, "[NCP->] Available Border Router %s/%u\n",
 			prefix_string,
 			prefixLength);
-		mNCPInstance->mPrimaryInterface->add_route(&boarder_router_prefix, prefixLength);
+		mNCPInstance->mPrimaryInterface->add_route(&boarder_router_prefix, prefixLength, 256);
 	} else {
 		syslog(LOG_NOTICE, "[NCP->] Not Available Border Router %s/%u\n",
 			prefix_string,
 			prefixLength);
-		mNCPInstance->mPrimaryInterface->remove_route(&boarder_router_prefix, prefixLength);
+		mNCPInstance->mPrimaryInterface->remove_route(&boarder_router_prefix, prefixLength, 256);
 	}
 
 bail:
@@ -3282,7 +3282,7 @@ EmberNCPControlInterface::vprocess_init(int event, va_list args)
 
 	mNCPInstance->set_ncp_power(true);
 
-	mNCPInstance->remove_all_address_prefix_entries();
+	mNCPInstance->remove_all_address_prefix_route_entries();
 
 	mNCPInstance->mNCPVersionString = "";
 	mFirmwareInterface = EmberCommands::FirmwareInterface::GetFirmwareInterfaceForVersion();
