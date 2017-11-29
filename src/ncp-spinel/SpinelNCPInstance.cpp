@@ -167,19 +167,34 @@ nl::wpantund::peek_ncp_callback_status(int event, va_list args)
 SpinelNCPInstance::SpinelNCPInstance(const Settings& settings) :
 	NCPInstanceBase(settings), mControlInterface(this)
 {
-	mOutboundBufferLen = 0;
+	mInboundFrameDataLen = 0;
+	mInboundFrameDataPtr = NULL;
+	mInboundFrameDataType = 0;
+	mInboundFrameHDLCCRC = 0;
+	mInboundFrameSize = 0;
 	mInboundHeader = 0;
-	mSupprotedChannels.clear();
-
-	mSetSteeringDataWhenJoinable = false;
-	memset(mSteeringDataAddress, 0xff, sizeof(mSteeringDataAddress));
-
-	mIsPcapInProgress = false;
-	mSettings.clear();
-	mXPANIDWasExplicitlySet = false;
-	mThreadMode = 0;
 	mIsCommissioned = false;
+	mFilterRLOCAddresses = true;
+	mIsPcapInProgress = false;
+	mLastHeader = 0;
+	mLastTID = 0;
+	mNetworkKeyIndex = 0;
+	mOutboundBufferEscapedLen = 0;
+	mOutboundBufferLen = 0;
+	mOutboundBufferSent = 0;
+	mOutboundBufferType = 0;
+	mResetIsExpected = false;
+	mSetSteeringDataWhenJoinable = false;
+	mSubPTIndex = 0;
+	mTXPower = 0;
+	mThreadMode = 0;
+	mXPANIDWasExplicitlySet = false;
 	mDisableRouterRoleAfterAttach = false;
+
+	mSupprotedChannels.clear();
+	mSettings.clear();
+
+	memset(mSteeringDataAddress, 0xff, sizeof(mSteeringDataAddress));
 
 	if (!settings.empty()) {
 		int status;
@@ -285,8 +300,10 @@ SpinelNCPInstance::get_supported_property_keys()const
 		properties.insert(kWPANTUNDProperty_ThreadStableLeaderNetworkData);
 		properties.insert(kWPANTUNDProperty_ThreadChildTable);
 		properties.insert(kWPANTUNDProperty_ThreadNeighborTable);
+		properties.insert(kWPANTUNDProperty_ThreadRouterTable);
 		properties.insert(kWPANTUNDProperty_ThreadCommissionerEnabled);
 		properties.insert(kWPANTUNDProperty_ThreadOffMeshRoutes);
+		properties.insert(kWPANTUNDProperty_NetworkPartitionId);
 	}
 
 	if (mCapabilities.count(SPINEL_CAP_COUNTERS)) {
@@ -558,77 +575,6 @@ unpack_jam_detect_history_bitmap(const uint8_t *data_in, spinel_size_t data_len,
 	return ret;
 }
 
-static int
-unpack_thread_off_mesh_routes(const uint8_t *data_in, spinel_size_t data_len, boost::any& value)
-{
-
-	int ret = kWPANTUNDStatus_Ok;
-	std::list<std::string> result;
-
-	while (data_len > 0)
-	{
-		spinel_ssize_t len;
-		struct in6_addr *route_prefix = NULL;
-		uint8_t prefix_len;
-		bool is_stable;
-		uint8_t flags;
-		bool is_local;
-		bool next_hop_is_this_device;
-
-
-		len = spinel_datatype_unpack(
-			data_in,
-			data_len,
-			SPINEL_DATATYPE_STRUCT_S(
-				SPINEL_DATATYPE_IPv6ADDR_S      // Route Prefix
-				SPINEL_DATATYPE_UINT8_S         // Prefix Length (in bits)
-				SPINEL_DATATYPE_BOOL_S          // isStable
-				SPINEL_DATATYPE_UINT8_S         // Flags
-				SPINEL_DATATYPE_BOOL_S          // IsLocal
-				SPINEL_DATATYPE_BOOL_S          // NextHopIsThisDevice
-			),
-			&route_prefix,
-			&prefix_len,
-			&is_stable,
-			&flags,
-			&is_local,
-			&next_hop_is_this_device
-		);
-
-		if (len <= 0) {
-			ret = kWPANTUNDStatus_Failure;
-			break;
-		} else {
-			char c_string[200];
-			NCPControlInterface::ExternalRoutePriority priority;
-
-			priority = SpinelNCPControlInterface::convert_flags_to_external_route_priority(flags);
-
-			snprintf(c_string, sizeof(c_string),
-				"%s/%d, stable:%s, local:%s, next_hop:%s, priority:%s (flags:0x%02x)",
-				in6_addr_to_string(*route_prefix).c_str(),
-				prefix_len,
-				is_stable ? "yes" : "no",
-				is_local ? "yes" : "no",
-				next_hop_is_this_device ? "this_device" : "off-mesh",
-				SpinelNCPControlInterface::external_route_priority_to_string(priority).c_str(),
-				flags
-			);
-
-			result.push_back(c_string);
-		}
-
-		data_in += len;
-		data_len -= len;
-	}
-
-	if (ret == kWPANTUNDStatus_Ok) {
-		value = result;
-	}
-
-	return ret;
-}
-
 void
 SpinelNCPInstance::update_node_type(NodeType new_node_type)
 {
@@ -795,20 +741,17 @@ SpinelNCPInstance::property_get_value(
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadStableNetworkDataVersion)) {
 		SIMPLE_SPINEL_GET(SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION, SPINEL_DATATYPE_UINT8_S);
 
-	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadOffMeshRoutes)) {
-		start_new_task(SpinelNCPTaskSendCommand::Factory(this)
-			.set_callback(cb)
-			.add_command(
-				SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_GET, SPINEL_PROP_THREAD_OFF_MESH_ROUTES)
-			)
-			.set_reply_unpacker(unpack_thread_off_mesh_routes)
-			.finish()
-		);
-
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadCommissionerEnabled)) {
 		SIMPLE_SPINEL_GET(SPINEL_PROP_THREAD_COMMISSIONER_ENABLED, SPINEL_DATATYPE_BOOL_S);
+
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadRouterRoleEnabled)) {
+		SIMPLE_SPINEL_GET(SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED, SPINEL_DATATYPE_BOOL_S);
+
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadDeviceMode)) {
 		SIMPLE_SPINEL_GET(SPINEL_PROP_THREAD_MODE, SPINEL_DATATYPE_UINT8_S);
+
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadConfigFilterRLOCAddresses)) {
+		cb(kWPANTUNDStatus_Ok, boost::any(mFilterRLOCAddresses));
 
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_IPv6MeshLocalPrefix) && !buffer_is_nonzero(mNCPV6Prefix, sizeof(mNCPV6Prefix))) {
 		SIMPLE_SPINEL_GET(SPINEL_PROP_IPV6_ML_PREFIX, SPINEL_DATATYPE_IPv6ADDR_S);
@@ -986,6 +929,26 @@ SpinelNCPInstance::property_get_value(
 				this,
 				cb,
 				SpinelNCPTaskGetNetworkTopology::kNeighborTable,
+				SpinelNCPTaskGetNetworkTopology::kResultFormat_ValueMapArray
+			)
+		));
+
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadRouterTable)) {
+		start_new_task(boost::shared_ptr<SpinelNCPTask>(
+			new SpinelNCPTaskGetNetworkTopology(
+				this,
+				cb,
+				SpinelNCPTaskGetNetworkTopology::kRouterTable,
+				SpinelNCPTaskGetNetworkTopology::kResultFormat_StringArray
+			)
+		));
+
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadRouterTableAsValMap)) {
+		start_new_task(boost::shared_ptr<SpinelNCPTask>(
+			new SpinelNCPTaskGetNetworkTopology(
+				this,
+				cb,
+				SpinelNCPTaskGetNetworkTopology::kRouterTable,
 				SpinelNCPTaskGetNetworkTopology::kResultFormat_ValueMapArray
 			)
 		));
@@ -1521,6 +1484,20 @@ SpinelNCPInstance::property_set_value(
 				))
 				.finish()
 			);
+
+		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadRouterRoleEnabled)) {
+			bool isEnabled = any_to_bool(value);
+
+			start_new_task(SpinelNCPTaskSendCommand::Factory(this)
+				.set_callback(cb)
+				.add_command(SpinelPackData(
+					SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_BOOL_S),
+					SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED,
+					isEnabled
+				))
+				.finish()
+			);
+
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_OpenThreadLogLevel)) {
 			uint8_t logLevel = static_cast<uint8_t>(any_to_int(value));
 			Data command = SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_UINT8_S), SPINEL_PROP_DEBUG_NCP_LOG_LEVEL, logLevel);
@@ -1532,6 +1509,10 @@ SpinelNCPInstance::property_set_value(
 				.add_command(command)
 				.finish()
 			);
+
+		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_ThreadConfigFilterRLOCAddresses)) {
+			mFilterRLOCAddresses = any_to_bool(value);
+			cb(kWPANTUNDStatus_Ok);
 
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_OpenThreadSteeringDataSetWhenJoinable)) {
 			mSetSteeringDataWhenJoinable = any_to_bool(value);
@@ -1552,20 +1533,24 @@ SpinelNCPInstance::property_set_value(
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_TmfProxyStream)) {
 			Data packet = any_to_data(value);
 
-			uint16_t port = (packet[packet.size() - sizeof(port)] << 8 | packet[packet.size() - sizeof(port) + 1]);
-			uint16_t locator = (packet[packet.size() - sizeof(locator) - sizeof(port)] << 8 |
-					packet[packet.size() - sizeof(locator) - sizeof(port) + 1]);
+			if (packet.size() > sizeof(uint16_t)*2) {
+				uint16_t port = (packet[packet.size() - sizeof(port)] << 8 | packet[packet.size() - sizeof(port) + 1]);
+				uint16_t locator = (packet[packet.size() - sizeof(locator) - sizeof(port)] << 8 |
+						packet[packet.size() - sizeof(locator) - sizeof(port) + 1]);
 
-			packet.resize(packet.size() - sizeof(locator) - sizeof(port));
+				packet.resize(packet.size() - sizeof(locator) - sizeof(port));
 
-			Data command = SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_UINT16_S SPINEL_DATATYPE_UINT16_S),
-					SPINEL_PROP_THREAD_TMF_PROXY_STREAM, packet.data(), packet.size(), locator, port);
+				Data command = SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_UINT16_S SPINEL_DATATYPE_UINT16_S),
+						SPINEL_PROP_THREAD_TMF_PROXY_STREAM, packet.data(), packet.size(), locator, port);
 
-			start_new_task(SpinelNCPTaskSendCommand::Factory(this)
-					.set_callback(cb)
-					.add_command(command)
-					.finish()
-					);
+				start_new_task(SpinelNCPTaskSendCommand::Factory(this)
+						.set_callback(cb)
+						.add_command(command)
+						.finish()
+						);
+			} else {
+				cb(kWPANTUNDStatus_InvalidArgument);
+			}
 
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NestLabs_DisableRouterRoleAfterAttach)) {
 			mDisableRouterRoleAfterAttach = any_to_bool(value);
@@ -1749,6 +1734,98 @@ SpinelNCPInstance::reset_tasks(wpantund_status_t status)
 }
 
 void
+SpinelNCPInstance::handle_ncp_spinel_value_is_OFF_MESH_ROUTE(const uint8_t* value_data_ptr, spinel_size_t value_data_len)
+{
+	std::multimap<IPv6Prefix, OffMeshRouteEntry>::iterator iter;
+	std::multimap<IPv6Prefix, OffMeshRouteEntry> off_mesh_routes(mOffMeshRoutes);
+	int num_routes = 0;
+
+	while (value_data_len > 0) {
+		spinel_ssize_t len;
+		struct in6_addr *route_prefix = NULL;
+		uint8_t prefix_len;
+		bool is_stable;
+		uint8_t flags;
+		bool is_local;
+		bool next_hop_is_this_device;
+		uint16_t rloc16;
+		RoutePreference preference;
+
+		len = spinel_datatype_unpack(
+			value_data_ptr,
+			value_data_len,
+			SPINEL_DATATYPE_STRUCT_S(
+				SPINEL_DATATYPE_IPv6ADDR_S      // Route Prefix
+				SPINEL_DATATYPE_UINT8_S         // Prefix Length (in bits)
+				SPINEL_DATATYPE_BOOL_S          // isStable
+				SPINEL_DATATYPE_UINT8_S         // Flags
+				SPINEL_DATATYPE_BOOL_S          // IsLocal
+				SPINEL_DATATYPE_BOOL_S          // NextHopIsThisDevice
+				SPINEL_DATATYPE_UINT16_S        // RLOC16
+			),
+			&route_prefix,
+			&prefix_len,
+			&is_stable,
+			&flags,
+			&is_local,
+			&next_hop_is_this_device,
+			&rloc16
+		);
+
+		if (len <= 0) {
+			break;
+		}
+
+		preference = convert_flags_to_route_preference(flags);
+
+		syslog(LOG_INFO, "[-NCP-]: Off-mesh route [%d] \"%s/%d\" stable:%s local:%s preference:%s, next_hop_is_this_device:%s, rloc16:0x%0x",
+			num_routes, in6_addr_to_string(*route_prefix).c_str(), prefix_len, is_stable ? "yes" : "no",
+			is_local ? "yes" : "no", NCPControlInterface::external_route_priority_to_string(preference).c_str(),
+			next_hop_is_this_device ? "yes" : "no", rloc16);
+
+		num_routes++;
+
+		if (!is_local) {
+
+			// Go through the `off_mesh_routes` list (which is the copy of mOffMeshRoutes)
+			// and check if this entry is already on the list, if so remove it.
+
+			IPv6Prefix route(*route_prefix, prefix_len);
+			OffMeshRouteEntry entry(kOriginThreadNCP, preference, is_stable, rloc16, next_hop_is_this_device);
+			iter = off_mesh_routes.lower_bound(route);
+
+			if (iter != off_mesh_routes.end()) {
+				std::multimap<IPv6Prefix, OffMeshRouteEntry>::iterator upper_iter = off_mesh_routes.upper_bound(route);
+
+				for (; iter != upper_iter; ++iter) {
+					if (iter->second == entry) {
+						off_mesh_routes.erase(iter);
+						break;
+					}
+				}
+			}
+
+			route_was_added(kOriginThreadNCP, *route_prefix, prefix_len, preference, is_stable, rloc16,
+				next_hop_is_this_device);
+		}
+
+		value_data_ptr += len;
+		value_data_len -= len;
+	}
+
+	// Since this was the whole list, we need to remove any routes
+	// which originated from NCP that that weren't in the new list.
+
+	for (iter = off_mesh_routes.begin(); iter != off_mesh_routes.end(); ++iter) {
+		if (iter->second.is_from_ncp()) {
+			route_was_removed(kOriginThreadNCP, iter->first.get_prefix(), iter->first.get_length(),
+				iter->second.get_preference(), iter->second.is_stable(), iter->second.get_rloc());
+		}
+	}
+}
+
+
+void
 SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8_t* value_data_ptr, spinel_size_t value_data_len)
 {
 	const uint8_t *original_value_data_ptr = value_data_ptr;
@@ -1787,8 +1864,14 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 		}
 	} else if (key == SPINEL_PROP_NCP_VERSION) {
 		const char* ncp_version = NULL;
-		spinel_datatype_unpack(value_data_ptr, value_data_len, "U", &ncp_version);
-		set_ncp_version_string(ncp_version);
+		spinel_ssize_t len = spinel_datatype_unpack(value_data_ptr, value_data_len, "U", &ncp_version);
+		if ((len <= 0) || (ncp_version == NULL)) {
+			syslog(LOG_CRIT, "[-NCP-]: Got a corrupted NCP version");
+			// TODO: Properly handle NCP Misbehavior
+			change_ncp_state(FAULT);
+		} else {
+			set_ncp_version_string(ncp_version);
+		}
 
 	} else if (key == SPINEL_PROP_INTERFACE_TYPE) {
 		unsigned int interface_type = 0;
@@ -1838,11 +1921,18 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 
 	} else if (key == SPINEL_PROP_NET_NETWORK_NAME) {
 		const char* value = NULL;
-		spinel_datatype_unpack(value_data_ptr, value_data_len, "U", &value);
-		syslog(LOG_INFO, "[-NCP-]: Network name \"%s\"", value);
-		if (value && (mCurrentNetworkInstance.name != value)) {
-			mCurrentNetworkInstance.name = value;
-			signal_property_changed(kWPANTUNDProperty_NetworkName, mCurrentNetworkInstance.name);
+		spinel_ssize_t len = spinel_datatype_unpack(value_data_ptr, value_data_len, "U", &value);
+
+		if ((len <= 0) || (value == NULL)) {
+			syslog(LOG_CRIT, "[-NCP-]: Got a corrupted NCP version");
+			// TODO: Properly handle NCP Misbehavior
+			change_ncp_state(FAULT);
+		} else {
+			syslog(LOG_INFO, "[-NCP-]: Network name \"%s\"", value);
+			if (mCurrentNetworkInstance.name != value) {
+				mCurrentNetworkInstance.name = value;
+				signal_property_changed(kWPANTUNDProperty_NetworkName, mCurrentNetworkInstance.name);
+			}
 		}
 
 	} else if (key == SPINEL_PROP_IPV6_LL_ADDR) {
@@ -2143,9 +2233,9 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 				is_local ? "yes" : "no", on_mesh_prefix_flags_to_string(flags).c_str());
 
 			num_prefix++;
-			on_mesh_prefixes.erase(*prefix);
 
 			if (!is_local) {
+				on_mesh_prefixes.erase(*prefix);
 				on_mesh_prefix_was_added(kOriginThreadNCP, *prefix, prefix_len, flags, stable);
 			}
 
@@ -2160,6 +2250,9 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 				on_mesh_prefix_was_removed(kOriginThreadNCP, iter->first, iter->second.get_prefix_len());
 			}
 		}
+
+	} else if (key == SPINEL_PROP_THREAD_OFF_MESH_ROUTES) {
+		handle_ncp_spinel_value_is_OFF_MESH_ROUTE(value_data_ptr, value_data_len);
 
 	} else if (key == SPINEL_PROP_THREAD_ASSISTING_PORTS) {
 		bool is_assisting = (value_data_len != 0);
@@ -2328,6 +2421,40 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 		}
 		syslog(LOG_INFO, "[-NCP-] Child: Total %d child%s", num_children, (num_children > 1) ? "ren" : "");
 
+	} else if (key == SPINEL_PROP_THREAD_NEIGHBOR_TABLE) {
+		SpinelNCPTaskGetNetworkTopology::Table neigh_table;
+		SpinelNCPTaskGetNetworkTopology::Table::iterator it;
+		int num_neighbor = 0;
+
+		SpinelNCPTaskGetNetworkTopology::parse_neighbor_table(value_data_ptr, value_data_len, neigh_table);
+
+		for (it = neigh_table.begin(); it != neigh_table.end(); it++)
+		{
+			num_neighbor++;
+			syslog(LOG_INFO, "[-NCP-] Neighbor: %02d %s", num_neighbor, it->get_as_string().c_str());
+		}
+		syslog(LOG_INFO, "[-NCP-] Neighbor: Total %d neighbor%s", num_neighbor, (num_neighbor > 1) ? "s" : "");
+
+	} else if (key == SPINEL_PROP_THREAD_ROUTER_TABLE) {
+		SpinelNCPTaskGetNetworkTopology::Table router_table;
+		SpinelNCPTaskGetNetworkTopology::Table::iterator it;
+		int num_router = 0;
+
+		SpinelNCPTaskGetNetworkTopology::parse_router_table(value_data_ptr, value_data_len, router_table);
+
+		for (it = router_table.begin(); it != router_table.end(); it++)
+		{
+			num_router++;
+			syslog(LOG_INFO, "[-NCP-] Router: %02d %s", num_router, it->get_as_string().c_str());
+		}
+		syslog(LOG_INFO, "[-NCP-] Router: Total %d router%s", num_router, (num_router > 1) ? "es" : "");
+
+
+	} else if (key == SPINEL_PROP_NET_PARTITION_ID) {
+		uint32_t paritition_id = 0;
+		spinel_datatype_unpack(value_data_ptr, value_data_len, SPINEL_DATATYPE_UINT32_S, &paritition_id);
+		syslog(LOG_INFO, "[-NCP-] Partition id: %u (0x%x)", paritition_id, paritition_id);
+
 	} else if (key == SPINEL_PROP_THREAD_LEADER_NETWORK_DATA) {
 		char net_data_cstr_buf[540];
 		encode_data_into_string(value_data_ptr, value_data_len, net_data_cstr_buf, sizeof(net_data_cstr_buf), 0);
@@ -2367,22 +2494,53 @@ SpinelNCPInstance::handle_ncp_spinel_value_inserted(spinel_prop_key_t key, const
 	} else if (key == SPINEL_PROP_THREAD_ON_MESH_NETS) {
 		struct in6_addr *prefix = NULL;
 		uint8_t prefix_len = 0;
-		bool stable;
+		bool stable = false;
 		uint8_t flags = 0;
-		bool is_local;
+		bool is_local = false;
 
 		spinel_datatype_unpack(value_data_ptr, value_data_len, "6CbCb",
 			&prefix, &prefix_len, &stable, &flags, &is_local);
 
-		syslog(LOG_INFO, "[-NCP-]: On-mesh net added \"%s/%d\" stable:%s local:%s flags:%s", in6_addr_to_string(*prefix).c_str(),
-			prefix_len,	stable ? "yes" : "no", is_local ? "yes" : "no",	on_mesh_prefix_flags_to_string(flags).c_str());
+		if (prefix != NULL) {
+			syslog(LOG_INFO, "[-NCP-]: On-mesh net added \"%s/%d\" stable:%s local:%s flags:%s", in6_addr_to_string(*prefix).c_str(),
+				prefix_len,	stable ? "yes" : "no", is_local ? "yes" : "no",	on_mesh_prefix_flags_to_string(flags).c_str());
 
-		if (!is_local) {
-			on_mesh_prefix_was_added(kOriginThreadNCP, *prefix, prefix_len, flags, stable);
+			if (!is_local) {
+				on_mesh_prefix_was_added(kOriginThreadNCP, *prefix, prefix_len, flags, stable);
+			}
 		}
+
+	} else if (key == SPINEL_PROP_THREAD_CHILD_TABLE) {
+		SpinelNCPTaskGetNetworkTopology::TableEntry child_entry;
+		int status;
+
+		status = SpinelNCPTaskGetNetworkTopology::parse_child_entry(value_data_ptr, value_data_len, child_entry);
+
+		if (status == kWPANTUNDStatus_Ok) {
+			syslog(LOG_INFO, "[-NCP-]: ChildTable entry added: %s", child_entry.get_as_string().c_str());
+		}
+
 	}
 
 	process_event(EVENT_NCP_PROP_VALUE_INSERTED, key, value_data_ptr, value_data_len);
+}
+
+void
+SpinelNCPInstance::handle_ncp_spinel_value_removed(spinel_prop_key_t key, const uint8_t* value_data_ptr, spinel_size_t value_data_len)
+{
+	if (key == SPINEL_PROP_THREAD_CHILD_TABLE) {
+		SpinelNCPTaskGetNetworkTopology::TableEntry child_entry;
+		int status;
+
+		status = SpinelNCPTaskGetNetworkTopology::parse_child_entry(value_data_ptr, value_data_len, child_entry);
+
+		if (status == kWPANTUNDStatus_Ok) {
+			syslog(LOG_INFO, "[-NCP-]: ChildTable entry removed: %s", child_entry.get_as_string().c_str());
+		}
+
+	}
+
+	process_event(EVENT_NCP_PROP_VALUE_REMOVED, key, value_data_ptr, value_data_len);
 }
 
 void
@@ -2448,12 +2606,6 @@ SpinelNCPInstance::handle_ncp_state_change(NCPState new_ncp_state, NCPState old_
 			);
 		}
 	}
-}
-
-void
-SpinelNCPInstance::handle_ncp_spinel_value_removed(spinel_prop_key_t key, const uint8_t* value_data_ptr, spinel_size_t value_data_len)
-{
-	process_event(EVENT_NCP_PROP_VALUE_REMOVED, key, value_data_ptr, value_data_len);
 }
 
 void
@@ -2555,17 +2707,19 @@ SpinelNCPInstance::should_filter_address(const struct in6_addr &addr, uint8_t pr
 	static const uint8_t rloc_bytes[] = {0x00,0x00,0x00,0xFF,0xFE,0x00};
 	bool should_filter = false;
 
-	// Filter RLOC link-local or mesh-local addresses
+	if (mFilterRLOCAddresses) {
+		// Filter RLOC link-local or mesh-local addresses
 
-	if (0 == memcmp(rloc_bytes, addr.s6_addr + 8, sizeof(rloc_bytes))) {
-		if (IN6_IS_ADDR_LINKLOCAL(&addr)) {
-			should_filter = true;
-		}
+		if (0 == memcmp(rloc_bytes, addr.s6_addr + 8, sizeof(rloc_bytes))) {
+			if (IN6_IS_ADDR_LINKLOCAL(&addr)) {
+				should_filter = true;
+			}
 
-		if (buffer_is_nonzero(mNCPV6Prefix, sizeof(mNCPV6Prefix))
-			&& (0 == memcmp(mNCPV6Prefix, &addr, sizeof(mNCPV6Prefix)))
-		) {
-			should_filter = true;
+			if (buffer_is_nonzero(mNCPV6Prefix, sizeof(mNCPV6Prefix))
+				&& (0 == memcmp(mNCPV6Prefix, &addr, sizeof(mNCPV6Prefix)))
+			) {
+				should_filter = true;
+			}
 		}
 	}
 
@@ -2653,7 +2807,7 @@ SpinelNCPInstance::add_multicast_address_on_ncp(const struct in6_addr &addr, Cal
 {
 	SpinelNCPTaskSendCommand::Factory factory(this);
 
-	syslog(LOG_NOTICE, "Adding multicast address \"%s\" on NCP", in6_addr_to_string(addr).c_str());
+	syslog(LOG_NOTICE, "Adding multicast address \"%s\" to NCP", in6_addr_to_string(addr).c_str());
 
 	factory.set_lock_property(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE);
 	factory.set_callback(cb);
@@ -2728,7 +2882,7 @@ SpinelNCPInstance::remove_on_mesh_prefix_on_ncp(const struct in6_addr &prefix, u
 {
 	SpinelNCPTaskSendCommand::Factory factory(this);
 
-	syslog(LOG_NOTICE, "Removing on-mesh prefix \"%s/%d\" to NCP", in6_addr_to_string(prefix).c_str(), prefix_len);
+	syslog(LOG_NOTICE, "Removing on-mesh prefix \"%s/%d\" from NCP", in6_addr_to_string(prefix).c_str(), prefix_len);
 
 	factory.set_lock_property(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE);
 	factory.set_callback(cb);
@@ -2750,13 +2904,118 @@ SpinelNCPInstance::remove_on_mesh_prefix_on_ncp(const struct in6_addr &prefix, u
 	start_new_task(factory.finish());
 }
 
+void
+SpinelNCPInstance::add_route_on_ncp(const struct in6_addr &route, uint8_t prefix_len, RoutePreference preference,
+	bool stable, CallbackWithStatus cb)
+{
+	SpinelNCPTaskSendCommand::Factory factory(this);
+
+	syslog(LOG_NOTICE, "Adding off-mesh route \"%s/%d\" with preference %s to NCP", in6_addr_to_string(route).c_str(),
+		prefix_len, NCPControlInterface::external_route_priority_to_string(preference).c_str());
+
+	factory.set_lock_property(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE);
+	factory.set_callback(cb);
+
+	factory.add_command(SpinelPackData(
+		SPINEL_FRAME_PACK_CMD_PROP_VALUE_INSERT(
+			SPINEL_DATATYPE_IPv6ADDR_S
+			SPINEL_DATATYPE_UINT8_S
+			SPINEL_DATATYPE_BOOL_S
+			SPINEL_DATATYPE_UINT8_S
+		),
+		SPINEL_PROP_THREAD_OFF_MESH_ROUTES,
+		&route,
+		prefix_len,
+		stable,
+		convert_route_preference_to_flags(preference)
+	));
+
+	start_new_task(factory.finish());
+}
+
+void
+SpinelNCPInstance::remove_route_on_ncp(const struct in6_addr &route, uint8_t prefix_len, RoutePreference preference,
+	bool stable, CallbackWithStatus cb)
+{
+	SpinelNCPTaskSendCommand::Factory factory(this);
+
+	syslog(LOG_NOTICE, "Removing off-mesh route \"%s/%d\" with preference %s from NCP", in6_addr_to_string(route).c_str(),
+		prefix_len, NCPControlInterface::external_route_priority_to_string(preference).c_str());
+
+	factory.set_lock_property(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE);
+	factory.set_callback(cb);
+
+	factory.add_command(SpinelPackData(
+		SPINEL_FRAME_PACK_CMD_PROP_VALUE_REMOVE(
+			SPINEL_DATATYPE_IPv6ADDR_S
+			SPINEL_DATATYPE_UINT8_S
+			SPINEL_DATATYPE_BOOL_S
+			SPINEL_DATATYPE_UINT8_S
+		),
+		SPINEL_PROP_THREAD_OFF_MESH_ROUTES,
+		&route,
+		prefix_len,
+		stable,
+		convert_route_preference_to_flags(preference)
+	));
+
+	start_new_task(factory.finish());
+}
+
+SpinelNCPInstance::RoutePreference
+SpinelNCPInstance::convert_flags_to_route_preference(uint8_t flags)
+{
+	RoutePreference preference = NCPControlInterface::ROUTE_MEDIUM_PREFERENCE;
+
+	switch (flags & SPINEL_NET_FLAG_PREFERENCE_MASK) {
+	case SPINEL_ROUTE_PREFERENCE_HIGH:
+		preference = NCPControlInterface::ROUTE_HIGH_PREFERENCE;
+		break;
+
+	case SPINEL_ROUTE_PREFERENCE_MEDIUM:
+		preference = NCPControlInterface::ROUTE_MEDIUM_PREFERENCE;
+		break;
+
+	case SPINEL_ROUTE_PREFERENCE_LOW:
+		preference = NCPControlInterface::ROUTE_LOW_PREFRENCE;
+		break;
+
+	default:
+		syslog(LOG_WARNING, "Invalid RoutePreference flag 0x%02x (using MEDIUM instead)", flags);
+		break;
+	}
+
+	return preference;
+}
+
+uint8_t
+SpinelNCPInstance::convert_route_preference_to_flags(RoutePreference preference)
+{
+	uint8_t flags = SPINEL_ROUTE_PREFERENCE_MEDIUM;
+
+	switch (preference) {
+	case NCPControlInterface::ROUTE_HIGH_PREFERENCE:
+		flags = SPINEL_ROUTE_PREFERENCE_HIGH;
+		break;
+
+	case NCPControlInterface::ROUTE_MEDIUM_PREFERENCE:
+		flags = SPINEL_ROUTE_PREFERENCE_MEDIUM;
+		break;
+
+	case NCPControlInterface::ROUTE_LOW_PREFRENCE:
+		flags = SPINEL_ROUTE_PREFERENCE_LOW;
+		break;
+	}
+
+	return flags;
+}
+
 bool
 SpinelNCPInstance::is_busy(void)
 {
 	return NCPInstanceBase::is_busy()
 		|| !mTaskQueue.empty();
 }
-
 
 void
 SpinelNCPInstance::process(void)

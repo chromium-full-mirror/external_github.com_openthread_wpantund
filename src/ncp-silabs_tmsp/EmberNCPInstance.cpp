@@ -183,6 +183,21 @@ EmberNCPInstance::add_on_mesh_prefix_on_ncp(const struct in6_addr &addr, uint8_t
 }
 
 void
+EmberNCPInstance::add_route_on_ncp(const struct in6_addr &route, uint8_t prefix_len, RoutePreference preference,
+	bool stable, CallbackWithStatus cb)
+{
+	cb(kWPANTUNDStatus_Ok);
+}
+
+void
+EmberNCPInstance::remove_route_on_ncp(const struct in6_addr &route, uint8_t prefix_len, RoutePreference preference,
+	bool stable, CallbackWithStatus cb)
+{
+	cb(kWPANTUNDStatus_Ok);
+}
+
+
+void
 EmberNCPInstance::remove_on_mesh_prefix_on_ncp(const struct in6_addr &addr, uint8_t prefix_len, uint8_t flags,
 					bool stable, CallbackWithStatus cb)
 {

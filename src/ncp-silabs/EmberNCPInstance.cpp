@@ -185,6 +185,20 @@ EmberNCPInstance::remove_on_mesh_prefix_on_ncp(const struct in6_addr &addr, uint
 }
 
 void
+EmberNCPInstance::add_route_on_ncp(const struct in6_addr &route, uint8_t prefix_len, RoutePreference preference,
+	bool stable, CallbackWithStatus cb)
+{
+	cb(kWPANTUNDStatus_Ok);
+}
+
+void
+EmberNCPInstance::remove_route_on_ncp(const struct in6_addr &route, uint8_t prefix_len, RoutePreference preference,
+	bool stable, CallbackWithStatus cb)
+{
+	cb(kWPANTUNDStatus_Ok);
+}
+
+void
 EmberNCPInstance::hard_reset_ncp(void)
 {
 	flush_queued_commands();

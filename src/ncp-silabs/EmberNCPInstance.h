@@ -120,6 +120,12 @@ private:
 	virtual void remove_on_mesh_prefix_on_ncp(const struct in6_addr &addr, uint8_t prefix_len, uint8_t flags,
 					bool stable, CallbackWithStatus cb = NilReturn());
 
+	virtual void add_route_on_ncp(const struct in6_addr &route, uint8_t prefix_len, RoutePreference preference,
+					bool stable, CallbackWithStatus cb);
+
+	virtual void remove_route_on_ncp(const struct in6_addr &route, uint8_t prefix_len, RoutePreference preference,
+					bool stable, CallbackWithStatus cb);
+
 	int send_management_command(const Data& data, const boost::function<void(int)>& cb=NilReturn());
 	void flush_queued_commands(int error=kWPANTUNDStatus_Canceled);
 	bool outbound_command_is_in_flight(void);
