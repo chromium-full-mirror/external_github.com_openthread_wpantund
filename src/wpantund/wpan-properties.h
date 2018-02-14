@@ -62,6 +62,7 @@
 #define kWPANTUNDProperty_NCPChannelMask                        "NCP:ChannelMask"
 #define kWPANTUNDProperty_NCPSleepyPollInterval                 "NCP:SleepyPollInterval"
 #define kWPANTUNDProperty_NCPRSSI                               "NCP:RSSI"
+#define kWPANTUNDProperty_NCPCCAFailureRate                     "NCP:CCAFailureRate"
 
 #define kWPANTUNDProperty_InterfaceUp                           "Interface:Up"
 
@@ -99,6 +100,8 @@
 #define kWPANTUNDProperty_ThreadChildTableAddresses             "Thread:ChildTable:Addresses"
 #define kWPANTUNDProperty_ThreadNeighborTable                   "Thread:NeighborTable"
 #define kWPANTUNDProperty_ThreadNeighborTableAsValMap           "Thread:NeighborTable:AsValMap"
+#define kWPANTUNDProperty_ThreadNeighborTableErrorRates         "Thread:NeighborTable:ErrorRates"
+#define kWPANTUNDProperty_ThreadNeighborTableErrorRatesAsValMap "Thread:NeighborTable:ErrorRates:AsValMap"
 #define kWPANTUNDProperty_ThreadRouterTable                     "Thread:RouterTable"
 #define kWPANTUNDProperty_ThreadRouterTableAsValMap             "Thread:RouterTable:AsValMap"
 #define kWPANTUNDProperty_ThreadNetworkDataVersion              "Thread:NetworkDataVersion"
@@ -152,6 +155,9 @@
 #define kWPANTUNDProperty_OpenThreadDebugTestAssert             "OpenThread:Debug:TestAssert"
 #define kWPANTUNDProperty_OpenThreadDebugTestWatchdog           "OpenThread:Debug:TestWatchdog"
 
+#define kWPANTUNDProperty_NCPCounterAllMac                      "NCP:Counter:AllMac"
+#define kWPANTUNDProperty_NCPCounterAllMacAsValMap              "NCP:Counter:AllMac:AsValMap"
+
 #define kWPANTUNDProperty_DebugIPv6GlobalIPAddressList          "Debug:IPv6:GlobalIPAddressList"
 
 #define kWPANTUNDProperty_MACWhitelistEnabled                   "MAC:Whitelist:Enabled"
@@ -168,6 +174,13 @@
 #define kWPANTUNDProperty_JamDetectionWindow                    "JamDetection:Window"
 #define kWPANTUNDProperty_JamDetectionBusyPeriod                "JamDetection:BusyPeriod"
 #define kWPANTUNDProperty_JamDetectionDebugHistoryBitmap        "JamDetection:Debug:HistoryBitmap"
+
+#define kWPANTUNDProperty_ChannelMonitorSampleInterval          "ChannelMonitor:SampleInterval"
+#define kWPANTUNDProperty_ChannelMonitorRssiThreshold           "ChannelMonitor:RssiThreshold"
+#define kWPANTUNDProperty_ChannelMonitorSampleWindow            "ChannelMonitor:SampleWindow"
+#define kWPANTUNDProperty_ChannelMonitorSampleCount             "ChannelMonitor:SampleCount"
+#define kWPANTUNDProperty_ChannelMonitorChannelQuality          "ChannelMonitor:ChannelQuality"
+#define kWPANTUNDProperty_ChannelMonitorChannelQualityAsValMap  "ChannelMonitor:ChannelQuality:AsValMap"
 
 #define kWPANTUNDProperty_TmfProxyEnabled                       "TmfProxy:Enabled"
 #define kWPANTUNDProperty_TmfProxyStream                        "TmfProxy:Stream"
@@ -284,6 +297,9 @@
 #define kWPANTUNDValueMapKey_Whitelist_ExtAddress               "ExtAddress"
 #define kWPANTUNDValueMapKey_Whitelist_Rssi                     "FixedRssi"
 
+#define kWPANTUNDValueMapKey_ChannelMonitor_Channel             "Channel"
+#define kWPANTUNDValueMapKey_ChannelMonitor_Quality             "Quality"
+
 #define kWPANTUNDValueMapKey_NetworkTopology_ExtAddress         "ExtAddress"
 #define kWPANTUNDValueMapKey_NetworkTopology_RLOC16             "RLOC16"
 #define kWPANTUNDValueMapKey_NetworkTopology_LinkQualityIn      "LinkQualityIn"
@@ -299,6 +315,8 @@
 #define kWPANTUNDValueMapKey_NetworkTopology_LinkFrameCounter   "LinkFrameCounter"
 #define kWPANTUNDValueMapKey_NetworkTopology_MleFrameCounter    "MleFrameCounter"
 #define kWPANTUNDValueMapKey_NetworkTopology_IsChild            "IsChild"
+#define kWPANTUNDValueMapKey_NetworkTopology_FrameErrorRate     "FrameErrorRate"
+#define kWPANTUNDValueMapKey_NetworkTopology_MessageErrorRate   "MessageErrorRate"
 
 #define kWPANTUNDValueMapKey_Scan_Period                        "Scan:Period"
 #define kWPANTUNDValueMapKey_Scan_ChannelMask                   "Scan:ChannelMask"
@@ -306,5 +324,38 @@
 #define kWPANTUNDValueMapKey_Scan_JoinerFalg                    "Scan:JoinerFlag"
 #define kWPANTUNDValueMapKey_Scan_EnableFiltering               "Scan:EnableFiltering"
 #define kWPANTUNDValueMapKey_Scan_PANIDFilter                   "Scan:PANID"
+
+#define kWPANTUNDValueMapKey_Counter_TxTotal                    "TxTotal"              // Number of transmissions
+#define kWPANTUNDValueMapKey_Counter_TxUnicast                  "TxUnicast"            // Number of unicast transmissions
+#define kWPANTUNDValueMapKey_Counter_TxBroadcast                "TxBroadcast"          // Number of broadcast transmissions
+#define kWPANTUNDValueMapKey_Counter_TxAckRequested             "TxAckRequested"       // Number of transmissions with ack request
+#define kWPANTUNDValueMapKey_Counter_TxAcked                    "TxAcked"              // Number of transmissions that were acked
+#define kWPANTUNDValueMapKey_Counter_TxNoAckRequested           "TxNoAckRequested"     // Number of transmissions without ack request
+#define kWPANTUNDValueMapKey_Counter_TxData                     "TxData"               // Number of transmitted data
+#define kWPANTUNDValueMapKey_Counter_TxDataPoll                 "TxDataPoll"           // Number of transmitted data poll
+#define kWPANTUNDValueMapKey_Counter_TxBeacon                   "TxBeacon"             // Number of transmitted beacon
+#define kWPANTUNDValueMapKey_Counter_TxBeaconRequest            "TxBeaconRequest"      // Number of transmitted beacon request
+#define kWPANTUNDValueMapKey_Counter_TxOther                    "TxOther"              // Number of transmitted other types of frames
+#define kWPANTUNDValueMapKey_Counter_TxRetry                    "TxRetry"              // Number of retransmission times
+#define kWPANTUNDValueMapKey_Counter_TxErrCca                   "TxErrCca"             // Number of CCA failure times
+#define kWPANTUNDValueMapKey_Counter_TxErrAbort                 "TxErrAbort"           // Number of frame transmission failures due to abort error
+#define kWPANTUNDValueMapKey_Counter_TxErrBusyChannel           "TxErrBusyChannel"     // Number of frames that were dropped due to a busy channel
+#define kWPANTUNDValueMapKey_Counter_RxTotal                    "RxTotal"              // Number of received packets
+#define kWPANTUNDValueMapKey_Counter_RxUnicast                  "RxUnicast"            // Number of unicast packets received
+#define kWPANTUNDValueMapKey_Counter_RxBroadcast                "RxBroadcast"          // Number of broadcast packets received
+#define kWPANTUNDValueMapKey_Counter_RxData                     "RxData"               // Number of received data
+#define kWPANTUNDValueMapKey_Counter_RxDataPoll                 "RxDataPoll"           // Number of received data poll
+#define kWPANTUNDValueMapKey_Counter_RxBeacon                   "RxBeacon"             // Number of received beacon
+#define kWPANTUNDValueMapKey_Counter_RxBeaconRequest            "RxBeaconRequest"      // Number of received beacon request
+#define kWPANTUNDValueMapKey_Counter_RxOther                    "RxOther"              // Number of received other types of frames
+#define kWPANTUNDValueMapKey_Counter_RxAddressFiltered          "RxAddressFiltered"    // Number of received packets filtered by address filter (whitelist or blacklist)
+#define kWPANTUNDValueMapKey_Counter_RxDestAddrFiltered         "RxDestAddrFiltered"   // Number of received packets filtered by destination check
+#define kWPANTUNDValueMapKey_Counter_RxDuplicated               "RxDuplicated"         // Number of received duplicated packets
+#define kWPANTUNDValueMapKey_Counter_RxErrNoFrame               "RxErrNoFrame"         // Number of received packets that do not contain contents
+#define kWPANTUNDValueMapKey_Counter_RxErrUnknownNeighbor       "RxErrUnknownNeighbor" // Number of received packets from unknown neighbor
+#define kWPANTUNDValueMapKey_Counter_RxErrInvalidSrcAddr        "RxErrInvalidSrcAddr"  // Number of received packets whose source address is invalid
+#define kWPANTUNDValueMapKey_Counter_RxErrSec                   "RxErrSec"             // Number of received packets with security error
+#define kWPANTUNDValueMapKey_Counter_RxErrFcs                   "RxErrFcs"             // Number of received packets with FCS error
+#define kWPANTUNDValueMapKey_Counter_RxErrOther                 "RxErrOther"           // Number of received packets with other error
 
 #endif
