@@ -73,8 +73,12 @@ NCPInstanceBase::NCPInstanceBase(const Settings& settings):
 	mRequestRouteRefresh = false;
 	mNodeType = UNKNOWN;
 	mNodeTypeSupportsLegacy = false;
+	mAutoUpdateInterfaceIPv6AddrsOnNCP = true;
+	mFilterUserAddedLinkLocalIPv6Address = true;
 	mSetDefaultRouteForAutoAddedPrefix = false;
 	mSetSLAACForAutoAddedPrefix = false;
+	mAutoAddOffMeshRoutesOnInterface = true;
+	mFilterSelfAutoAddedOffMeshRoutes = true;
 	mTerminateOnFault = false;
 	mWasBusy = false;
 	mNCPIsMisbehaving = false;
@@ -382,6 +386,12 @@ NCPInstanceBase::property_get_value(
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_DaemonTerminateOnFault)) {
 		cb(0, boost::any(mTerminateOnFault));
 
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_DaemonIPv6AutoUpdateIntfaceAddrOnNCP)) {
+		cb(0, boost::any(mAutoUpdateInterfaceIPv6AddrsOnNCP));
+
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_DaemonIPv6FilterUserAddedLinkLocal)) {
+		cb(0, boost::any(mFilterUserAddedLinkLocalIPv6Address));
+
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_DaemonSetDefRouteForAutoAddedPrefix)) {
 		cb(0, boost::any(mSetDefaultRouteForAutoAddedPrefix));
 
@@ -396,6 +406,12 @@ NCPInstanceBase::property_get_value(
 
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_IPv6SetSLAACForAutoAddedPrefix)) {
 		cb(0, boost::any(mSetSLAACForAutoAddedPrefix));
+
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_DaemonOffMeshRouteAutoAddOnInterface)) {
+		cb(0, boost::any(mAutoAddOffMeshRoutesOnInterface));
+
+	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_DaemonOffMeshRouteFilterSelfAutoAdded)) {
+		cb(0, boost::any(mFilterSelfAutoAddedOffMeshRoutes));
 
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_IPv6MeshLocalPrefix)) {
 		if (buffer_is_nonzero(mNCPV6Prefix, sizeof(mNCPV6Prefix))) {
@@ -611,12 +627,28 @@ NCPInstanceBase::property_set_value(
 				reinitialize_ncp();
 			}
 
+		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_DaemonIPv6AutoUpdateIntfaceAddrOnNCP)) {
+			mAutoUpdateInterfaceIPv6AddrsOnNCP = any_to_bool(value);
+			cb(0);
+
+		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_DaemonIPv6FilterUserAddedLinkLocal)) {
+			mFilterUserAddedLinkLocalIPv6Address = any_to_bool(value);
+			cb(0);
+
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_DaemonSetDefRouteForAutoAddedPrefix)) {
 			mSetDefaultRouteForAutoAddedPrefix = any_to_bool(value);
 			cb(0);
 
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_IPv6SetSLAACForAutoAddedPrefix)) {
 			mSetSLAACForAutoAddedPrefix = any_to_bool(value);
+			cb(0);
+
+		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_DaemonOffMeshRouteAutoAddOnInterface)) {
+			mAutoAddOffMeshRoutesOnInterface = any_to_bool(value);
+			cb(0);
+
+		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_DaemonOffMeshRouteFilterSelfAutoAdded)) {
+			mFilterSelfAutoAddedOffMeshRoutes = any_to_bool(value);
 			cb(0);
 
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_IPv6MeshLocalPrefix)

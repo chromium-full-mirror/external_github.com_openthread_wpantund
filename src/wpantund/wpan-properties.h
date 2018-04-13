@@ -47,7 +47,12 @@
 #define kWPANTUNDProperty_DaemonAutoFirmwareUpdate              "Daemon:AutoFirmwareUpdate"
 #define kWPANTUNDProperty_DaemonAutoDeepSleep                   "Daemon:AutoDeepSleep"
 #define kWPANTUNDProperty_DaemonFaultReason                     "Daemon:FaultReason"
+#define kWPANTUNDProperty_DaemonTickleOnHostDidWake             "Daemon:TickleOnHostDidWake"
+#define kWPANTUNDProperty_DaemonIPv6AutoUpdateIntfaceAddrOnNCP  "Daemon:IPv6:AutoUpdateInterfaceAddrsOnNCP"
+#define kWPANTUNDProperty_DaemonIPv6FilterUserAddedLinkLocal    "Daemon:IPv6:FilterUserAddedLinkLocal"
 #define kWPANTUNDProperty_DaemonSetDefRouteForAutoAddedPrefix   "Daemon:SetDefaultRouteForAutoAddedPrefix"
+#define kWPANTUNDProperty_DaemonOffMeshRouteAutoAddOnInterface  "Daemon:OffMeshRoute:AutoAddOnInterface"
+#define kWPANTUNDProperty_DaemonOffMeshRouteFilterSelfAutoAdded "Daemon:OffMeshRoute:FilterSelfAutoAdded"
 
 #define kWPANTUNDProperty_NCPVersion                            "NCP:Version"
 #define kWPANTUNDProperty_NCPState                              "NCP:State"
@@ -63,6 +68,7 @@
 #define kWPANTUNDProperty_NCPSleepyPollInterval                 "NCP:SleepyPollInterval"
 #define kWPANTUNDProperty_NCPRSSI                               "NCP:RSSI"
 #define kWPANTUNDProperty_NCPCCAFailureRate                     "NCP:CCAFailureRate"
+#define kWPANTUNDProperty_NCPMCUPowerState                      "NCP:MCUPowerState"
 
 #define kWPANTUNDProperty_InterfaceUp                           "Interface:Up"
 
@@ -182,6 +188,14 @@
 #define kWPANTUNDProperty_ChannelMonitorChannelQuality          "ChannelMonitor:ChannelQuality"
 #define kWPANTUNDProperty_ChannelMonitorChannelQualityAsValMap  "ChannelMonitor:ChannelQuality:AsValMap"
 
+#define kWPANTUNDProperty_ChannelManagerNewChannel              "ChannelManager:NewChannel"
+#define kWPANTUNDProperty_ChannelManagerDelay                   "ChannelManager:Delay"
+#define kWPANTUNDProperty_ChannelManagerChannelSelect           "ChannelManager:ChannelSelect"
+#define kWPANTUNDProperty_ChannelManagerAutoSelectEnabled       "ChannelManager:AutoSelect:Enabled"
+#define kWPANTUNDProperty_ChannelManagerAutoSelectInterval      "ChannelManager:AutoSelect:Interval"
+#define kWPANTUNDProperty_ChannelManagerSupportedChannelMask    "ChannelManager:SupportedChannelMask"
+#define kWPANTUNDProperty_ChannelManagerFavoredChannelMask      "ChannelManager:FavoredChannelMask"
+
 #define kWPANTUNDProperty_TmfProxyEnabled                       "TmfProxy:Enabled"
 #define kWPANTUNDProperty_TmfProxyStream                        "TmfProxy:Stream"
 
@@ -269,6 +283,13 @@
 #define kWPANTUNDStateIsolated                                  "associated:no-parent"
 #define kWPANTUNDStateNetWake_Asleep                            "associated:netwake-asleep"
 #define kWPANTUNDStateNetWake_Waking                            "associated:netwake-waking"
+
+// ----------------------------------------------------------------------------
+
+// Values of the property kWPANTUNDProperty_NCPMCUPowerState
+#define kWPANTUNDNCPMCUPowerState_On                            "on"
+#define kWPANTUNDNCPMCUPowerState_LowPower                      "low-power"
+#define kWPANTUNDNCPMCUPowerState_Off                           "off"
 
 // ----------------------------------------------------------------------------
 

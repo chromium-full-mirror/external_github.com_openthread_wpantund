@@ -98,6 +98,7 @@ class SpinelNCPInstance : public NCPInstanceBase {
 	friend class SpinelNCPTaskScan;
 	friend class SpinelNCPTaskLeave;
 	friend class SpinelNCPTaskPeek;
+	friend class SpinelNCPTaskHostDidWake;
 	friend class SpinelNCPTaskSendCommand;
 	friend class SpinelNCPTaskGetNetworkTopology;
 	friend class SpinelNCPTaskGetMsgBufferCounters;
@@ -259,6 +260,7 @@ private:
 	uint8_t mThreadMode;
 	bool mIsCommissioned;
 	bool mFilterRLOCAddresses;
+	bool mTickleOnHostDidWake;
 
 	std::set<unsigned int> mCapabilities;
 
@@ -282,6 +284,7 @@ private:
 	Data mNetworkKey;
 	uint32_t mNetworkKeyIndex;
 	bool mXPANIDWasExplicitlySet;
+	uint8_t mChannelManagerNewChannel;
 
 	bool mResetIsExpected;
 

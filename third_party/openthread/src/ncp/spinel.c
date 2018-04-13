@@ -1097,6 +1097,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_HOST_POWER_STATE";
         break;
 
+    case SPINEL_PROP_MCU_POWER_STATE:
+        ret = "PROP_MCU_POWER_STATE";
+        break;
+
     case SPINEL_PROP_GPIO_CONFIG:
         ret = "PROP_GPIO_CONFIG";
         break;
@@ -1569,6 +1573,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_IPV6_MULTICAST_ADDRESS_TABLE";
         break;
 
+    case SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD_MODE:
+        ret = "PROP_IPV6_ICMP_PING_OFFLOAD_MODE";
+        break;
+
     case SPINEL_PROP_STREAM_DEBUG:
         ret = "PROP_STREAM_DEBUG";
         break;
@@ -1583,6 +1591,34 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_STREAM_NET_INSECURE:
         ret = "PROP_STREAM_NET_INSECURE";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL:
+        ret = "PROP_CHANNEL_MANAGER_NEW_CHANNEL";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_DELAY:
+        ret = "PROP_CHANNEL_MANAGER_DELAY";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_SUPPORTED_CHANNELS:
+        ret = "PROP_CHANNEL_MANAGER_SUPPORTED_CHANNELS";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_FAVORED_CHANNELS:
+        ret = "PROP_CHANNEL_MANAGER_FAVORED_CHANNELS";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_CHANNEL_SELECT:
+        ret = "PROP_CHANNEL_MANAGER_CHANNEL_SELECT";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_AUTO_SELECT_ENABLED:
+        ret = "PROP_CHANNEL_MANAGER_AUTO_SELECT_ENABLED";
+        break;
+
+    case SPINEL_PROP_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL:
+        ret = "PROP_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL";
         break;
 
     case SPINEL_PROP_UART_BITRATE:
@@ -1857,6 +1893,28 @@ const char *spinel_net_role_to_cstr(uint8_t net_role)
     return ret;
 }
 
+const char *spinel_mcu_power_state_to_cstr(spinel_mcu_power_state_t mcu_power_state)
+{
+    const char *ret = "MCU_POWER_STATE_UNKNOWN";
+
+    switch (mcu_power_state)
+    {
+    case SPINEL_MCU_POWER_STATE_ON:
+        ret = "MCU_POWER_STATE_ON";
+        break;
+
+    case SPINEL_MCU_POWER_STATE_LOW_POWER:
+        ret = "MCU_POWER_STATE_LOW_POWER";
+        break;
+
+    case SPINEL_MCU_POWER_STATE_OFF:
+        ret = "MCU_POWER_STATE_OFF";
+        break;
+    }
+
+    return ret;
+}
+
 const char *spinel_status_to_cstr(spinel_status_t status)
 {
     const char *ret = "UNKNOWN";
@@ -2064,6 +2122,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
         ret = "CAP_UNSOL_UPDATE_FILTER";
         break;
 
+    case SPINEL_CAP_MCU_POWER_STATE:
+        ret = "CAP_MCU_POWER_STATE";
+        break;
+
     case SPINEL_CAP_802_15_4_2003:
         ret = "CAP_802_15_4_2003";
         break;
@@ -2134,6 +2196,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
 
     case SPINEL_CAP_CHANNEL_MONITOR:
         ret = "CAP_CHANNEL_MONITOR";
+        break;
+
+    case SPINEL_CAP_CHANNEL_MANAGER:
+        ret = "CAP_CHANNEL_MANAGER";
         break;
 
     case SPINEL_CAP_ERROR_RATE_TRACKING:
