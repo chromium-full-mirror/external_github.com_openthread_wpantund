@@ -51,7 +51,7 @@ using namespace wpantund;
 WPANTUND_DEFINE_NCPINSTANCE_PLUGIN(spinel, SpinelNCPInstance);
 
 void
-SpinelNCPInstance::handle_ncp_log(const uint8_t* data_ptr, int data_len)
+SpinelNCPInstance::handle_ncp_debug_stream(const uint8_t* data_ptr, int data_len)
 {
 	static char linebuffer[NCP_DEBUG_LINE_LENGTH_MAX + 1];
 	static int linepos = 0;
@@ -75,6 +75,169 @@ SpinelNCPInstance::handle_ncp_log(const uint8_t* data_ptr, int data_len)
 			linepos = 0;
 		}
 	}
+}
+
+static const char *
+ot_log_level_to_string(uint8_t log_level)
+{
+	const char *retval = "----";
+
+	switch (log_level)
+	{
+	case SPINEL_NCP_LOG_LEVEL_EMERG:
+		retval = "EMRG";
+		break;
+
+	case SPINEL_NCP_LOG_LEVEL_ALERT:
+		retval = "ALRT";
+		break;
+
+	case SPINEL_NCP_LOG_LEVEL_CRIT:
+		retval = "CRIT";
+		break;
+
+	case SPINEL_NCP_LOG_LEVEL_ERR:
+		retval = "ERR ";
+		break;
+
+	case SPINEL_NCP_LOG_LEVEL_WARN:
+		retval = "WARN";
+		break;
+
+	case SPINEL_NCP_LOG_LEVEL_NOTICE:
+		retval = "NOTE";
+		break;
+
+	case SPINEL_NCP_LOG_LEVEL_INFO:
+		retval = "INFO";
+		break;
+
+	case SPINEL_NCP_LOG_LEVEL_DEBUG:
+		retval = "DEBG";
+		break;
+	}
+
+	return retval;
+}
+
+static const char *
+ot_log_region_to_string(unsigned int log_region)
+{
+	const char *retval = "---------";
+
+	switch (log_region)
+	{
+	case SPINEL_NCP_LOG_REGION_OT_API:
+		retval = "-API-----";
+		break;
+
+	case SPINEL_NCP_LOG_REGION_OT_MLE:
+		retval = "-MLE-----";
+		break;
+
+	case SPINEL_NCP_LOG_REGION_OT_COAP:
+		retval = "-COAP----";
+		break;
+
+	case SPINEL_NCP_LOG_REGION_OT_ARP:
+		retval = "-ARP-----";
+		break;
+
+	case SPINEL_NCP_LOG_REGION_OT_NET_DATA:
+		retval = "-N-DATA--";
+		break;
+
+	case SPINEL_NCP_LOG_REGION_OT_ICMP:
+		retval = "-ICMP----";
+		break;
+
+	case SPINEL_NCP_LOG_REGION_OT_IP6:
+		retval = "-IP6-----";
+		break;
+
+	case SPINEL_NCP_LOG_REGION_OT_MAC:
+		retval = "-MAC-----";
+		break;
+
+	case SPINEL_NCP_LOG_REGION_OT_MEM:
+		retval = "-MEM-----";
+		break;
+
+	case SPINEL_NCP_LOG_REGION_OT_NCP:
+		retval = "-NCP-----";
+		break;
+
+	case SPINEL_NCP_LOG_REGION_OT_MESH_COP:
+		retval = "-MESH-CP-";
+		break;
+
+	case SPINEL_NCP_LOG_REGION_OT_NET_DIAG:
+		retval = "-DIAG----";
+		break;
+
+	case SPINEL_NCP_LOG_REGION_OT_PLATFORM:
+		retval = "-PLAT----";
+		break;
+
+	case SPINEL_NCP_LOG_REGION_OT_CORE:
+		retval = "-CORE----";
+		break;
+
+	case SPINEL_NCP_LOG_REGION_OT_UTIL:
+		retval = "-UTIL----";
+		break;
+	}
+
+	return retval;
+}
+
+void
+SpinelNCPInstance::handle_ncp_log_stream(const uint8_t *data_in, int data_len)
+{
+	spinel_ssize_t len;
+	char prefix_string[NCP_DEBUG_LINE_LENGTH_MAX + 1];
+	const char *log_string;
+
+	len = spinel_datatype_unpack(
+		data_in,
+		data_len,
+		SPINEL_DATATYPE_UTF8_S,
+		&log_string
+	);
+	require(len >= 0, bail);
+
+	data_in += len;
+	data_len -= len;
+
+	prefix_string[0] = 0;
+
+	if ((data_len > 0) && mCapabilities.count(SPINEL_CAP_OPENTHREAD_LOG_METADATA)) {
+		uint8_t log_level;
+		unsigned int log_region;
+
+		len = spinel_datatype_unpack(
+			data_in,
+			data_len,
+			SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT_PACKED_S,
+			&log_level,
+			&log_region
+		);
+
+		require(len >= 0, bail);
+
+		snprintf(
+			prefix_string,
+			sizeof(prefix_string),
+			"[%s]%s: ",
+			ot_log_level_to_string(log_level),
+			ot_log_region_to_string(log_region)
+		);
+	}
+
+	syslog(LOG_WARNING, "NCP => %s%s\n", prefix_string, log_string);
+
+bail:
+	return;
 }
 
 void
@@ -171,7 +334,7 @@ nl::wpantund::peek_ncp_callback_status(int event, va_list args)
 }
 
 SpinelNCPInstance::SpinelNCPInstance(const Settings& settings) :
-	NCPInstanceBase(settings), mControlInterface(this)
+	NCPInstanceBase(settings), mControlInterface(this), mVendorCustom(this)
 {
 	mInboundFrameDataLen = 0;
 	mInboundFrameDataPtr = NULL;
@@ -377,6 +540,11 @@ SpinelNCPInstance::get_supported_property_keys()const
 		properties.insert(kWPANTUNDProperty_NestLabs_LegacyMeshLocalPrefix);
 	}
 
+	{
+		const std::set<std::string> vendor_props(mVendorCustom.get_supported_property_keys());
+		properties.insert(vendor_props.begin(), vendor_props.end());
+	}
+
 	return properties;
 }
 
@@ -399,6 +567,10 @@ SpinelNCPInstance::get_ms_to_next_event(void)
 		if (tmp_cms < cms) {
 			cms = tmp_cms;
 		}
+	}
+
+	if (cms > mVendorCustom.get_ms_to_next_event()) {
+		cms = mVendorCustom.get_ms_to_next_event();
 	}
 
 	if (cms < 0) {
@@ -1061,6 +1233,9 @@ SpinelNCPInstance::property_get_value(
 	if (strcaseequal(key.c_str(), kWPANTUNDProperty_ConfigNCPDriverName)) {
 		cb(0, boost::any(std::string("spinel")));
 
+	} else if (mVendorCustom.is_property_key_supported(key)) {
+		mVendorCustom.property_get_value(key, cb);
+
 	} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NCPChannelMask)) {
 		cb(0, boost::any(get_default_channel_mask()));
 
@@ -1383,7 +1558,7 @@ SpinelNCPInstance::property_get_value(
 			start_new_task(SpinelNCPTaskSendCommand::Factory(this)
 				.set_callback(cb)
 				.add_command(
-					SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_GET, SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_QUALITY)
+					SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_GET, SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_OCCUPANCY)
 				)
 				.set_reply_unpacker(boost::bind(unpack_channel_monitor_channel_quality, _1, _2, _3, false))
 				.finish()
@@ -1397,7 +1572,7 @@ SpinelNCPInstance::property_get_value(
 			start_new_task(SpinelNCPTaskSendCommand::Factory(this)
 				.set_callback(cb)
 				.add_command(
-					SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_GET, SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_QUALITY)
+					SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_GET, SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_OCCUPANCY)
 				)
 				.set_reply_unpacker(boost::bind(unpack_channel_monitor_channel_quality, _1, _2, _3, true))
 				.finish()
@@ -1838,7 +2013,10 @@ SpinelNCPInstance::property_set_value(
 	}
 
 	try {
-		if (strcaseequal(key.c_str(), kWPANTUNDProperty_NCPChannel)) {
+		if (mVendorCustom.is_property_key_supported(key)) {
+			mVendorCustom.property_set_value(key, value, cb);
+
+		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NCPChannel)) {
 			int channel = any_to_int(value);
 			mCurrentNetworkInstance.channel = channel;
 
@@ -2052,17 +2230,6 @@ SpinelNCPInstance::property_set_value(
 			);
 
 			mXPANIDWasExplicitlySet = true;
-
-		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NetworkKey)) {
-			Data network_key = any_to_data(value);
-
-			start_new_task(SpinelNCPTaskSendCommand::Factory(this)
-				.set_callback(cb)
-				.add_command(
-					SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_DATA_S), SPINEL_PROP_NET_MASTER_KEY, network_key.data(), network_key.size())
-				)
-				.finish()
-			);
 
 		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_NetworkKeyIndex)) {
 			uint32_t key_index = any_to_int(value);
@@ -2642,7 +2809,10 @@ SpinelNCPInstance::property_insert_value(
 	}
 
 	try {
-		if (strcaseequal(key.c_str(), kWPANTUNDProperty_MACWhitelistEntries)) {
+		if (mVendorCustom.is_property_key_supported(key)) {
+			mVendorCustom.property_insert_value(key, value, cb);
+
+		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_MACWhitelistEntries)) {
 			Data ext_address = any_to_data(value);
 			int8_t rssi = kWPANTUND_Whitelist_RssiOverrideDisabled;
 
@@ -2716,7 +2886,10 @@ SpinelNCPInstance::property_remove_value(
 	syslog(LOG_INFO, "property_remove_value: key: \"%s\"", key.c_str());
 
 	try {
-		if (strcaseequal(key.c_str(), kWPANTUNDProperty_MACWhitelistEntries)) {
+		if (mVendorCustom.is_property_key_supported(key)) {
+			mVendorCustom.property_remove_value(key, value, cb);
+
+		} else if (strcaseequal(key.c_str(), kWPANTUNDProperty_MACWhitelistEntries)) {
 			Data ext_address = any_to_data(value);
 
 			if (!mCapabilities.count(SPINEL_CAP_MAC_WHITELIST)) {
@@ -3227,7 +3400,10 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 		}
 
 	} else if (key == SPINEL_PROP_STREAM_DEBUG) {
-		handle_ncp_log(value_data_ptr, value_data_len);
+		handle_ncp_debug_stream(value_data_ptr, value_data_len);
+
+	} else if (key == SPINEL_PROP_STREAM_LOG) {
+		handle_ncp_log_stream(value_data_ptr, value_data_len);
 
 	} else if (key == SPINEL_PROP_NET_ROLE) {
 		uint8_t value = 0;
@@ -3776,7 +3952,7 @@ SpinelNCPInstance::handle_ncp_spinel_callback(unsigned int command, const uint8_
 				return;
 			}
 
-			if (key != SPINEL_PROP_STREAM_DEBUG) {
+			if ((key != SPINEL_PROP_STREAM_DEBUG) && (key != SPINEL_PROP_STREAM_LOG)) {
 				syslog(LOG_INFO, "[NCP->] CMD_PROP_VALUE_IS(%s) tid:%d", spinel_prop_key_to_cstr(key), SPINEL_HEADER_GET_TID(cmd_data_ptr[0]));
 			}
 
@@ -4166,6 +4342,8 @@ void
 SpinelNCPInstance::process(void)
 {
 	NCPInstanceBase::process();
+
+	mVendorCustom.process();
 
 	if (!is_initializing_ncp() && mTaskQueue.empty()) {
 		bool x = mPcapManager.is_enabled();

@@ -1209,8 +1209,8 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_CHANNEL_MONITOR_SAMPLE_COUNT";
         break;
 
-    case SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_QUALITY:
-        ret = "PROP_CHANNEL_MONITOR_CHANNEL_QUALITY";
+    case SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_OCCUPANCY:
+        ret = "PROP_CHANNEL_MONITOR_CHANNEL_OCCUPANCY";
         break;
 
     case SPINEL_PROP_MAC_SCAN_STATE:
@@ -1591,6 +1591,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_STREAM_NET_INSECURE:
         ret = "PROP_STREAM_NET_INSECURE";
+        break;
+
+    case SPINEL_PROP_STREAM_LOG:
+        ret = "PROP_STREAM_LOG";
         break;
 
     case SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL:
@@ -2200,6 +2204,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
 
     case SPINEL_CAP_CHANNEL_MANAGER:
         ret = "CAP_CHANNEL_MANAGER";
+        break;
+
+    case SPINEL_CAP_OPENTHREAD_LOG_METADATA:
+        ret = "CAP_OPENTHREAD_LOG_METADATA";
         break;
 
     case SPINEL_CAP_ERROR_RATE_TRACKING:
