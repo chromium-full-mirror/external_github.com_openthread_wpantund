@@ -35,13 +35,22 @@
 #include "SpinelNCPTask.h"
 #include "SpinelNCPTaskSendCommand.h"
 
+#include "spinel-vendor.h"
+
 using namespace nl;
 using namespace wpantund;
+
+// Nest specific wpantund properties (name MUST start with "nest:" prefix).
+
+#define kWPANTUNDProperty_NestPAWDestAddress    "nest:PAW:DestAddress"    // Proximity Advance Wakeup (PAW)
 
 SpinelNCPVendorCustom::SpinelNCPVendorCustom(SpinelNCPInstance* instance):
 	mInstance(instance)
 {
 	// Warning: `instance` hasn't yet been fully constructed at this point.
+
+	mSupportedProperties.insert(kWPANTUNDProperty_NestPAWDestAddress);
+
 }
 
 SpinelNCPVendorCustom::~SpinelNCPVendorCustom()
@@ -58,10 +67,6 @@ SpinelNCPVendorCustom::setup_property_supported_by_class(const std::string& prop
 const std::set<std::string>&
 SpinelNCPVendorCustom::get_supported_property_keys()const
 {
-	if (mSupportedProperties.empty()) {
-		// Populate mSupportedProperties here.
-	}
-
 	return mSupportedProperties;
 }
 
@@ -74,18 +79,13 @@ SpinelNCPVendorCustom::is_property_key_supported(const std::string& key)const
 void
 SpinelNCPVendorCustom::property_get_value(const std::string& key, CallbackWithStatusArg1 cb)
 {
-#define SIMPLE_SPINEL_GET(prop__, type__)                                \
-	mInstance->start_new_task(SpinelNCPTaskSendCommand::Factory(this)    \
-		.set_callback(cb)                                                \
-		.add_command(                                                    \
-			SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_GET, prop__) \
-		)                                                                \
-		.set_reply_format(type__)                                        \
-		.finish()                                                        \
-	)
-
-	if (strcaseequal(key.c_str(), "__CustomKeyHere__")) {
-		cb(0, boost::any(std::string("spinel")));
+	if (strcaseequal(key.c_str(), kWPANTUNDProperty_NestPAWDestAddress)) {
+		mInstance->start_new_task(SpinelNCPTaskSendCommand::Factory(mInstance)
+			.set_callback(cb)
+			.add_command(SpinelPackData(SPINEL_FRAME_PACK_CMD_PROP_VALUE_GET, SPINEL_PROP_VENDOR_NEST_PAW_DEST_ADDR))
+			.set_reply_format(SPINEL_DATATYPE_IPv6ADDR_S)
+			.finish()
+		);
 
 	} else {
 		cb(kWPANTUNDStatus_FeatureNotSupported,
@@ -96,8 +96,22 @@ SpinelNCPVendorCustom::property_get_value(const std::string& key, CallbackWithSt
 void
 SpinelNCPVendorCustom::property_set_value(const std::string& key, const boost::any& value, CallbackWithStatus cb)
 {
-	if (strcaseequal(key.c_str(), "__CustomKeyHere__")) {
-		cb(kWPANTUNDStatus_Ok);
+	if (strcaseequal(key.c_str(), kWPANTUNDProperty_NestPAWDestAddress)) {
+		struct in6_addr addr = any_to_ipv6(value);
+		Data command =
+			SpinelPackData(
+				SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_IPv6ADDR_S),
+				SPINEL_PROP_VENDOR_NEST_PAW_DEST_ADDR,
+				&addr
+			);
+
+		mInstance->mSettings[kWPANTUNDProperty_NestPAWDestAddress] = SpinelNCPInstance::SettingsEntry(command);
+
+		mInstance->start_new_task(SpinelNCPTaskSendCommand::Factory(mInstance)
+			.set_callback(cb)
+			.add_command(command)
+			.finish()
+		);
 
 	} else {
 		cb(kWPANTUNDStatus_FeatureNotSupported);
