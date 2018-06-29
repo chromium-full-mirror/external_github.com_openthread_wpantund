@@ -596,31 +596,29 @@ EmberNCPControlInterface::poke(uint32_t address, Data bytes, CallbackWithStatus 
 
 void
 EmberNCPControlInterface::add_on_mesh_prefix(
-	const struct in6_addr *prefix,
-	bool defaultRoute,
-	bool preferred,
-	bool slaac,
-	bool onMesh,
+	const struct in6_addr& prefix,
+	uint8_t prefix_len,
+	OnMeshPrefixFlags flag_set,
 	OnMeshPrefixPriority priority,
+	bool stable,
 	CallbackWithStatus cb
 ) {
 	using namespace nl::wpantund::EmberCommands;
 	uint8_t flags(0);
-	struct in6_addr address = *prefix;
+	struct in6_addr address = prefix;
 
-	require_action(prefix != NULL, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
 
 	BEGIN_TRY_FOR_CMD(cb);
 
-	if (defaultRoute) {
+	if (flag_set.count(NCPControlInterface::PREFIX_FLAG_DEFAULT_ROUTE)) {
 		flags |= FirmwareInterface::DEFAULT_ROUTE_FLAG;
 	}
 
 	flags |= FirmwareInterface::SLAAC_PREFERRED_FLAG | FirmwareInterface::SLAAC_VALID_FLAG;
 
-	if (!buffer_is_nonzero(prefix->s6_addr+8, 8)) {
-		address = make_slaac_addr_from_eui64(prefix->s6_addr, mNCPInstance->mMACAddress);
+	if (!buffer_is_nonzero(prefix.s6_addr+8, 8)) {
+		address = make_slaac_addr_from_eui64(prefix.s6_addr, mNCPInstance->mMACAddress);
 	}
 
 	config_gateway_address(
@@ -639,19 +637,19 @@ bail:
 
 void
 EmberNCPControlInterface::remove_on_mesh_prefix(
-	const struct in6_addr *prefix,
+	const struct in6_addr& prefix,
+	uint8_t prefix_len,
 	CallbackWithStatus cb
 ) {
 	using namespace nl::wpantund::EmberCommands;
-	struct in6_addr address = *prefix;
+	struct in6_addr address = prefix;
 
-	require_action(prefix != NULL, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
 
 	BEGIN_TRY_FOR_CMD(cb);
 
-	if (!buffer_is_nonzero(prefix->s6_addr+8, 8)) {
-		address = make_slaac_addr_from_eui64(prefix->s6_addr, mNCPInstance->mMACAddress);
+	if (!buffer_is_nonzero(prefix.s6_addr+8, 8)) {
+		address = make_slaac_addr_from_eui64(prefix.s6_addr, mNCPInstance->mMACAddress);
 	}
 
 	config_gateway_address(
@@ -674,6 +672,7 @@ EmberNCPControlInterface::add_external_route(
 	int prefix_len_in_bits,
 	int domain_id,
 	ExternalRoutePriority priority,
+	bool stable,
 	CallbackWithStatus cb
 ) {
 	uint8_t flags = 0;

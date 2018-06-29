@@ -624,34 +624,31 @@ EmberNCPControlInterface::poke(uint32_t address, Data bytes, CallbackWithStatus 
 
 void
 EmberNCPControlInterface::add_on_mesh_prefix(
-	const struct in6_addr *prefix,
-	bool defaultRoute,
-	bool preferred,
-	bool slaac,
-	bool onMesh,
+	const struct in6_addr& prefix,
+	uint8_t prefix_len_in_bits,
+	OnMeshPrefixFlags flag_set,
 	OnMeshPrefixPriority priority,
+	bool stable,
 	CallbackWithStatus cb
 ) {
 	using namespace nl::wpantund::EmberCommands;
 	uint8_t flags(0);
-	struct in6_addr address = *prefix;
-	int prefix_len_in_bits = 64;
+	struct in6_addr address = prefix;
 
-	require_action(prefix != NULL, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(prefix_len_in_bits >= 0, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(prefix_len_in_bits <= IPV6_MAX_PREFIX_LENGTH, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
 
 	BEGIN_TRY_FOR_CMD(cb);
 
-	if (defaultRoute) {
+	if (flag_set.count(NCPControlInterface::PREFIX_FLAG_DEFAULT_ROUTE)) {
 		flags |= EMBER_BORDER_ROUTER_DEFAULT_ROUTE_FLAG;
 	}
 
 	flags |= EMBER_BORDER_ROUTER_PREFERRED_FLAG | EMBER_BORDER_ROUTER_SLAAC_FLAG;
 
-	if (!buffer_is_nonzero(prefix->s6_addr+8, 8)) {
-		address = make_slaac_addr_from_eui64(prefix->s6_addr, mNCPInstance->mMACAddress);
+	if (!buffer_is_nonzero(prefix.s6_addr+8, 8)) {
+		address = make_slaac_addr_from_eui64(prefix.s6_addr, mNCPInstance->mMACAddress);
 		prefix_len_in_bits = 128;
 	} else {
 		prefix_len_in_bits = 128;
@@ -674,22 +671,21 @@ bail:
 
 void
 EmberNCPControlInterface::remove_on_mesh_prefix(
-	const struct in6_addr *prefix,
+	const struct in6_addr& prefix,
+	uint8_t prefix_len_in_bits,
 	CallbackWithStatus cb
 ) {
 	using namespace nl::wpantund::EmberCommands;
-	struct in6_addr address = *prefix;
-	int prefix_len_in_bits = 64;
+	struct in6_addr address = prefix;
 
-	require_action(prefix != NULL, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(prefix_len_in_bits >= 0, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(prefix_len_in_bits <= IPV6_MAX_PREFIX_LENGTH, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
 
 	BEGIN_TRY_FOR_CMD(cb);
 
-	if (!buffer_is_nonzero(prefix->s6_addr+8, 8)) {
-		address = make_slaac_addr_from_eui64(prefix->s6_addr, mNCPInstance->mMACAddress);
+	if (!buffer_is_nonzero(prefix.s6_addr+8, 8)) {
+		address = make_slaac_addr_from_eui64(prefix.s6_addr, mNCPInstance->mMACAddress);
 		prefix_len_in_bits = 128;
 	} else {
 		prefix_len_in_bits = 128;
@@ -716,6 +712,7 @@ EmberNCPControlInterface::add_external_route(
 	int prefix_len_in_bits,
 	int domain_id,
 	ExternalRoutePriority priority,
+	bool stable,
 	CallbackWithStatus cb
 ) {
 	uint8_t flags = 0;
