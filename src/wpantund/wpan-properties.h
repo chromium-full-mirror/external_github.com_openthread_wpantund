@@ -78,6 +78,7 @@
 #define kWPANTUNDProperty_NetworkNodeType                       "Network:NodeType"
 #define kWPANTUNDProperty_NetworkKey                            "Network:Key"
 #define kWPANTUNDProperty_NetworkKeyIndex                       "Network:KeyIndex"
+#define kWPANTUNDProperty_NetworkKeySwitchGuardTime             "Network:KeySwitchGuardTime"
 #define kWPANTUNDProperty_NetworkIsCommissioned                 "Network:IsCommissioned"
 #define kWPANTUNDProperty_NetworkIsConnected                    "Network:IsConnected"
 #define kWPANTUNDProperty_NetworkPSKc                           "Network:PSKc"
@@ -94,6 +95,7 @@
 
 #define kWPANTUNDProperty_ThreadRLOC16                          "Thread:RLOC16"
 #define kWPANTUNDProperty_ThreadRouterID                        "Thread:RouterID"
+#define kWPANTUNDProperty_ThreadRouterSelectionJitter           "Thread:RouterSelectionJitter"
 #define kWPANTUNDProperty_ThreadLeaderAddress                   "Thread:Leader:Address"
 #define kWPANTUNDProperty_ThreadLeaderRouterID                  "Thread:Leader:RouterID"
 #define kWPANTUNDProperty_ThreadLeaderWeight                    "Thread:Leader:Weight"
@@ -120,10 +122,14 @@
 #define kWPANTUNDProperty_ThreadOnMeshPrefixes                  "Thread:OnMeshPrefixes"
 #define kWPANTUNDProperty_ThreadRouterRoleEnabled               "Thread:RouterRole:Enabled"
 #define kWPANTUNDProperty_ThreadConfigFilterRLOCAddresses       "Thread:Config:FilterRLOCAddresses"
+#define kWPANTUNDProperty_ThreadRouterUpgradeThreshold          "Thread:RouterUpgradeThreshold"
+#define kWPANTUNDProperty_ThreadRouterDowngradeThreshold        "Thread:RouterDowngradeThreshold"
 #define kWPANTUNDProperty_ThreadActiveDataset                   "Thread:ActiveDataset"
 #define kWPANTUNDProperty_ThreadActiveDatasetAsValMap           "Thread:ActiveDataset:AsValMap"
 #define kWPANTUNDProperty_ThreadPendingDataset                  "Thread:PendingDataset"
 #define kWPANTUNDProperty_ThreadPendingDatasetAsValMap          "Thread:PendingDataset:AsValMap"
+#define kWPANTUNDProperty_ThreadAddressCacheTable               "Thread:AddressCacheTable"
+#define kWPANTUNDProperty_ThreadAddressCacheTableAsValMap       "Thread:AddressCacheTable:AsValMap"
 
 #define kWPANTUNDProperty_DatasetActiveTimestamp                "Dataset:ActiveTimestamp"
 #define kWPANTUNDProperty_DatasetPendingTimestamp               "Dataset:PendingTimestamp"
@@ -232,6 +238,11 @@
 #define kWPANTUNDProperty_NestLabs_HackAlwaysResetToWake        "com.nestlabs.internal:Hack:AlwaysResetToWake"
 #define kWPANTUNDProperty_NestLabs_DisableRouterRoleAfterAttach "com.nestlabs.internal:DisableRouterRoleAfterAttach"
 
+#define kWPANTUNDProperty_TimeSync_NetworkTime                  "TimeSync:ThreadNetworkTime"
+#define kWPANTUNDProperty_TimeSync_NetworkTimeAsValMap          "TimeSync:ThreadNetworkTime:AsValMap"
+#define kWPANTUNDProperty_TimeSync_Period                       "TimeSync:Period"
+#define kWPANTUNDProperty_TimeSync_Xtal_Threshold               "TimeSync:XtalThreshold"
+
 #define kWPANTUNDProperty_Stat_Prefix                           "Stat:"
 #define kWPANTUNDProperty_StatRX                                "Stat:RX"
 #define kWPANTUNDProperty_StatTX                                "Stat:TX"
@@ -321,6 +332,10 @@
 #define kWPANTUNDValueMapKey_ChannelMonitor_Channel             "Channel"
 #define kWPANTUNDValueMapKey_ChannelMonitor_Quality             "Quality"
 
+#define kWPANTUNDValueMapKey_AddressCacheTable_Address          "Address"
+#define kWPANTUNDValueMapKey_AddressCacheTable_RLOC16           "RLOC16"
+#define kWPANTUNDValueMapKey_AddressCacheTable_Age              "Age"
+
 #define kWPANTUNDValueMapKey_NetworkTopology_ExtAddress         "ExtAddress"
 #define kWPANTUNDValueMapKey_NetworkTopology_RLOC16             "RLOC16"
 #define kWPANTUNDValueMapKey_NetworkTopology_LinkQualityIn      "LinkQualityIn"
@@ -378,5 +393,8 @@
 #define kWPANTUNDValueMapKey_Counter_RxErrSec                   "RxErrSec"             // Number of received packets with security error
 #define kWPANTUNDValueMapKey_Counter_RxErrFcs                   "RxErrFcs"             // Number of received packets with FCS error
 #define kWPANTUNDValueMapKey_Counter_RxErrOther                 "RxErrOther"           // Number of received packets with other error
+
+#define kWPANTUNDValueMapKey_TimeSync_Time                      "ThreadNetworkTime"
+#define kWPANTUNDValueMapKey_TimeSync_Status                    "TimeSyncStatus"
 
 #endif

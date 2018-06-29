@@ -34,6 +34,7 @@
 #include <boost/signals2/signal.hpp>
 #include <boost/any.hpp>
 #include <list>
+#include <set>
 #include <arpa/inet.h>
 #include "time-utils.h"
 
@@ -78,6 +79,17 @@ public:
 		PREFIX_MEDIUM_PREFERENCE = 0,
 		PREFIX_HIGH_PREFERENCE = 1,
 	};
+
+	enum PrefixFlag {
+		PREFIX_FLAG_PREFERRED,
+		PREFIX_FLAG_SLAAC,
+		PREFIX_FLAG_DHCP,
+		PREFIX_FLAG_CONFIGURE,
+		PREFIX_FLAG_DEFAULT_ROUTE,
+		PREFIX_FLAG_ON_MESH,
+	};
+
+	typedef std::set<PrefixFlag> OnMeshPrefixFlags;
 
 public:
 	// ========================================================================
@@ -147,17 +159,17 @@ public:
 	) = 0;
 
 	virtual void add_on_mesh_prefix(
-		const struct in6_addr *prefix,
-		bool defaultRoute,
-		bool preferred,
-		bool slaac,
-		bool onMesh,
+		const struct in6_addr& prefix,
+		uint8_t prefix_len,
+		OnMeshPrefixFlags flags,
 		OnMeshPrefixPriority priority,
+		bool stable,
 		CallbackWithStatus cb = NilReturn()
 	) = 0;
 
 	virtual void remove_on_mesh_prefix(
-		const struct in6_addr *prefix,
+		const struct in6_addr& prefix,
+		uint8_t prefix_len,
 		CallbackWithStatus cb = NilReturn()
 	) = 0;
 
@@ -166,13 +178,7 @@ public:
 		int prefix_len_in_bits,
 		int domain_id,
 		ExternalRoutePriority priority,
-		CallbackWithStatus cb = NilReturn()
-	) = 0;
-
-	virtual void joiner_add(
-		const char *psk,
-		uint32_t joiner_timeout,
-		const uint8_t *addr,
+		bool stable,
 		CallbackWithStatus cb = NilReturn()
 	) = 0;
 
@@ -180,6 +186,13 @@ public:
 		const struct in6_addr *prefix,
 		int prefix_len_in_bits,
 		int domain_id,
+		CallbackWithStatus cb = NilReturn()
+	) = 0;
+
+	virtual void joiner_add(
+		const char *psk,
+		uint32_t joiner_timeout,
+		const uint8_t *addr,
 		CallbackWithStatus cb = NilReturn()
 	) = 0;
 

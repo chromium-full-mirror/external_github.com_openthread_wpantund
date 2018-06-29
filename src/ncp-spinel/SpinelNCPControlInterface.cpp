@@ -190,50 +190,23 @@ SpinelNCPControlInterface::data_poll(CallbackWithStatus cb)
 
 void
 SpinelNCPControlInterface::add_on_mesh_prefix(
-	const struct in6_addr *prefix,
-	bool defaultRoute,
-	bool preferred,
-	bool slaac,
-	bool onMesh,
+	const struct in6_addr& prefix,
+	uint8_t prefix_len,
+	OnMeshPrefixFlags flags,
 	OnMeshPrefixPriority priority,
+	bool stable,
 	CallbackWithStatus cb
 ) {
-	uint8_t flags = 0;
-
-	require_action(prefix != NULL, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
 
-	switch (priority) {
-	case ROUTE_HIGH_PREFERENCE:
-		flags = (1 << SpinelNCPInstance::OnMeshPrefixEntry::kPreferenceOffset);
-		break;
-
-	case ROUTE_MEDIUM_PREFERENCE:
-		flags = 0;
-		break;
-
-	case ROUTE_LOW_PREFRENCE:
-		flags = (3 << SpinelNCPInstance::OnMeshPrefixEntry::kPreferenceOffset);
-		break;
-	}
-
-	if (defaultRoute) {
-		flags |= SpinelNCPInstance::OnMeshPrefixEntry::kFlagDefaultRoute;
-	}
-
-	if (preferred) {
-		flags |= SpinelNCPInstance::OnMeshPrefixEntry::kFlagPreferred;
-	}
-
-	if (slaac) {
-		flags |= SpinelNCPInstance::OnMeshPrefixEntry::kFlagSLAAC;
-	}
-
-	if (onMesh) {
-		flags |= SpinelNCPInstance::OnMeshPrefixEntry::kFlagOnMesh;
-	}
-
-	mNCPInstance->on_mesh_prefix_was_added(SpinelNCPInstance::kOriginUser, *prefix, 64, flags, true, cb);
+	mNCPInstance->on_mesh_prefix_was_added(
+		SpinelNCPInstance::kOriginUser,
+		prefix,
+		prefix_len,
+		SpinelNCPInstance::OnMeshPrefixEntry::encode_flag_set(flags, priority),
+		stable,
+		cb
+	);
 
 bail:
 	return;
@@ -241,13 +214,12 @@ bail:
 
 void
 SpinelNCPControlInterface::remove_on_mesh_prefix(
-	const struct in6_addr *prefix,
+	const struct in6_addr& prefix,
+	uint8_t prefix_len,
 	CallbackWithStatus cb
 ) {
-	require_action(prefix != NULL, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
-
-	mNCPInstance->on_mesh_prefix_was_removed(SpinelNCPInstance::kOriginUser, *prefix, 64, cb);
+	mNCPInstance->on_mesh_prefix_was_removed(SpinelNCPInstance::kOriginUser, prefix, prefix_len, cb);
 
 bail:
 	return;
@@ -259,6 +231,7 @@ SpinelNCPControlInterface::add_external_route(
 	int prefix_len,
 	int domain_id,
 	ExternalRoutePriority priority,
+	bool stable,
 	CallbackWithStatus cb
 ) {
 	require_action(route != NULL, bail, cb(kWPANTUNDStatus_InvalidArgument));
@@ -271,7 +244,7 @@ SpinelNCPControlInterface::add_external_route(
 		*route,
 		prefix_len,
 		priority,
-		true,     // stable
+		stable,
 		0,        // rlco16 (ignored for user added routes)
 		true,     // next_hop_is_host
 		cb
