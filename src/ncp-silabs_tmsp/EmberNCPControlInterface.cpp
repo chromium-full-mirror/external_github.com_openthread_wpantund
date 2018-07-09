@@ -635,7 +635,6 @@ EmberNCPControlInterface::add_on_mesh_prefix(
 	uint8_t flags(0);
 	struct in6_addr address = prefix;
 
-	require_action(prefix_len_in_bits >= 0, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(prefix_len_in_bits <= IPV6_MAX_PREFIX_LENGTH, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
 
@@ -678,7 +677,6 @@ EmberNCPControlInterface::remove_on_mesh_prefix(
 	using namespace nl::wpantund::EmberCommands;
 	struct in6_addr address = prefix;
 
-	require_action(prefix_len_in_bits >= 0, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(prefix_len_in_bits <= IPV6_MAX_PREFIX_LENGTH, bail, cb(kWPANTUNDStatus_InvalidArgument));
 	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
 
