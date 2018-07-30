@@ -147,6 +147,7 @@
 #define kWPANTUNDProperty_DatasetSecPolicyKeyRotation           "Dataset:SecPolicy:KeyRotation"
 #define kWPANTUNDProperty_DatasetSecPolicyFlags                 "Dataset:SecPolicy:Flags"
 #define kWPANTUNDProperty_DatasetRawTlvs                        "Dataset:RawTlvs"
+#define kWPANTUNDProperty_DatasetDestIpAddress                  "Dataset:DestIpAddress"
 
 #define kWPANTUNDProperty_DatasetAllFileds                      "Dataset:AllFields"
 #define kWPANTUNDProperty_DatasetAllFileds_AltString            "Dataset"
@@ -156,10 +157,12 @@
 #define kWPANTUNDDatasetCommand_Erase                           "Erase"
 #define kWPANTUNDDatasetCommand_GetActive                       "GetActive"
 #define kWPANTUNDDatasetCommand_SetActive                       "SetActive"
-#define kWPANTUNDDatasetCommand_MgmtSendActive                  "MgmtSendActive"
+#define kWPANTUNDDatasetCommand_SendMgmtGetActive               "SendMgmtGetActive"
+#define kWPANTUNDDatasetCommand_SendMgmtSetActive               "SendMgmtSetActive"
 #define kWPANTUNDDatasetCommand_GetPending                      "GetPending"
 #define kWPANTUNDDatasetCommand_SetPending                      "SetPending"
-#define kWPANTUNDDatasetCommand_MgmtSendPending                 "MgmtSendPending"
+#define kWPANTUNDDatasetCommand_SendMgmtGetPending              "SendMgmtGetPending"
+#define kWPANTUNDDatasetCommand_SendMgmtSetPending              "SendMgmtSetPending"
 
 #define kWPANTUNDProperty_OpenThreadLogLevel                    "OpenThread:LogLevel"
 #define kWPANTUNDProperty_OpenThreadSteeringDataAddress         "OpenThread:SteeringData:Address"
@@ -206,6 +209,7 @@
 
 #define kWPANTUNDProperty_TmfProxyEnabled                       "TmfProxy:Enabled"
 #define kWPANTUNDProperty_TmfProxyStream                        "TmfProxy:Stream"
+#define kWPANTUNDProperty_UdpProxyStream                        "UdpProxy:Stream"
 
 // Ignore this line --- begin pe8qf1P4GCme
 #define kWPANTUNDProperty_SiLabs_NCPAssociationState           "com.silabs:NCP:AssociationState"
