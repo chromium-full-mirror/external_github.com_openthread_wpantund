@@ -106,6 +106,7 @@
 #define kWPANTUNDProperty_ThreadChildTable                      "Thread:ChildTable"
 #define kWPANTUNDProperty_ThreadChildTableAsValMap              "Thread:ChildTable:AsValMap"
 #define kWPANTUNDProperty_ThreadChildTableAddresses             "Thread:ChildTable:Addresses"
+#define kWPANTUNDProperty_ThreadChildTimeout                    "Thread:ChildTimeout"
 #define kWPANTUNDProperty_ThreadNeighborTable                   "Thread:NeighborTable"
 #define kWPANTUNDProperty_ThreadNeighborTableAsValMap           "Thread:NeighborTable:AsValMap"
 #define kWPANTUNDProperty_ThreadNeighborTableErrorRates         "Thread:NeighborTable:ErrorRates"
@@ -116,7 +117,6 @@
 #define kWPANTUNDProperty_ThreadStableNetworkData               "Thread:StableNetworkData"
 #define kWPANTUNDProperty_ThreadStableNetworkDataVersion        "Thread:StableNetworkDataVersion"
 #define kWPANTUNDProperty_ThreadPreferredRouterID               "Thread:PreferredRouterID"
-#define kWPANTUNDProperty_ThreadCommissionerEnabled             "Thread:Commissioner:Enabled"
 #define kWPANTUNDProperty_ThreadDeviceMode                      "Thread:DeviceMode"
 #define kWPANTUNDProperty_ThreadOffMeshRoutes                   "Thread:OffMeshRoutes"
 #define kWPANTUNDProperty_ThreadOnMeshPrefixes                  "Thread:OnMeshPrefixes"
@@ -192,6 +192,9 @@
 #define kWPANTUNDProperty_JamDetectionBusyPeriod                "JamDetection:BusyPeriod"
 #define kWPANTUNDProperty_JamDetectionDebugHistoryBitmap        "JamDetection:Debug:HistoryBitmap"
 
+#define kWPANTUNDProperty_ChildSupervisionInterval              "ChildSupervision:Interval"
+#define kWPANTUNDProperty_ChildSupervisionCheckTimeout          "ChildSupervision:CheckTimeout"
+
 #define kWPANTUNDProperty_ChannelMonitorSampleInterval          "ChannelMonitor:SampleInterval"
 #define kWPANTUNDProperty_ChannelMonitorRssiThreshold           "ChannelMonitor:RssiThreshold"
 #define kWPANTUNDProperty_ChannelMonitorSampleWindow            "ChannelMonitor:SampleWindow"
@@ -210,6 +213,20 @@
 #define kWPANTUNDProperty_TmfProxyEnabled                       "TmfProxy:Enabled"
 #define kWPANTUNDProperty_TmfProxyStream                        "TmfProxy:Stream"
 #define kWPANTUNDProperty_UdpProxyStream                        "UdpProxy:Stream"
+
+#define kWPANTUNDProperty_CommissionerState                     "Commissioner:State"
+#define kWPANTUNDProperty_CommissionerProvisioningUrl           "Commissioner:ProvisioningUrl"
+#define kWPANTUNDProperty_CommissionerSessionId                 "Commissioner:SessionId"
+#define kWPANTUNDProperty_CommissionerEnergyScanResult          "Commissioner:EnergyScanResult"
+#define kWPANTUNDProperty_CommissionerPanIdConflictResult       "Commissioner:PanIdConflictResult"
+#define kWPANTUNDProperty_CommissionerSendMgmtGet               "Commissioner:Send:MgmtGet"
+#define kWPANTUNDProperty_CommissionerSendMgmtSet               "Commissioner:Send:MgmtSet"
+
+#define kWPANTUNDCommissionerState_Disabled                     "disabled"
+#define kWPANTUNDCommissionerState_Petition                     "petition"
+#define kWPANTUNDCommissionerState_Active                       "active"
+
+#define kWPANTUNDProperty_ThreadJoinerState                     "Thread:Joiner:State"
 
 // Ignore this line --- begin pe8qf1P4GCme
 #define kWPANTUNDProperty_SiLabs_NCPAssociationState           "com.silabs:NCP:AssociationState"
@@ -341,6 +358,12 @@
 #define kWPANTUNDValueMapKey_AddressCacheTable_Address          "Address"
 #define kWPANTUNDValueMapKey_AddressCacheTable_RLOC16           "RLOC16"
 #define kWPANTUNDValueMapKey_AddressCacheTable_Age              "Age"
+
+#define kWPANTUNDValueMapKey_CommrEnergyScanResult_ChannelMask  "ChannelMask"
+#define kWPANTUNDValueMapKey_CommrEnergyScanResult_Data         "Data"
+
+#define kWPANTUNDValueMapKey_CommrPanIdConflict_ChannelMask     "ChannelMask"
+#define kWPANTUNDValueMapKey_CommrPanIdConflict_PanId           "PanId"
 
 #define kWPANTUNDValueMapKey_NetworkTopology_ExtAddress         "ExtAddress"
 #define kWPANTUNDValueMapKey_NetworkTopology_RLOC16             "RLOC16"

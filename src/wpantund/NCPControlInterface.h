@@ -189,12 +189,61 @@ public:
 		CallbackWithStatus cb = NilReturn()
 	) = 0;
 
-	virtual void joiner_add(
-		const char *psk,
-		uint32_t joiner_timeout,
-		const uint8_t *addr,
+public:
+	// ========================================================================
+	// Thread Mesh Commissioning Protocol (MeshCoP) Member Functions
+
+	virtual void joiner_attach(
 		CallbackWithStatus cb = NilReturn()
 	) = 0;
+
+	virtual void joiner_commissioning(
+		bool action,
+		const char *psk,
+		const char *provisioning_url,
+		CallbackWithStatus cb = NilReturn()
+	) = 0;
+
+	virtual void commissioner_add_joiner(
+		const uint8_t *eui64,
+		uint32_t timeout,
+		const char *psk,
+		CallbackWithStatus cb = NilReturn()
+	) = 0;
+
+	virtual void commissioner_remove_joiner(
+		const uint8_t *eui64,
+		uint32_t timeout,
+		CallbackWithStatus cb = NilReturn()
+	) = 0;
+
+	virtual void commissioner_send_announce_begin(
+		uint32_t channel_mask,
+		uint8_t count,
+		uint16_t period,         // in milliseconds
+		const struct in6_addr& dest,
+		CallbackWithStatus cb = NilReturn()
+	) = 0;
+
+	virtual void commissioner_send_energy_scan_query(
+		uint32_t channel_mask,
+		uint8_t count,
+		uint16_t period,         // in milliseconds
+		uint16_t scan_duration,  // in milliseconds
+		const struct in6_addr& dest,
+		CallbackWithStatus cb = NilReturn()
+	) = 0;
+
+	virtual void commissioner_send_pan_id_query(
+		uint16_t pan_id,
+		uint32_t channel_mask,
+		const struct in6_addr& dest,
+		CallbackWithStatus cb = NilReturn()
+	) = 0;
+
+public:
+	// ========================================================================
+	// Packet Capture (pcap) Member Functions
 
 	virtual void pcap_to_fd(
 		int fd,
@@ -250,6 +299,7 @@ public:
 	virtual void data_poll(
 		CallbackWithStatus cb = NilReturn()
 	) = 0;
+
 
 public:
 	// ========================================================================

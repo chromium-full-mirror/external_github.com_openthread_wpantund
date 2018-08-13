@@ -32,7 +32,6 @@
 #include "string-utils.h"
 #include "any-to.h"
 #include "time-utils.h"
-#include "commissioner-utils.h"
 
 #include <cstring>
 #include <algorithm>
@@ -48,6 +47,7 @@
 #include "SpinelNCPTask.h"
 #include "SpinelNCPTaskWake.h"
 #include "SpinelNCPTaskJoin.h"
+#include "SpinelNCPTaskJoinerCommissioning.h"
 #include "SpinelNCPTaskForm.h"
 #include "SpinelNCPTaskLeave.h"
 #include "SpinelNCPTaskScan.h"
@@ -282,6 +282,39 @@ bail:
 }
 
 void
+SpinelNCPControlInterface::joiner_attach(CallbackWithStatus cb)
+{
+	mNCPInstance->start_new_task(SpinelNCPTaskSendCommand::Factory(mNCPInstance)
+			.set_callback(cb)
+			.add_command(SpinelPackData(
+					SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(SPINEL_DATATYPE_BOOL_S),
+					SPINEL_PROP_NET_STACK_UP,
+					true
+					))
+			.finish()
+			);
+}
+
+void
+SpinelNCPControlInterface::joiner_commissioning(
+		bool action,
+		const char *psk,
+		const char *provisioning_url,
+		CallbackWithStatus cb
+) {
+	mNCPInstance->start_new_task(boost::shared_ptr<SpinelNCPTask>(
+		new SpinelNCPTaskJoinerCommissioning(
+				mNCPInstance,
+				boost::bind(cb,_1),
+				action,
+				psk,
+				provisioning_url
+				)
+			));
+}
+
+/*
+void
 SpinelNCPControlInterface::joiner_add(
 		const char *psk,
 		uint32_t joiner_timeout,
@@ -323,6 +356,222 @@ SpinelNCPControlInterface::joiner_add(
 			))
 			.finish()
 		);
+	}
+
+bail:
+	return;
+}
+*/
+
+void
+SpinelNCPControlInterface::commissioner_add_joiner(
+	const uint8_t *eui64,
+	uint32_t timeout,
+	const char *psk,
+	CallbackWithStatus cb
+) {
+	require_action(psk != NULL, bail, cb(kWPANTUNDStatus_InvalidArgument));
+	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
+
+	if (!mNCPInstance->mCapabilities.count(SPINEL_CAP_THREAD_COMMISSIONER)) {
+		cb(kWPANTUNDStatus_FeatureNotSupported);
+	} else {
+		Data command;
+
+		if (eui64 != NULL) {
+			command = SpinelPackData(
+				SPINEL_FRAME_PACK_CMD_PROP_VALUE_INSERT(
+					SPINEL_DATATYPE_STRUCT_S(SPINEL_DATATYPE_EUI64_S)
+					SPINEL_DATATYPE_UINT32_S
+					SPINEL_DATATYPE_UTF8_S
+				),
+				SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS,
+				eui64,
+				timeout,
+				psk
+			);
+		} else {
+			command = SpinelPackData(
+				SPINEL_FRAME_PACK_CMD_PROP_VALUE_INSERT(
+					SPINEL_DATATYPE_STRUCT_S(SPINEL_DATATYPE_NULL_S)
+					SPINEL_DATATYPE_UINT32_S
+					SPINEL_DATATYPE_UTF8_S
+				),
+				SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS,
+				timeout,
+				psk
+			);
+		}
+
+		mNCPInstance->start_new_task(
+			SpinelNCPTaskSendCommand::Factory(mNCPInstance)
+				.set_callback(cb)
+				.add_command(command)
+				.finish()
+		);
+	}
+
+bail:
+	return;
+}
+
+void
+SpinelNCPControlInterface::commissioner_remove_joiner(
+	const uint8_t *eui64,
+	uint32_t timeout,
+	CallbackWithStatus cb
+) {
+	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
+
+	if (!mNCPInstance->mCapabilities.count(SPINEL_CAP_THREAD_COMMISSIONER)) {
+		cb(kWPANTUNDStatus_FeatureNotSupported);
+	} else {
+		Data command;
+
+		if (eui64 != NULL) {
+			command = SpinelPackData(
+				SPINEL_FRAME_PACK_CMD_PROP_VALUE_REMOVE(
+					SPINEL_DATATYPE_STRUCT_S(SPINEL_DATATYPE_EUI64_S)
+					SPINEL_DATATYPE_UINT32_S
+				),
+				SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS,
+				eui64,
+				timeout
+			);
+		} else {
+			command = SpinelPackData(
+				SPINEL_FRAME_PACK_CMD_PROP_VALUE_REMOVE(
+					SPINEL_DATATYPE_STRUCT_S(SPINEL_DATATYPE_NULL_S)
+					SPINEL_DATATYPE_UINT32_S
+				),
+				SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS,
+				timeout
+			);
+		}
+
+		mNCPInstance->start_new_task(
+			SpinelNCPTaskSendCommand::Factory(mNCPInstance)
+				.set_callback(cb)
+				.add_command(command)
+				.finish()
+		);
+	}
+
+bail:
+	return;
+}
+
+void
+SpinelNCPControlInterface::commissioner_send_announce_begin(
+	uint32_t channel_mask,
+	uint8_t count,
+	uint16_t period,
+	const struct in6_addr& dest,
+	CallbackWithStatus cb
+) {
+	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
+
+	if (!mNCPInstance->mCapabilities.count(SPINEL_CAP_THREAD_COMMISSIONER)) {
+		cb(kWPANTUNDStatus_FeatureNotSupported);
+	} else {
+		mNCPInstance->start_new_task(
+			SpinelNCPTaskSendCommand::Factory(mNCPInstance)
+				.set_callback(cb)
+				.add_command(SpinelPackData(
+					SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(
+						SPINEL_DATATYPE_UINT32_S
+						SPINEL_DATATYPE_UINT8_S
+						SPINEL_DATATYPE_UINT16_S
+						SPINEL_DATATYPE_IPv6ADDR_S
+					),
+					SPINEL_PROP_MESHCOP_COMMISSIONER_ANNOUNCE_BEGIN,
+					channel_mask,
+					count,
+					period,
+					&dest
+				))
+				.finish()
+		);
+	}
+
+bail:
+	return;
+}
+
+void
+SpinelNCPControlInterface::commissioner_send_energy_scan_query(
+	uint32_t channel_mask,
+	uint8_t count,
+	uint16_t period,
+	uint16_t scan_duration,
+	const struct in6_addr& dest,
+	CallbackWithStatus cb
+) {
+	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
+
+	if (!mNCPInstance->mCapabilities.count(SPINEL_CAP_THREAD_COMMISSIONER)) {
+		cb(kWPANTUNDStatus_FeatureNotSupported);
+	} else {
+		mNCPInstance->start_new_task(
+			SpinelNCPTaskSendCommand::Factory(mNCPInstance)
+				.set_callback(cb)
+				.add_command(SpinelPackData(
+					SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(
+						SPINEL_DATATYPE_UINT32_S
+						SPINEL_DATATYPE_UINT8_S
+						SPINEL_DATATYPE_UINT16_S
+						SPINEL_DATATYPE_UINT16_S
+						SPINEL_DATATYPE_IPv6ADDR_S
+					),
+					SPINEL_PROP_MESHCOP_COMMISSIONER_ENERGY_SCAN,
+					channel_mask,
+					count,
+					period,
+					scan_duration,
+					&dest
+				))
+				.finish()
+		);
+
+		// Clear saved results for previous energy scan query
+		mNCPInstance->mCommissionerEnergyScanResult.clear();
+	}
+
+bail:
+	return;
+}
+
+void
+SpinelNCPControlInterface::commissioner_send_pan_id_query(
+	uint16_t pan_id,
+	uint32_t channel_mask,
+	const struct in6_addr& dest,
+	CallbackWithStatus cb
+) {
+	require_action(mNCPInstance->mEnabled, bail, cb(kWPANTUNDStatus_InvalidWhenDisabled));
+
+	if (!mNCPInstance->mCapabilities.count(SPINEL_CAP_THREAD_COMMISSIONER)) {
+		cb(kWPANTUNDStatus_FeatureNotSupported);
+	} else {
+		mNCPInstance->start_new_task(
+			SpinelNCPTaskSendCommand::Factory(mNCPInstance)
+				.set_callback(cb)
+				.add_command(SpinelPackData(
+					SPINEL_FRAME_PACK_CMD_PROP_VALUE_SET(
+						SPINEL_DATATYPE_UINT16_S
+						SPINEL_DATATYPE_UINT32_S
+						SPINEL_DATATYPE_IPv6ADDR_S
+					),
+					SPINEL_PROP_MESHCOP_COMMISSIONER_PAN_ID_QUERY,
+					pan_id,
+					channel_mask,
+					&dest
+				))
+				.finish()
+		);
+
+		// Clear saved results for previous PAN Id query
+		mNCPInstance->mCommissionerPanIdConflictResult.clear();
 	}
 
 bail:

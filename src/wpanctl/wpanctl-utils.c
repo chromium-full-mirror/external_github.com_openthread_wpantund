@@ -25,6 +25,7 @@
 #include "string-utils.h"
 #include "wpanctl-utils.h"
 #include "wpan-dbus-v0.h"
+#include "wpan-dbus-v1.h"
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -578,4 +579,63 @@ node_type_int2str(uint16_t node_type)
 	}
 
 	return "unknown";
+}
+
+int create_new_wpan_dbus_message(DBusMessage **message, const char *dbus_command)
+{
+	int ret = 0;
+	char path[DBUS_MAXIMUM_NAME_LENGTH + 1];
+	char interface_dbus_name[DBUS_MAXIMUM_NAME_LENGTH + 1];
+
+	assert(*message == NULL);
+
+	ret = lookup_dbus_name_from_interface(interface_dbus_name, gInterfaceName);
+	require_quiet(ret == 0, bail);
+
+	snprintf(path, sizeof(path), "%s/%s", WPANTUND_DBUS_PATH, gInterfaceName);
+	*message = dbus_message_new_method_call(interface_dbus_name, path, WPANTUND_DBUS_APIv1_INTERFACE, dbus_command);
+
+	if (*message == NULL) {
+		ret = ERRORCODE_ALLOC;
+	}
+
+bail:
+	return ret;
+}
+
+const char *joiner_state_int2str(uint8_t state)
+{
+    const char *ret = "idle";
+
+    switch (state)
+    {
+    case JOINER_STATE_IDLE:
+        ret = "idle";
+        break;
+
+    case JOINER_STATE_DISCOVER:
+        ret = "discover";
+        break;
+
+    case JOINER_STATE_CONNECT:
+        ret = "connect";
+        break;
+
+    case JOINER_STATE_CONNECTED:
+        ret = "connected";
+        break;
+
+    case JOINER_STATE_ENTRUST:
+        ret = "entrust";
+        break;
+
+    case JOINER_STATE_JOINED:
+        ret = "joined";
+        break;
+
+    default:
+        break;
+    }
+
+    return ret;
 }

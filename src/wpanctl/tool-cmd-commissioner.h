@@ -18,6 +18,9 @@
  *    Description:
  *      This file implements "commissioner" command in wpanctl.
  *
+ *      The wpanctl "commissioner" command is implemented in `tool-cmd-commr.h`. This file contains the old
+ *      implementation which is retained under command name "o-commissioner".
+ *
  */
 
 #ifndef WPANCTL_TOOL_CMD_COMMISSIONER_H
