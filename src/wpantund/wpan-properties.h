@@ -48,8 +48,10 @@
 #define kWPANTUNDProperty_DaemonAutoDeepSleep                   "Daemon:AutoDeepSleep"
 #define kWPANTUNDProperty_DaemonFaultReason                     "Daemon:FaultReason"
 #define kWPANTUNDProperty_DaemonTickleOnHostDidWake             "Daemon:TickleOnHostDidWake"
+
 #define kWPANTUNDProperty_DaemonIPv6AutoUpdateIntfaceAddrOnNCP  "Daemon:IPv6:AutoUpdateInterfaceAddrsOnNCP"
 #define kWPANTUNDProperty_DaemonIPv6FilterUserAddedLinkLocal    "Daemon:IPv6:FilterUserAddedLinkLocal"
+#define kWPANTUNDProperty_DaemonIPv6AutoAddSLAACAddress         "Daemon:IPv6:AutoAddSLAACAddress"
 #define kWPANTUNDProperty_DaemonSetDefRouteForAutoAddedPrefix   "Daemon:SetDefaultRouteForAutoAddedPrefix"
 #define kWPANTUNDProperty_DaemonOffMeshRouteAutoAddOnInterface  "Daemon:OffMeshRoute:AutoAddOnInterface"
 #define kWPANTUNDProperty_DaemonOffMeshRouteFilterSelfAutoAdded "Daemon:OffMeshRoute:FilterSelfAutoAdded"
@@ -69,6 +71,7 @@
 #define kWPANTUNDProperty_NCPRSSI                               "NCP:RSSI"
 #define kWPANTUNDProperty_NCPCCAFailureRate                     "NCP:CCAFailureRate"
 #define kWPANTUNDProperty_NCPMCUPowerState                      "NCP:MCUPowerState"
+#define kWPANTUNDProperty_NCPCapabilities                       "NCP:Capabilities"
 
 #define kWPANTUNDProperty_InterfaceUp                           "Interface:Up"
 

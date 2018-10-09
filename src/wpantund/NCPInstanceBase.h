@@ -171,8 +171,6 @@ public:
 			RoutePreference preference = NCPControlInterface::ROUTE_MEDIUM_PREFERENCE,  bool stable = true,
 			uint16_t rloc16 = 0, CallbackWithStatus cb = NilReturn());
 
-	bool lookup_address_for_prefix(struct in6_addr *address, const struct in6_addr &prefix, int prefix_len = 64);
-
 	static std::string on_mesh_prefix_flags_to_string(uint8_t flags, bool detailed = false);
 
 protected:
@@ -320,6 +318,7 @@ private:
 	void get_prop_DaemonTerminateOnFault(CallbackWithStatusArg1 cb);
 	void get_prop_DaemonIPv6AutoUpdateIntfaceAddrOnNCP(CallbackWithStatusArg1 cb);
 	void get_prop_DaemonIPv6FilterUserAddedLinkLocal(CallbackWithStatusArg1 cb);
+	void get_prop_DaemonIPv6AutoAddSLAACAddress(CallbackWithStatusArg1 cb);
 	void get_prop_DaemonSetDefRouteForAutoAddedPrefix(CallbackWithStatusArg1 cb);
 	void get_prop_NestLabs_NetworkPassthruPort(CallbackWithStatusArg1 cb);
 	void get_prop_NCPMACAddress(CallbackWithStatusArg1 cb);
@@ -351,6 +350,7 @@ private:
 	void set_prop_DaemonTerminateOnFault(const boost::any &value, CallbackWithStatus cb);
 	void set_prop_DaemonIPv6AutoUpdateIntfaceAddrOnNCP(const boost::any &value, CallbackWithStatus cb);
 	void set_prop_DaemonIPv6FilterUserAddedLinkLocal(const boost::any &value, CallbackWithStatus cb);
+	void set_prop_DaemonIPv6AutoAddSLAACAddress(const boost::any &value, CallbackWithStatus cb);
 	void set_prop_DaemonSetDefRouteForAutoAddedPrefix(const boost::any &value, CallbackWithStatus cb);
 	void set_prop_IPv6SetSLAACForAutoAddedPrefix(const boost::any &value, CallbackWithStatus cb);
 	void set_prop_DaemonOffMeshRouteAutoAddOnInterface(const boost::any &value, CallbackWithStatus cb);
@@ -571,7 +571,14 @@ protected:
 		uint32_t mMetric;
 	};
 
+	enum {
+		kSLAACPrefixLength = 64, // Expected prefix length to add SLAAC address.
+	};
+
 private:
+	bool has_address_with_prefix(const IPv6Prefix &prefix);
+	bool has_slaac_on_mesh_prefix(const IPv6Prefix &prefix);
+	std::map<struct in6_addr, UnicastAddressEntry>::iterator find_address_with_prefix(const IPv6Prefix &prefix, Origin origin);
 	void add_address_on_ncp_and_update_prefixes(const in6_addr &address, const UnicastAddressEntry &entry);
 	void remove_address_on_ncp_and_update_prefixes(const in6_addr &address, const UnicastAddressEntry &entry);
 	std::multimap<IPv6Prefix, OnMeshPrefixEntry>::iterator find_prefix_entry(const IPv6Prefix &prefix, const OnMeshPrefixEntry &entry);
@@ -622,6 +629,14 @@ protected:
 	// By default this is enabled. It can be changed using a configuration
 	// wpantund property "Daemon:IPv6:FilterUserAddedLinkLocal"
 	bool mFilterUserAddedLinkLocalIPv6Address;
+
+	// This boolean flag indicates whether wpantund would generate and add
+	// an SLAAC address on seeing/adding an on-mesh prefix with SLAAC flag.
+	// Note that the SLAAC address is added only if there is no existing
+	// address with the same prefix. By default this feature is enabled
+	// (i.e., SLAAC addresses are added by wpantund). It can be changed
+	// using the wpantund property "Daemon:IPv6:AutoAddSLAACAddress".
+	bool mAutoAddSLAACAddress;
 
 	// When an unicast address is added on interface, the related on-mesh prefix
 	// is updated on NCP if `mDefaultRouteForAutoAddedPrefix` is true the prefix

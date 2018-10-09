@@ -273,7 +273,7 @@ enum
 enum
 {
     SPINEL_THREAD_MODE_FULL_NETWORK_DATA   = (1 << 0),
-    SPINEL_THREAD_MODE_FULL_FUNCTION_DEV   = (1 << 1),
+    SPINEL_THREAD_MODE_FULL_THREAD_DEV     = (1 << 1),
     SPINEL_THREAD_MODE_SECURE_DATA_REQUEST = (1 << 2),
     SPINEL_THREAD_MODE_RX_ON_WHEN_IDLE     = (1 << 3),
 };
@@ -404,7 +404,7 @@ enum
     SPINEL_CMD_HBO_DROP      = 14,
     SPINEL_CMD_HBO_OFFLOADED = 15,
     SPINEL_CMD_HBO_RECLAIMED = 16,
-    SPINEL_CMD_HBO_DROPED    = 17,
+    SPINEL_CMD_HBO_DROPPED   = 17,
 
     SPINEL_CMD_PEEK     = 18,
     SPINEL_CMD_PEEK_RET = 19,
@@ -464,6 +464,7 @@ enum
 
     SPINEL_CAP_NET__BEGIN     = 52,
     SPINEL_CAP_NET_THREAD_1_0 = (SPINEL_CAP_NET__BEGIN + 0),
+    SPINEL_CAP_NET_THREAD_1_1 = (SPINEL_CAP_NET__BEGIN + 1),
     SPINEL_CAP_NET__END       = 64,
 
     SPINEL_CAP_OPENTHREAD__BEGIN       = 512,
@@ -844,6 +845,16 @@ typedef enum {
      *
      */
     SPINEL_PROP_CHANNEL_MONITOR_CHANNEL_OCCUPANCY = SPINEL_PROP_PHY_EXT__BEGIN + 10,
+
+    /// Radio caps
+    /** Format: `i` (read-only)
+     *
+     * Data per item is:
+     *
+     *  `i`: Radio Capabilities.
+     *
+     */
+    SPINEL_PROP_RADIO_CAPS = SPINEL_PROP_PHY_EXT__BEGIN + 11,
 
     SPINEL_PROP_PHY_EXT__END = 0x1300,
 
@@ -1602,7 +1613,7 @@ typedef enum {
      *   `D`: Log metadata (optional).
      *
      * Any data after the log string is considered metadata and is OPTIONAL.
-     * Pretense of `SPINEL_CAP_OPENTHREAD_LOG_METADATA` capability
+     * Presence of `SPINEL_CAP_OPENTHREAD_LOG_METADATA` capability
      * indicates that OpenThread log metadata format is used as defined
      * below:
      *
@@ -2548,6 +2559,8 @@ SPINEL_API_EXTERN spinel_ssize_t spinel_packed_uint_size(unsigned int value);
 SPINEL_API_EXTERN const char *spinel_next_packed_datatype(const char *pack_format);
 
 // ----------------------------------------------------------------------------
+
+SPINEL_API_EXTERN const char *spinel_command_to_cstr(unsigned int command);
 
 SPINEL_API_EXTERN const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key);
 
