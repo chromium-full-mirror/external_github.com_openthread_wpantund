@@ -1973,14 +1973,6 @@ EmberNCPControlInterface::handle_cb_slaac_server_change(const Data& data)
 		syslog(LOG_NOTICE, "[NCP->] SLAAC Server for prefix \"%s/%u\" is %savailable", prefix_cstr, prefix_len * 8, available?"":"NOT ");
 	}
 
-	if (available
-	    && (prefix_len == 8)
-		&& !mNCPInstance->lookup_address_for_prefix(NULL, address, 64)
-	) {
-		address = make_slaac_addr_from_eui64(prefix, mNCPInstance->mMACAddress);
-		request_address_from_ncp(address, 128, 0);
-	}
-
 bail:
 	return;
 }

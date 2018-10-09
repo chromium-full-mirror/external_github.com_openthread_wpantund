@@ -2254,12 +2254,6 @@ EmberNCPControlInterface::handle_cb_slaac_server_change(va_list args)
 	if (buffer_is_nonzero(prefix, IPV6_PREFIX_BITS_TO_BYTES(IPV6_NETWORK_PREFIX_LENGTH))) {
 		syslog(LOG_NOTICE, "[NCP->] SLAAC Server for prefix \"%s/%u\" is %savailable", address_string.c_str(), prefix_len_in_bits, available?"":"NOT ");
 
-		if (available
-			&& !mNCPInstance->lookup_address_for_prefix(NULL, address, prefix_len_in_bits)
-		) {
-			address = make_slaac_addr_from_eui64(prefix, mNCPInstance->mMACAddress);
-			request_address_from_ncp(address, IPV6_MAX_PREFIX_LENGTH, 0);
-		}
 	} else {
 		syslog(LOG_ERR, "[NCP->] *INVALID* SLAAC Server prefix \"%s/%u\" is %savailable", address_string.c_str(), prefix_len_in_bits, available?"":"NOT ");
 	}
