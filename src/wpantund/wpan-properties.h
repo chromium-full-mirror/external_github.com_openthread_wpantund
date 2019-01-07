@@ -167,6 +167,8 @@
 #define kWPANTUNDDatasetCommand_SendMgmtGetPending              "SendMgmtGetPending"
 #define kWPANTUNDDatasetCommand_SendMgmtSetPending              "SendMgmtSetPending"
 
+#define kWPANTUNDProperty_POSIXAppRCPVersion                    "POSIXApp:RCPVersion"
+
 #define kWPANTUNDProperty_OpenThreadLogLevel                    "OpenThread:LogLevel"
 #define kWPANTUNDProperty_OpenThreadSteeringDataAddress         "OpenThread:SteeringData:Address"
 #define kWPANTUNDProperty_OpenThreadSteeringDataSetWhenJoinable "OpenThread:SteeringData:SetWhenJoinable"
@@ -215,7 +217,7 @@
 
 #define kWPANTUNDProperty_TmfProxyEnabled                       "TmfProxy:Enabled"
 #define kWPANTUNDProperty_TmfProxyStream                        "TmfProxy:Stream"
-#define kWPANTUNDProperty_UdpProxyStream                        "UdpProxy:Stream"
+#define kWPANTUNDProperty_UdpForwardStream                      "UdpForward:Stream"
 
 #define kWPANTUNDProperty_CommissionerState                     "Commissioner:State"
 #define kWPANTUNDProperty_CommissionerProvisioningUrl           "Commissioner:ProvisioningUrl"
@@ -472,5 +474,6 @@
 
 #define kWPANTUNDValueMapKey_TimeSync_Time                      "ThreadNetworkTime"
 #define kWPANTUNDValueMapKey_TimeSync_Status                    "TimeSyncStatus"
+#define kWPANTUNDValueMapKey_TimeSync_ReceivedMonoTimeUs        "TimeSyncReceivedMonoTimeUs"
 
 #endif

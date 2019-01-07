@@ -490,6 +490,10 @@ SpinelNCPInstance::get_supported_property_keys()const
 		properties.insert(kWPANTUNDProperty_ThreadJoinerState);
 	}
 
+	if (mCapabilities.count(SPINEL_CAP_POSIX_APP)) {
+		properties.insert(kWPANTUNDProperty_POSIXAppRCPVersion);
+	}
+
 	if (mCapabilities.count(SPINEL_CAP_COUNTERS)) {
 		properties.insert(kWPANTUNDProperty_NCPCounterAllMac);
 		properties.insert(kWPANTUNDProperty_NCPCounter_TX_IP_SEC_TOTAL);
@@ -1220,18 +1224,10 @@ bail:
 	return ret;
 }
 
-static int
-unpack_thread_network_time(const uint8_t *data_in, spinel_size_t data_len, boost::any& value, bool as_val_map)
+static int 
+unpack_thread_network_time_spinel(const uint8_t *data_in, spinel_size_t data_len, uint64_t &time, int8_t &time_sync_status)
 {
-	spinel_ssize_t len;
-	ValueMap entry;
-	std::list<ValueMap> result_as_val_map;
-	std::list<std::string> result_as_string;
-	uint64_t time;
-	int8_t timeSyncStatus;
-	int ret = kWPANTUNDStatus_Failure;
-
-	len = spinel_datatype_unpack(
+	return spinel_datatype_unpack(
 		data_in,
 		data_len,
 		(
@@ -1239,26 +1235,83 @@ unpack_thread_network_time(const uint8_t *data_in, spinel_size_t data_len, boost
 			SPINEL_DATATYPE_INT8_S     // time sync status
 		),
 		&time,
-		&timeSyncStatus
+		&time_sync_status
 	);
+}
+
+static int
+unpack_thread_network_time_as_string(const uint8_t *data_in, spinel_size_t data_len, std::string &result)
+{
+	spinel_ssize_t len;
+	uint64_t time;
+	int8_t time_sync_status;
+	char c_string[500];
+	int ret = kWPANTUNDStatus_Failure;
+	
+	len = unpack_thread_network_time_spinel(data_in, data_len, time, time_sync_status);
 
 	if (len > 0)
 	{
 		ret = kWPANTUNDStatus_Ok;
-		if (as_val_map) {
-			entry.clear();
-			entry[kWPANTUNDValueMapKey_TimeSync_Time] = time;
-			entry[kWPANTUNDValueMapKey_TimeSync_Status] = timeSyncStatus;
-			result_as_val_map.push_back(entry);
-			value = result_as_val_map;
-		} else {
-			char c_string[500];
-			int index;
+		snprintf(c_string, sizeof(c_string), "ThreadNetworkTime: %" PRIu64 ", TimeSyncStatus:%d", time, time_sync_status);
+		result.assign(c_string);
+	}
 
-			index = snprintf(c_string, sizeof(c_string), "ThreadNetworkTime: %" PRIu64 ", TimeSyncStatus:%d", time, timeSyncStatus);
+	return ret;
+}
 
-			result_as_string.push_back(std::string(c_string));
-			value = result_as_string;
+static int
+unpack_thread_network_time_as_valmap(const uint8_t *data_in, spinel_size_t data_len, ValueMap &result)
+{
+	spinel_ssize_t len;
+	ValueMap entry;
+	uint64_t time;
+	int8_t time_sync_status;
+	int ret = kWPANTUNDStatus_Failure;
+
+	len = unpack_thread_network_time_spinel(data_in, data_len, time, time_sync_status);
+
+	if (len > 0)
+	{
+		ret = kWPANTUNDStatus_Ok;
+		result.clear();
+		result[kWPANTUNDValueMapKey_TimeSync_Time] = time;
+		result[kWPANTUNDValueMapKey_TimeSync_Status] = time_sync_status;
+#if APPEND_NETWORK_TIME_RECEIVED_MONOTONIC_TIMESTAMP
+		result[kWPANTUNDValueMapKey_TimeSync_ReceivedMonoTimeUs] = time_get_monotonic_us();
+#endif // APPEND_NETWORK_TIME_RECEIVED_MONOTONIC_TIMESTAMP
+	}
+
+	return ret;
+}
+
+static int
+unpack_thread_network_time_as_any(const uint8_t *data_in, spinel_size_t data_len, boost::any& value, bool as_val_map)
+{
+	ValueMap result_as_val_map;
+	std::list<ValueMap> result_as_val_map_list;
+	std::string result_as_string;
+	std::list<std::string> result_as_string_list;
+	int ret;
+
+	if (as_val_map)
+	{
+		ret = unpack_thread_network_time_as_valmap(data_in, data_len, result_as_val_map);
+
+		if (ret == kWPANTUNDStatus_Ok)
+		{
+			result_as_val_map_list.push_back(result_as_val_map);
+			value = result_as_val_map_list;
+		}
+	}
+	else
+	{
+		ret = unpack_thread_network_time_as_string(data_in, data_len, result_as_string);
+
+		if (ret == kWPANTUNDStatus_Ok)
+		{
+			result_as_string_list.push_back(result_as_string);
+			value = result_as_string_list;
 		}
 	}
 
@@ -1885,6 +1938,10 @@ SpinelNCPInstance::regsiter_all_get_handlers(void)
 		kWPANTUNDProperty_NCPCounter_IP_RX_FAILURE,
 		SPINEL_CAP_COUNTERS,
 		SPINEL_PROP_CNTR_IP_RX_FAILURE, SPINEL_DATATYPE_UINT32_S);
+	register_get_handler_capability_spinel_simple(
+		kWPANTUNDProperty_POSIXAppRCPVersion,
+		SPINEL_CAP_POSIX_APP,
+		SPINEL_PROP_RCP_VERSION, SPINEL_DATATYPE_UTF8_S);
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// Properties associated with a spinel property using an unpacker
@@ -1976,11 +2033,11 @@ SpinelNCPInstance::regsiter_all_get_handlers(void)
 	register_get_handler_capability_spinel_unpacker(
 		kWPANTUNDProperty_TimeSync_NetworkTime,
 		SPINEL_CAP_TIME_SYNC,
-		SPINEL_PROP_THREAD_NETWORK_TIME, boost::bind(unpack_thread_network_time, _1, _2, _3, false));
+		SPINEL_PROP_THREAD_NETWORK_TIME, boost::bind(unpack_thread_network_time_as_any, _1, _2, _3, false));
 	register_get_handler_capability_spinel_unpacker(
 		kWPANTUNDProperty_TimeSync_NetworkTimeAsValMap,
 		SPINEL_CAP_TIME_SYNC,
-		SPINEL_PROP_THREAD_NETWORK_TIME, boost::bind(unpack_thread_network_time, _1, _2, _3, true));
+		SPINEL_PROP_THREAD_NETWORK_TIME, boost::bind(unpack_thread_network_time_as_any, _1, _2, _3, true));
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// Properties with a dedicated handler method
@@ -2889,8 +2946,8 @@ SpinelNCPInstance::regsiter_all_set_handlers(void)
 		kWPANTUNDProperty_TmfProxyStream,
 		boost::bind(&SpinelNCPInstance::set_prop_TmfProxyStream, this, _1, _2));
 	register_set_handler(
-		kWPANTUNDProperty_UdpProxyStream,
-		boost::bind(&SpinelNCPInstance::set_prop_UdpProxyStream, this, _1, _2));
+		kWPANTUNDProperty_UdpForwardStream,
+		boost::bind(&SpinelNCPInstance::set_prop_UdpForwardStream, this, _1, _2));
 	register_set_handler(
 		kWPANTUNDProperty_DatasetActiveTimestamp,
 		boost::bind(&SpinelNCPInstance::set_prop_DatasetActiveTimestamp, this, _1, _2));
@@ -3163,7 +3220,7 @@ SpinelNCPInstance::set_prop_TmfProxyStream(const boost::any &value, CallbackWith
 }
 
 void
-SpinelNCPInstance::set_prop_UdpProxyStream(const boost::any &value, CallbackWithStatus cb)
+SpinelNCPInstance::set_prop_UdpForwardStream(const boost::any &value, CallbackWithStatus cb)
 {
 	Data packet = any_to_data(value);
 
@@ -3184,7 +3241,7 @@ SpinelNCPInstance::set_prop_UdpProxyStream(const boost::any &value, CallbackWith
 				SPINEL_DATATYPE_IPv6ADDR_S  // Peer address
 				SPINEL_DATATYPE_UINT16_S    // Sock port
 			),
-			SPINEL_PROP_THREAD_UDP_PROXY_STREAM,
+			SPINEL_PROP_THREAD_UDP_FORWARD_STREAM,
 			packet.data(),
 			payload_len,
 			peer_port,
@@ -4426,7 +4483,7 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 			signal_property_changed(kWPANTUNDProperty_TmfProxyStream, data);
 		}
 
-	} else if (key == SPINEL_PROP_THREAD_UDP_PROXY_STREAM) {
+	} else if (key == SPINEL_PROP_THREAD_UDP_FORWARD_STREAM) {
 		const uint8_t* frame_ptr(NULL);
 		unsigned int frame_len(0);
 		uint16_t peer_port = 0;
@@ -4462,7 +4519,7 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 			// pack the port in big endian.
 			data.push_back(sock_port >> 8);
 			data.push_back(sock_port & 0xff);
-			signal_property_changed(kWPANTUNDProperty_UdpProxyStream, data);
+			signal_property_changed(kWPANTUNDProperty_UdpForwardStream, data);
 		}
 
 	} else if ((key == SPINEL_PROP_STREAM_NET) || (key == SPINEL_PROP_STREAM_NET_INSECURE)) {
@@ -4576,6 +4633,31 @@ SpinelNCPInstance::handle_ncp_spinel_value_is(spinel_prop_key_t key, const uint8
 		char net_data_cstr_buf[540];
 		encode_data_into_string(value_data_ptr, value_data_len, net_data_cstr_buf, sizeof(net_data_cstr_buf), 0);
 		syslog(LOG_INFO, "[-NCP-] Leader network data: [%s]", net_data_cstr_buf);
+
+	} else if (key == SPINEL_PROP_RCP_VERSION) {
+		const char *rcp_version = NULL;
+		spinel_ssize_t len;
+
+		len = spinel_datatype_unpack(value_data_ptr, value_data_len, SPINEL_DATATYPE_UTF8_S, &rcp_version);
+
+		if (len > 0) {
+			syslog(LOG_NOTICE, "[-NCP-]: RCP is running \"%s\"", rcp_version);
+		}
+	} else if (key == SPINEL_PROP_THREAD_NETWORK_TIME) {
+		ValueMap result;
+		std::string result_as_string;
+
+		if (unpack_thread_network_time_as_valmap(value_data_ptr, value_data_len, result) == kWPANTUNDStatus_Ok) {
+			if (unpack_thread_network_time_as_string(value_data_ptr, value_data_len, result_as_string) == kWPANTUNDStatus_Ok) {
+				syslog(LOG_INFO, "[-NCP-]: Network time update: %s", result_as_string.c_str());
+			} else {
+				syslog(LOG_WARNING, "[-NCP-]: Failed to extract network time update for logging");
+			}
+
+			handle_network_time_update(result);
+		} else {
+			syslog(LOG_WARNING, "[-NCP-]: Failed to unpack network time update");
+		}
 	}
 
 bail:

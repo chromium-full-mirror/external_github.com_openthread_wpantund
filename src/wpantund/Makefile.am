@@ -87,6 +87,7 @@ SOURCES = \
 	../util/any-to.cpp \
 	../util/string-utils.c \
 	../util/time-utils.c \
+	../util/time-utils-extra.cpp \
 	../util/nlpt-select.c \
 	../util/Data.cpp \
 	../util/SocketWrapper.cpp \
@@ -126,7 +127,7 @@ wpantund_LDADD += $(LIBDL_LIBS)
 wpantund_LDFLAGS = @EXPORT_DYNAMIC_LDFLAGS@
 endif
 
-wpantund_CPPFLAGS = $(AM_CPPFLAGS) $(DBUS_CFLAGS) $(CODE_COVERAGE_CPPFLAGS)
+wpantund_CPPFLAGS = -D_DEFAULT_SOURCE -D_XOPEN_SOURCE -D_XOPEN_SOURCE_EXTENDED -D_POSIX_C_SOURCE=200112L $(AM_CPPFLAGS) $(DBUS_CFLAGS) $(CODE_COVERAGE_CPPFLAGS)
 wpantund_CXXFLAGS = $(AM_CXXFLAGS) $(BOOST_CXXFLAGS) $(CODE_COVERAGE_CXXFLAGS)
 wpantund_CFLAGS = $(AM_CFLAGS)
 
@@ -134,6 +135,11 @@ wpantund_CPPFLAGS += $(CODE_COVERAGE_CPPFLAGS)
 wpantund_CXXFLAGS += $(CODE_COVERAGE_CXXFLAGS)
 wpantund_CFLAGS += $(CODE_COVERAGE_CFLAGS)
 wpantund_LDADD += $(CODE_COVERAGE_LIBS)
+
+if APPEND_NETWORK_TIME_RECEIVED_MONOTONIC_TIMESTAMP
+wpantund_LDADD += -l:libboost_system.a -l:libboost_chrono.a
+wpantund_CPPFLAGS += -DUSE_BOOST_CHRONO_MONOTONIC_TIME=1
+endif
 
 wpantund_fuzz_SOURCES = wpantund-fuzz.cpp $(SOURCES)
 

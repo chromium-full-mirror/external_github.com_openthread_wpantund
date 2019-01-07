@@ -1290,6 +1290,10 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PHY_RX_SENSITIVITY";
         break;
 
+    case SPINEL_PROP_PHY_PCAP_ENABLED:
+        ret = "PHY_PCAP_ENABLED";
+        break;
+
     case SPINEL_PROP_JAM_DETECT_ENABLE:
         ret = "JAM_DETECT_ENABLE";
         break;
@@ -1602,8 +1606,8 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "THREAD_TMF_PROXY_STREAM";
         break;
 
-    case SPINEL_PROP_THREAD_UDP_PROXY_STREAM:
-        ret = "THREAD_UDP_PROXY_STREAM";
+    case SPINEL_PROP_THREAD_UDP_FORWARD_STREAM:
+        ret = "THREAD_UDP_FORWARD_STREAM";
         break;
 
     case SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG:
@@ -1836,6 +1840,14 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT:
         ret = "CHILD_SUPERVISION_CHECK_TIMEOUT";
+        break;
+
+    case SPINEL_PROP_RCP_VERSION:
+        ret = "RCP_VERSION";
+        break;
+
+    case SPINEL_PROP_PARENT_RESPONSE_INFO:
+        ret = "PARENT_RESPONSE_INFO";
         break;
 
     case SPINEL_PROP_UART_BITRATE:
@@ -2351,6 +2363,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
         ret = "MCU_POWER_STATE";
         break;
 
+    case SPINEL_CAP_PCAP:
+        ret = "PCAP";
+        break;
+
     case SPINEL_CAP_802_15_4_2003:
         ret = "802_15_4_2003";
         break;
@@ -2393,6 +2409,18 @@ const char *spinel_capability_to_cstr(unsigned int capability)
 
     case SPINEL_CAP_802_15_4_868MHZ_ASK:
         ret = "802_15_4_868MHZ_ASK";
+        break;
+
+    case SPINEL_CAP_CONFIG_FTD:
+        ret = "CONFIG_FTD";
+        break;
+
+    case SPINEL_CAP_CONFIG_MTD:
+        ret = "CONFIG_MTD";
+        break;
+
+    case SPINEL_CAP_CONFIG_RADIO:
+        ret = "CONFIG_RADIO";
         break;
 
     case SPINEL_CAP_ROLE_ROUTER:
@@ -2443,6 +2471,10 @@ const char *spinel_capability_to_cstr(unsigned int capability)
         ret = "CHILD_SUPERVISION";
         break;
 
+    case SPINEL_CAP_POSIX_APP:
+        ret = "POSIX_APP";
+        break;
+
     case SPINEL_CAP_ERROR_RATE_TRACKING:
         ret = "ERROR_RATE_TRACKING";
         break;
@@ -2455,12 +2487,16 @@ const char *spinel_capability_to_cstr(unsigned int capability)
         ret = "THREAD_TMF_PROXY";
         break;
 
-    case SPINEL_CAP_THREAD_UDP_PROXY:
-        ret = "THREAD_UDP_PROXY";
+    case SPINEL_CAP_THREAD_UDP_FORWARD:
+        ret = "THREAD_UDP_FORWARD";
         break;
 
     case SPINEL_CAP_THREAD_JOINER:
         ret = "THREAD_JOINER";
+        break;
+
+    case SPINEL_CAP_THREAD_BORDER_ROUTER:
+        ret = "THREAD_BORDER_ROUTER";
         break;
 
     case SPINEL_CAP_NEST_LEGACY_INTERFACE:
@@ -2482,9 +2518,9 @@ const char *spinel_capability_to_cstr(unsigned int capability)
     return ret;
 }
 
-    // **** LCOV_EXCL_STOP ****
+// **** LCOV_EXCL_STOP ****
 
-    /* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
 
 #if SPINEL_SELF_TEST
 
